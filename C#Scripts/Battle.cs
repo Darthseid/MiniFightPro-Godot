@@ -368,8 +368,7 @@ public partial class Battle : Node2D
     internal string GetSquadName(int teamId)
     {
         var player = teamId == 1 ? _teamAPlayer : _teamBPlayer;
-        var squad = CombatHelpers.GetActiveSquad(teamId, _teamASquad, _teamBSquad);
-        return squad?.Name ?? player?.PlayerName ?? $"Team {teamId}";
+        return player?.PlayerName ?? $"Team {teamId}";
     }
 
     private string DetermineFirstSquad(Player teamA, Player teamB)
@@ -388,13 +387,16 @@ public partial class Battle : Node2D
         _teamAPlayer.TheirSquads.RemoveAll(s => s == null || s.Composition == null || s.Composition.Count == 0);
         _teamBPlayer.TheirSquads.RemoveAll(s => s == null || s.Composition == null || s.Composition.Count == 0);
 
-        if (_teamAPlayer.TheirSquads.Count == 0)
+        var teamAModelCount = CountPlayerModels(_teamAPlayer);
+        var teamBModelCount = CountPlayerModels(_teamBPlayer);
+
+        if (teamAModelCount <= 0)
         {
-            _ = EndBattleAsync(_teamBSquad ?? new Squad());
+            _ = EndBattleAsync(_teamBPlayer);
         }
-        else if (_teamBPlayer.TheirSquads.Count == 0)
+        else if (teamBModelCount <= 0)
         {
-            _ = EndBattleAsync(_teamASquad ?? new Squad());
+            _ = EndBattleAsync(_teamAPlayer);
         }
     }
 
@@ -413,9 +415,19 @@ public partial class Battle : Node2D
         {
             actor.Selected += HandleActorSelected;
         }
-            }
+    }
 
-    private async Task EndBattleAsync(Squad winner)
+    private int CountPlayerModels(Player player)
+    {
+        if (player?.TheirSquads == null)
+        {
+            return 0;
+        }
+
+        return player.TheirSquads.Sum(squad => squad?.Composition?.Count ?? 0);
+    }
+
+    private async Task EndBattleAsync(Player winner)
     {
         if (_isBattleEnding)
         {
@@ -428,7 +440,7 @@ public partial class Battle : Node2D
         _movementTcs?.TrySetResult(true);
         SyncGlobalTurnRound();
 
-        _battleHud?.ShowGameOverBanner($"Game Over. {winner.Name} Wins!");
+        _battleHud?.ShowGameOverBanner($"Game Over. {winner.PlayerName} Wins!");
 
         var musicManager = GetNodeOrNull<AudioStreamPlayer>("/root/Musicmanager");
         musicManager?.Stop();
@@ -479,9 +491,8 @@ public partial class Battle : Node2D
 
     internal void AnnounceTurnStart()
     {
-        var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
-        var squadName = activeSquad?.Name ?? $"Team {_activeTeamId}";
-        _battleHud?.ShowToast($"Round {_round} - Turn {_currentTurn}: ({squadName}).", 2f);
+        var playerName = GetSquadName(_activeTeamId);
+        _battleHud?.ShowToast($"Round {_round} - Turn {_currentTurn}: ({playerName}).", 2f);
     }
 
 

@@ -171,6 +171,37 @@ public static class CombatEngine
         return $"{weapon.WeaponName}::{weapon.Attacks}::{weapon.Damage}::{weapon.Range}::{weapon.HitSkill}::{weapon.Strength}::{weapon.ArmorPenetration}::{weapon.IsMelee}::{specials}";
     }
 
+
+    private static void ConsumeOneShotWeapons(Squad attackerSquad, Weapon weapon)
+    {
+        if (attackerSquad == null || weapon == null)
+        {
+            return;
+        }
+
+        if (weapon.Special == null || weapon.Special.All(ability => ability?.Innate != "1 Shot"))
+        {
+            return;
+        }
+
+        var fingerprint = BuildWeaponFingerprint(weapon);
+        foreach (var model in attackerSquad.Composition.Where(model => model != null && model.Health > 0))
+        {
+            foreach (var tool in model.Tools)
+            {
+                if (tool == null)
+                {
+                    continue;
+                }
+
+                if (BuildWeaponFingerprint(tool) == fingerprint)
+                {
+                    tool.Attacks = "0";
+                }
+            }
+        }
+    }
+
     public static List<WeaponBatch> BuildWeaponBatches(Squad attackerSquad, bool isMelee)
     {
         if (attackerSquad == null)
@@ -286,6 +317,10 @@ public static class CombatEngine
             }
 
             var attacks = batch.TotalAttacks;
+            if (attacks <= 0)
+            {
+                continue;
+            }
             var weaponSound = ResolveWeaponSound(weapon);
             var modifiers = CombatHelpers.ObtainModifiers(
                 weapon,
@@ -364,6 +399,7 @@ public static class CombatEngine
                 injuries,
                 unsaved
             ));
+            ConsumeOneShotWeapons(attackerSquad, weapon);
 
             if (remainingHealth <= 0)
             {
@@ -516,6 +552,10 @@ public static class CombatEngine
 
             var aliveBeforeWeapon = CountLivingActors(defenderActors);
             var attacks = batch.TotalAttacks;
+            if (attacks <= 0)
+            {
+                continue;
+            }
             var weaponSound = ResolveWeaponSound(weapon);
             var modifiers = CombatHelpers.ObtainModifiers(
                 weapon,
@@ -669,6 +709,10 @@ public static class CombatEngine
             }
 
             var attacks = batch.TotalAttacks;
+            if (attacks <= 0)
+            {
+                continue;
+            }
             var aliveBeforeWeapon = CountLivingActors(defenderActors);
             var weaponSound = ResolveWeaponSound(weapon);
             var modifiers = CombatHelpers.ObtainModifiers(weapon, attackerSquad, attackerMove, defenderSquad, false, isFight, _currentDistance);
@@ -711,6 +755,7 @@ public static class CombatEngine
             AllocateDamage(attackerActor, defenderActors, defenderSquad, weapon, unsaved, ref currentRecipient);
 
             var summary = new WeaponResolutionSummary(weapon.WeaponName, attacks, hits, injuries, unsaved);
+            ConsumeOneShotWeapons(attackerSquad, weapon);
             battleHud?.ShowToast(BuildWeaponToast(summary), 2f);
             await Task.Delay(2000);
 
