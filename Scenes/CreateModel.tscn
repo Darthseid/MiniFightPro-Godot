@@ -1,0 +1,93 @@
+[gd_scene format=3 uid="uid://d1h6b2j7xg3h0"]
+
+[ext_resource type="Script" path="res://C#Scripts/CreateModel.cs" id="1_6hn3u"]
+
+[node name="CreateModel" type="Control" unique_id=1209391188]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_6hn3u")
+
+[node name="Panel" type="Panel" parent="." unique_id=678238799]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1955957176]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainContainer" type="VBoxContainer" parent="ScrollContainer" unique_id=1290452642]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleLabel" type="Label" parent="ScrollContainer/MainContainer" unique_id=709769215]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Create Model"
+
+[node name="Label_Name" type="Label" parent="ScrollContainer/MainContainer" unique_id=1730538654]
+layout_mode = 2
+text = "Model Name"
+
+[node name="ModelNameInput" type="LineEdit" parent="ScrollContainer/MainContainer" unique_id=222103308]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Label_Health" type="Label" parent="ScrollContainer/MainContainer" unique_id=784305488]
+layout_mode = 2
+text = "Health"
+
+[node name="ModelHealthInput" type="SpinBox" parent="ScrollContainer/MainContainer" unique_id=811843029]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 999.0
+step = 1.0
+
+[node name="Label_Bracketed" type="Label" parent="ScrollContainer/MainContainer" unique_id=399722851]
+layout_mode = 2
+text = "Bracketed Threshold"
+
+[node name="ModelBracketedInput" type="SpinBox" parent="ScrollContainer/MainContainer" unique_id=1300806296]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 999.0
+step = 1.0
+
+[node name="Label_Weapons" type="Label" parent="ScrollContainer/MainContainer" unique_id=2058555128]
+layout_mode = 2
+text = "Select Weapons"
+
+[node name="WeaponList" type="ItemList" parent="ScrollContainer/MainContainer" unique_id=65947431]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+select_mode = 2
+allow_reselect = true
+fixed_column_width = 0
+
+[node name="ActionsContainer" type="HBoxContainer" parent="ScrollContainer/MainContainer" unique_id=739395411]
+layout_mode = 2
+alignment = 2
+
+[node name="BtnDiscard" type="Button" parent="ScrollContainer/MainContainer/ActionsContainer" unique_id=1236710266]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Discard"
+
+[node name="BtnSave" type="Button" parent="ScrollContainer/MainContainer/ActionsContainer" unique_id=718604254]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save"

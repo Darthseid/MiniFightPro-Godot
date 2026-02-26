@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://0r4s4qymiyok"]
+
+[ext_resource type="Texture2D" uid="uid://b4n2t2n421ngr" path="res://Assets/drawable/stormweaver.jpg" id="1_50j67"]
+[ext_resource type="AudioStream" uid="uid://bus46wkvi24ox" path="res://Assets/raw/lightning.mp3" id="2_13jq6"]
+[ext_resource type="Script" path="res://GDScripts/Splash1.gd" id="4_qvm2y"]
+
+[node name="Splash" type="Control" unique_id=31339452]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1347523381]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_50j67")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1764102686]
+stream = ExtResource("2_13jq6")
+autoplay = true
+
+[node name="Timer" type="Timer" parent="." unique_id=1674953809]
+wait_time = 4.0
+one_shot = true
+autostart = true
+ignore_time_scale = true
+script = ExtResource("4_qvm2y")
+
+[connection signal="timeout" from="Timer" to="Timer" method="_on_timeout"]

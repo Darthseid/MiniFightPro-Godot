@@ -1,0 +1,36 @@
+config_version=5
+
+[application]
+
+config/name="MiniatureFightPro"
+run/main_scene="uid://0r4s4qymiyok"
+config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
+config/icon="uid://c24i23k2u0uk8"
+
+[audio]
+
+buses/default_bus_layout="uid://2woteu4fi8rx"
+
+[autoload]
+
+Musicmanager="*uid://cnscp16stb6vk"
+Gamedata="*uid://cqxtsqwtxrbuy"
+GameGlobals="*uid://b47gtfg7dktcf"
+
+[dotnet]
+
+project/assembly_name="MiniatureFightFree"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/markdownlabel/plugin.cfg", "res://addons/node_disabler/plugin.cfg")
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

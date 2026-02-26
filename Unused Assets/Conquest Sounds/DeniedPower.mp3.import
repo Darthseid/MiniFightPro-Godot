@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://6f51hsmscr0m"
+path="res://.godot/imported/DeniedPower.mp3-e5e1597556e5a56dcb9ad8f370cd8c6a.mp3str"
+
+[deps]
+
+source_file="res://Unused Assets/Conquest Sounds/DeniedPower.mp3"
+dest_files=["res://.godot/imported/DeniedPower.mp3-e5e1597556e5a56dcb9ad8f370cd8c6a.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,6 @@
+To do list for mini fight free godot:
+* Pretty up the entire game, including each menu and squads.
+* Stress Test everything.
+* Make sure that all the option dialogs are fully readable on mobile devices.
+* Test on multiple devices.
+

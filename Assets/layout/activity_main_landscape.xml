@@ -1,0 +1,98 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+    <ImageView
+        android:id="@+id/mainGameLogo"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@string/logo"
+        android:scaleType="fitXY"
+        android:src="@drawable/minifightlogo"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.55" />
+
+    <Button
+        android:id="@+id/startGameButton"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:layout_marginTop="91dp"
+        android:layout_marginBottom="12dp"
+        android:text="@string/start_game"
+        app:layout_constraintBottom_toTopOf="@id/createWeaponButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mainGameLogo"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/createMiniatureButton"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:layout_marginTop="35dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/create_miniatures"
+        app:layout_constraintBottom_toTopOf="@id/createSquadButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mainGameLogo"
+        app:layout_constraintTop_toBottomOf="@+id/createWeaponButton" />
+
+    <Button
+        android:id="@+id/createSquadButton"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:layout_marginTop="26dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/create_squads"
+        app:layout_constraintBottom_toTopOf="@id/createPlayerButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mainGameLogo"
+        app:layout_constraintTop_toBottomOf="@+id/createMiniatureButton" />
+
+    <Button
+        android:id="@+id/createPlayerButton"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:layout_marginTop="26dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/create_squads"
+        app:layout_constraintBottom_toTopOf="@id/readRulesButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mainGameLogo"
+        app:layout_constraintTop_toBottomOf="@+id/createSquadButton" />
+
+    <Button
+        android:id="@+id/readRulesButton"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:layout_marginTop="21dp"
+        android:layout_marginBottom="72dp"
+        android:text="@string/read_rules"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mainGameLogo"
+        app:layout_constraintTop_toBottomOf="@+id/createPlayerButton" />
+
+    <Button
+        android:id="@+id/createWeaponButton"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:layout_marginTop="53dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/create_weapon"
+        app:layout_constraintBottom_toTopOf="@id/createMiniatureButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mainGameLogo"
+        app:layout_constraintTop_toBottomOf="@+id/startGameButton" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

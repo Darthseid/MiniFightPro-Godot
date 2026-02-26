@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://b2y5xpp1qchbd"
+path="res://.godot/imported/Sniper.mp3-98c7267c618b716c4d80ee7e27177e3b.mp3str"
+
+[deps]
+
+source_file="res://Unused Assets/Conquest Sounds/Sniper.mp3"
+dest_files=["res://.godot/imported/Sniper.mp3-98c7267c618b716c4d80ee7e27177e3b.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

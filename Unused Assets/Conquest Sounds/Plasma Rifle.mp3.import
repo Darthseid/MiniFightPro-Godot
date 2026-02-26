@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bm8yjvsut6x85"
+path="res://.godot/imported/Plasma Rifle.mp3-1aa52852b9ab1f77c5e788d84a118547.mp3str"
+
+[deps]
+
+source_file="res://Unused Assets/Conquest Sounds/Plasma Rifle.mp3"
+dest_files=["res://.godot/imported/Plasma Rifle.mp3-1aa52852b9ab1f77c5e788d84a118547.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

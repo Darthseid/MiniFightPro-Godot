@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://b1mxxgkr3o5jh"]
+
+[ext_resource type="Script" uid="uid://bi6ro60aovjl7" path="res://C#Scripts/SquadList.cs" id="1_6v2e4"]
+[ext_resource type="Script" uid="uid://cu1wo86ckndpr" path="res://GDScripts/Btn_Back.gd" id="2_rsdpj"]
+
+[node name="SquadList" type="Control" unique_id=240093803]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_6v2e4")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1012717387]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BtnCreate" type="Button" parent="VBoxContainer" unique_id=781609623]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Create Squad"
+
+[node name="BtnBack" type="Button" parent="VBoxContainer" unique_id=687277093]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Home"
+script = ExtResource("2_rsdpj")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=617043383]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=1702504845]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3

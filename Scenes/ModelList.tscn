@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://cvrj3udnu8sk7"]
+
+[ext_resource type="Script" uid="uid://did3qec8vki44" path="res://C#Scripts/ModelList.cs" id="1_wn5v1"]
+[ext_resource type="Script" uid="uid://cu1wo86ckndpr" path="res://GDScripts/Btn_Back.gd" id="2_jaqde"]
+
+[node name="ModelList" type="Control" unique_id=809358120]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_wn5v1")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1453046965]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BtnCreate" type="Button" parent="VBoxContainer" unique_id=267450563]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Create Model"
+
+[node name="BtnBack" type="Button" parent="VBoxContainer" unique_id=1739870262]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Home"
+script = ExtResource("2_jaqde")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1198372863]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ListContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=107816711]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/minifighticon"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/minifighticon"
+        android:supportsRtl="true"
+        tools:targetApi="31">
+        <!-- Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713 -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-4834496138444464~3641624898"/>
+        <activity
+            android:name=".BattleActivity"
+            android:configChanges="orientation|screenSize"
+            android:exported="false" />
+        <activity
+            android:name=".StartGameActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SquadListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ModelListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".WeaponListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CreateSquadActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CreateModelActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CreateWeaponActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CreatePlayerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PlayerListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".MainActivity" />
+        <activity android:name=".RulesActivity" />
+    </application>
+
+</manifest>

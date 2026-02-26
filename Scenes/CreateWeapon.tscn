@@ -1,0 +1,154 @@
+[gd_scene format=3 uid="uid://gjv08ranrdew"]
+
+[ext_resource type="Script" uid="uid://ng7t63a6dgim" path="res://C#Scripts/CreateWeapon.cs" id="1_5whs7"]
+
+[node name="CreateWeapon" type="Control" unique_id=836826962]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_5whs7")
+
+[node name="Panel" type="Panel" parent="." unique_id=1212906708]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=2026991327]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainContainer" type="VBoxContainer" parent="ScrollContainer" unique_id=17938546]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleLabel" type="Label" parent="ScrollContainer/MainContainer" unique_id=752157752]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Create New Weapon"
+
+[node name="Label_Name" type="Label" parent="ScrollContainer/MainContainer" unique_id=1096651499]
+layout_mode = 2
+text = "Weapon Name"
+
+[node name="NameInput" type="LineEdit" parent="ScrollContainer/MainContainer" unique_id=149164256]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="ScrollContainer/MainContainer" unique_id=1537189668]
+layout_mode = 2
+
+[node name="StatGrid" type="GridContainer" parent="ScrollContainer/MainContainer" unique_id=124022896]
+layout_mode = 2
+
+[node name="Label_Range" type="Label" parent="ScrollContainer/MainContainer/StatGrid" unique_id=804758271]
+layout_mode = 2
+text = "Range"
+
+[node name="RangeInput" type="SpinBox" parent="ScrollContainer/MainContainer/StatGrid" unique_id=257078884]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 999.0
+step = 0.1
+
+[node name="Label_HS" type="Label" parent="ScrollContainer/MainContainer/StatGrid" unique_id=1937742603]
+layout_mode = 2
+text = "Hit Skill"
+
+[node name="HitSkillInput" type="SpinBox" parent="ScrollContainer/MainContainer/StatGrid" unique_id=1311174526]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 9.0
+
+[node name="Label_Str" type="Label" parent="ScrollContainer/MainContainer/StatGrid" unique_id=1517122637]
+layout_mode = 2
+text = "Strength"
+
+[node name="StrengthInput" type="SpinBox" parent="ScrollContainer/MainContainer/StatGrid" unique_id=204974443]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 99.0
+
+[node name="Label_AP" type="Label" parent="ScrollContainer/MainContainer/StatGrid" unique_id=697183607]
+layout_mode = 2
+text = "Armor Penetration"
+
+[node name="APInput" type="SpinBox" parent="ScrollContainer/MainContainer/StatGrid" unique_id=1507289364]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -9.0
+max_value = 9.0
+
+[node name="HSeparator" type="HSeparator" parent="ScrollContainer/MainContainer/StatGrid" unique_id=780849042]
+layout_mode = 2
+
+[node name="Label_Attacks" type="Label" parent="ScrollContainer/MainContainer" unique_id=78051188]
+layout_mode = 2
+text = "Attacks"
+
+[node name="AttacksInput" type="LineEdit" parent="ScrollContainer/MainContainer" unique_id=1688074027]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Label_Damage" type="Label" parent="ScrollContainer/MainContainer" unique_id=1911508398]
+layout_mode = 2
+text = "Damage"
+
+[node name="DamageInput" type="LineEdit" parent="ScrollContainer/MainContainer" unique_id=981471167]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="ScrollContainer/MainContainer" unique_id=2135079125]
+layout_mode = 2
+
+[node name="BtnAbilities" type="Button" parent="ScrollContainer/MainContainer" unique_id=1151983288]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select Abilities"
+
+[node name="SelectedAbilitiesLabel" type="Label" parent="ScrollContainer/MainContainer" unique_id=1417702226]
+unique_name_in_owner = true
+layout_mode = 2
+text = "No abilities selected."
+
+[node name="Spacer" type="Control" parent="ScrollContainer/MainContainer" unique_id=187180134]
+layout_mode = 2
+
+[node name="ActionsContainer" type="HBoxContainer" parent="ScrollContainer/MainContainer" unique_id=1436608811]
+layout_mode = 2
+
+[node name="BtnSave" type="Button" parent="ScrollContainer/MainContainer/ActionsContainer" unique_id=308535241]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save"
+
+[node name="BtnDiscard" type="Button" parent="ScrollContainer/MainContainer/ActionsContainer" unique_id=1260163439]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Discard"
+
+[node name="AbilitiesDialog" type="AcceptDialog" parent="." unique_id=1500328825]
+unique_name_in_owner = true
+title = "Select Weapon Abilities"
+size = Vector2i(420, 320)
+
+[node name="AbilitiesList" type="ItemList" parent="AbilitiesDialog" unique_id=1853002407]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+select_mode = 2
+allow_reselect = true

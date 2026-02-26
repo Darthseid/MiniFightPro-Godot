@@ -1,0 +1,132 @@
+[gd_scene format=3 uid="uid://bflwvm4oq5cav"]
+
+[ext_resource type="Texture2D" uid="uid://c1ix76rwymrvi" path="res://Assets/drawable/Minifightlogo2.png" id="1_8saeu"]
+[ext_resource type="Script" uid="uid://dqk6m7tewq0m7" path="res://GDScripts/Btn_Weapon.gd" id="2_ghw46"]
+[ext_resource type="Script" path="res://GDScripts/Btn_Rules.gd" id="3_df05h"]
+[ext_resource type="Script" uid="uid://dyj8d353ycrn7" path="res://GDScripts/Btn_Model.gd" id="4_b11t0"]
+[ext_resource type="Script" uid="uid://c2u6v01m240wv" path="res://GDScripts/Btn_Squad.gd" id="5_i5ak1"]
+[ext_resource type="Script" uid="uid://h2xxrd8n22wo" path="res://GDScripts/Btn_Start.gd" id="6_p4p8q"]
+[ext_resource type="AudioStream" uid="uid://brtl8cm0wf37o" path="res://Assets/raw/select.mp3" id="7_xim88"]
+[ext_resource type="Script" path="res://GDScripts/AudioOptionsPopup.gd" id="8_audioopts"]
+
+[node name="MainMenu" type="Control" unique_id=1717271632]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ResponsiveLayout" type="BoxContainer" parent="." unique_id=834988191]
+layout_mode = 0
+offset_left = 33.0
+offset_top = 16.0
+offset_right = 1152.0
+offset_bottom = 650.0
+
+[node name="TextureRect" type="TextureRect" parent="ResponsiveLayout" unique_id=2077267309]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("1_8saeu")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ResponsiveLayout" unique_id=71819759]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MenuSound" type="AudioStreamPlayer" parent="ResponsiveLayout/VBoxContainer" unique_id=2145354432]
+stream = ExtResource("7_xim88")
+bus = &"SFX"
+
+[node name="BtnStart" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=893008064]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Start Game"
+script = ExtResource("6_p4p8q")
+
+[node name="BtnWeapon" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=1824228647]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Create Weapon"
+script = ExtResource("2_ghw46")
+
+[node name="BtnModel" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=281472605]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Create Model"
+script = ExtResource("4_b11t0")
+
+[node name="BtnSquad" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=337437817]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Create Squad"
+script = ExtResource("5_i5ak1")
+
+[node name="BtnRules" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=809125656]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Read Rules"
+script = ExtResource("3_df05h")
+
+[node name="BtnOptions" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=601927359]
+layout_mode = 2
+text = "Options"
+
+[node name="OptionsPopup" type="PopupPanel" parent="ResponsiveLayout/VBoxContainer" unique_id=601927360]
+script = ExtResource("8_audioopts")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ResponsiveLayout/VBoxContainer/OptionsPopup" unique_id=601927361]
+custom_minimum_size = Vector2(380, 170)
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 384.0
+offset_bottom = 174.0
+
+[node name="Title" type="Label" parent="ResponsiveLayout/VBoxContainer/OptionsPopup/VBoxContainer" unique_id=601927362]
+layout_mode = 2
+text = "Audio Options"
+horizontal_alignment = 1
+
+[node name="MusicRow" type="HBoxContainer" parent="ResponsiveLayout/VBoxContainer/OptionsPopup/VBoxContainer" unique_id=601927363]
+layout_mode = 2
+
+[node name="MusicLabel" type="Label" parent="ResponsiveLayout/VBoxContainer/OptionsPopup/VBoxContainer/MusicRow" unique_id=601927364]
+layout_mode = 2
+text = "Music"
+
+[node name="MusicSlider" type="HSlider" parent="ResponsiveLayout/VBoxContainer/OptionsPopup/VBoxContainer/MusicRow" unique_id=601927365]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MusicValueLabel" type="Label" parent="ResponsiveLayout/VBoxContainer/OptionsPopup/VBoxContainer/MusicRow" unique_id=601927366]
+unique_name_in_owner = true
+layout_mode = 2
+text = "100%"
+
+[node name="SfxRow" type="HBoxContainer" parent="ResponsiveLayout/VBoxContainer/OptionsPopup/VBoxContainer" unique_id=601927367]
+layout_mode = 2
+
+[node name="SfxLabel" type="Label" parent="ResponsiveLayout/VBoxContainer/OptionsPopup/VBoxContainer/SfxRow" unique_id=601927368]
+layout_mode = 2
+text = "SFX"
+
+[node name="SfxSlider" type="HSlider" parent="ResponsiveLayout/VBoxContainer/OptionsPopup/VBoxContainer/SfxRow" unique_id=601927369]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SfxValueLabel" type="Label" parent="ResponsiveLayout/VBoxContainer/OptionsPopup/VBoxContainer/SfxRow" unique_id=601927370]
+unique_name_in_owner = true
+layout_mode = 2
+text = "100%"
+
+[connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnStart" to="ResponsiveLayout/VBoxContainer/BtnStart" method="_on_pressed"]
+[connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnWeapon" to="ResponsiveLayout/VBoxContainer/BtnWeapon" method="_on_pressed"]
+[connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnModel" to="ResponsiveLayout/VBoxContainer/BtnModel" method="_on_pressed"]
+[connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnSquad" to="ResponsiveLayout/VBoxContainer/BtnSquad" method="_on_pressed"]
+[connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnRules" to="ResponsiveLayout/VBoxContainer/BtnRules" method="_on_pressed"]
+[connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnOptions" to="ResponsiveLayout/VBoxContainer/OptionsPopup" method="OpenPopup"]

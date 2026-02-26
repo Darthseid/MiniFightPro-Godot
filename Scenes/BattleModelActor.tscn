@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://cpv3k70ymjoep"]
+
+[ext_resource type="Script" uid="uid://ihrnfgcj6grl" path="res://C#Scripts/BattleModelActor.cs" id="1_1qf2g"]
+[ext_resource type="Texture2D" uid="uid://brjy7vu4jf116" path="res://Assets/drawable/gunman.png" id="2_s5p5r"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+
+[node name="BattleModelActor" type="Node2D" unique_id=534680604]
+script = ExtResource("1_1qf2g")
+
+[node name="MiniSprite" type="Sprite2D" parent="." unique_id=603757648]
+position = Vector2(628, 278)
+texture = ExtResource("2_s5p5r")
+
+[node name="ClickArea" type="Area2D" parent="." unique_id=866129977]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ClickArea" unique_id=1450219469]
+position = Vector2(607, 288)
+shape = SubResource("CircleShape2D_1")
+
+[node name="HpLabel" type="Label" parent="." unique_id=667806084]
+offset_right = 11.0
+offset_bottom = 26.0
+theme_override_font_sizes/font_size = 18
+text = "0"

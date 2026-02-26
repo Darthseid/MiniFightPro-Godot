@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bifgcab3o8btu"
+path="res://.godot/imported/Cavalry.mp3-380492bd76a19903d4cb9594a59f54f4.mp3str"
+
+[deps]
+
+source_file="res://Unused Assets/Conquest Sounds/Cavalry.mp3"
+dest_files=["res://.godot/imported/Cavalry.mp3-380492bd76a19903d4cb9594a59f54f4.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

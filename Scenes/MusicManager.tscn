@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cnscp16stb6vk"]
+
+[ext_resource type="AudioStream" uid="uid://b5ul4qmyyy2vx" path="res://Assets/raw/marching.mp3" id="1_3kxxr"]
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" unique_id=1170744943]
+stream = ExtResource("1_3kxxr")
+autoplay = true
+bus = &"Music"

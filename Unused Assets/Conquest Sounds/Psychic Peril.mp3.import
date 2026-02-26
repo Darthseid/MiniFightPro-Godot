@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://nxvxrrmd65ar"
+path="res://.godot/imported/Psychic Peril.mp3-9a2d9f2d0325d5c7133327e190b99a76.mp3str"
+
+[deps]
+
+source_file="res://Unused Assets/Conquest Sounds/Psychic Peril.mp3"
+dest_files=["res://.godot/imported/Psychic Peril.mp3-9a2d9f2d0325d5c7133327e190b99a76.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

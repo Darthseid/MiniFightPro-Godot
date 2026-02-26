@@ -1,0 +1,779 @@
+using Godot;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+public partial class Battle : Node2D
+{
+    [Export] public PackedScene BattleFieldScene = GD.Load<PackedScene>("res://Scenes/BattleField.tscn");
+    [Export] public PackedScene BattleHudScene = GD.Load<PackedScene>("res://Scenes/BattleHud.tscn");
+
+    private BattleField _battleField;
+    private BattleHud _battleHud;
+    private readonly RandomNumberGenerator _rng = new RandomNumberGenerator();
+    private Squad _pendingUnitOne;
+    private Squad _pendingUnitTwo;
+    private Squad _teamASquad;
+    private Squad _teamBSquad;
+    private List<BattleModelActor> _teamAActors = new();
+    private List<BattleModelActor> _teamBActors = new();
+    private List<BattleModelActor> _selectedActors = new();
+    private int _selectedTeamId = -1;
+    private MoveVars _teamAMove = new MoveVars(false, false, false);
+    private MoveVars _teamBMove = new MoveVars(false, false, false);
+    private readonly Dictionary<BattleModelActor, Vector2> _movementStartPositions = new();
+    private BattlePhase _currentPhase = BattlePhase.Command;
+    private int _activeTeamId = 1;
+    private int _startingTeamId = 1;
+    private int _currentTurn = 1;
+    private int _round = 1;
+    private float _movementAllowanceInches;
+    private bool _movementIgnoresMaxLimit;
+    private float _movementEnemyBufferInches = 1.05f;
+    private bool _enforceAircraftMinMove;
+    private bool _movementCompletesPhase = true;
+    private bool _movementUpdatesMoveVars = true;
+    private bool _awaitingMovement;
+    private bool _activeSquadChargedThisTurn;
+    private bool _activeSquadMovedAfterShootingThisTurn;
+    private bool _isBattleEnding;
+    private TaskCompletionSource<bool> _movementTcs;
+    private readonly AudioStream _gameOverMusic = GD.Load<AudioStream>("res://Assets/raw/victory.mp3");
+    private CombatSequence _sequence;
+
+    public override void _Ready()
+    {
+        _rng.Randomize();
+        EnsureNodes();
+
+        if (_pendingUnitOne != null && _pendingUnitTwo != null)
+        {
+            _ = InitializeBattleAsync();
+        }
+    }
+    public void SetupSquads(Squad unitOne, Squad unitTwo)
+    {
+        _pendingUnitOne = unitOne;
+        _pendingUnitTwo = unitTwo;
+
+        if (IsInsideTree())
+        {
+            _ = InitializeBattleAsync();
+        }
+    }
+    private void EnsureNodes()
+    {
+        _battleField = GetNodeOrNull<BattleField>("BattleField");
+        _battleHud = GetNodeOrNull<BattleHud>("HudLayer/BattleHud") ?? GetNodeOrNull<BattleHud>("BattleHud");
+
+        if (_battleField == null && BattleFieldScene != null)
+        {
+            _battleField = BattleFieldScene.Instantiate<BattleField>();
+            _battleField.Name = "BattleField";
+            AddChild(_battleField);
+        }
+
+        if (_battleHud == null && BattleHudScene != null)
+        {
+            _battleHud = BattleHudScene.Instantiate<BattleHud>();
+            _battleHud.Name = "BattleHud";
+            var hudLayer = GetNodeOrNull<CanvasLayer>("HudLayer");
+            if (hudLayer != null)
+            {
+                hudLayer.AddChild(_battleHud);
+            }
+            else
+            {
+                AddChild(_battleHud);
+            }
+        }
+
+        if (_battleField != null)
+        {
+            _battleField.DragUpdated -= HandleDragUpdated;
+            _battleField.DragUpdated += HandleDragUpdated;
+            _battleField.DragEnded -= OnDragEnded;
+            _battleField.DragEnded += OnDragEnded;
+        }
+    }
+
+    private async Task InitializeBattleAsync()
+    {
+        EnsureNodes();
+        if (_battleField == null || _battleHud == null)
+        {
+            return;
+        }
+
+        _teamASquad = _pendingUnitOne.DeepCopy();
+        _teamBSquad = _pendingUnitTwo.DeepCopy();
+
+        _battleField.ClearExistingUnits();
+
+        var teamATexture = LoadSquadTexture(_teamASquad, true);
+        var teamBTexture = LoadSquadTexture(_teamBSquad, false);
+        _teamAActors = _battleField.SpawnSquad(_teamASquad, true, teamATexture).ToList();
+        _teamBActors = _battleField.SpawnSquad(_teamBSquad, false, teamBTexture).ToList();
+
+        foreach (var actor in _teamAActors.Concat(_teamBActors))
+        {
+            actor.Selected += HandleActorSelected;
+        }
+
+        _battleHud.UpdateDistanceAndHud(_teamAActors, _teamBActors);
+
+        AudioManager.Instance?.Play("startbattle");
+
+        var firstSquadName = DetermineFirstSquad(_teamASquad, _teamBSquad);
+        _startingTeamId = firstSquadName == _teamASquad.Name ? 1 : 2;
+        _activeTeamId = _startingTeamId;
+        _currentTurn = 1;
+
+        await RunPreGameDeploymentAsync(_activeTeamId);
+
+        _battleHud.ShowToast($"{GetSquadName(_activeTeamId)} acts first", 2f);
+        await DelaySecondsAsync(2f);
+        _battleHud.ShowToast($"{GetSquadName(_activeTeamId == 1 ? 2 : 1)} acts second", 2f);
+        await DelaySecondsAsync(2f);
+
+        AudioManager.Instance?.Play("roundbell");
+        _round = 1;
+        if (GameGlobals.Instance != null)
+        {
+            GameGlobals.Instance.CurrentRound = _round;
+            GameGlobals.Instance.CurrentTurn = _currentTurn;
+            GameGlobals.Instance.CurrentPhase = BattlePhase.Command.ToString();
+        }
+        _sequence = new CombatSequence(this);
+        _sequence.BeginTurn();
+    }
+
+    private Texture2D LoadSquadTexture(Squad squad, bool isTeamA)
+    {
+        var squadTypes = squad.SquadType ?? new List<string>();
+        string texturePath;
+
+        if (isTeamA)
+        {
+            texturePath = squadTypes.Contains("Aircraft") ? "res://Assets/drawable/combatjet.png"
+                : squadTypes.Contains("Titanic") ? "res://Assets/drawable/mecha.png"
+                : squadTypes.Contains("Fortification") || squadTypes.Contains("Building") ? "res://Assets/drawable/fort.png"
+                : squadTypes.Contains("Character") ? "res://Assets/drawable/vip.png"
+                : squadTypes.Contains("Mounted") ? "res://Assets/drawable/biker.png"
+                : squadTypes.Contains("Monster") ? "res://Assets/drawable/monsterbug.png"
+                : squadTypes.Contains("Vehicle") ? "res://Assets/drawable/tank.png"
+                : squadTypes.Contains("Infantry") ? "res://Assets/drawable/gunman.png"
+                : "res://Assets/drawable/red-square.png";
+        }
+        else
+        {
+            texturePath = squadTypes.Contains("Aircraft") ? "res://Assets/drawable/helicopter.png"
+                : squadTypes.Contains("Fortification") || squadTypes.Contains("Building") ? "res://Assets/drawable/fort2.png"
+                : squadTypes.Contains("Character") ? "res://Assets/drawable/vip2.png"
+                : squadTypes.Contains("Mounted") ? "res://Assets/drawable/dinorider.png"
+                : squadTypes.Contains("Monster") ? "res://Assets/drawable/monsterspike.png"
+                : squadTypes.Contains("Vehicle") ? "res://Assets/drawable/tank2.png"
+                : squadTypes.Contains("Infantry") ? "res://Assets/drawable/gunman2.png"
+                : "res://Assets/drawable/red-circle.svg";
+        }
+
+        return GD.Load<Texture2D>(texturePath);
+    }
+
+    private void HandleActorSelected(BattleModelActor actor, Vector2 pointerGlobal)
+    {
+        PruneDisposedActors("HandleActorSelected");
+        if (_awaitingMovement)
+        {
+            ShapeHelpers.SetSelectableVisuals(GetActiveActors(), false);
+        }
+        var selection = ShapeHelpers.OnActorSelected(
+            actor,
+            pointerGlobal,
+            _currentPhase,
+            _awaitingMovement,
+            _activeTeamId,
+            _selectedTeamId,
+            _selectedActors,
+            _teamAActors,
+            _teamBActors,
+            _battleField,
+            _movementIgnoresMaxLimit ? -1f : _movementAllowanceInches,
+            _movementEnemyBufferInches
+        );
+        _selectedTeamId = selection.SelectedTeamId;
+        _selectedActors = selection.SelectedActors;
+    }
+
+    private void HandleDragUpdated()
+    {
+        PruneDisposedActors("HandleDragUpdated");
+        ShapeHelpers.OnDragUpdated(_battleHud, _teamAActors, _teamBActors);
+    }
+
+    private void OnDragEnded()
+    {
+        FaceMovedSquadAfterDrag();
+
+        if (_currentPhase == BattlePhase.Movement && _awaitingMovement)
+        {
+            _awaitingMovement = false;
+            FinishMovementPhase(true);
+            _movementTcs?.TrySetResult(true);
+        }
+
+        if (_selectedActors.Count > 0)
+        {
+            ShapeHelpers.SetSelectableVisuals(_selectedActors, false);
+        }
+
+        HandleDragUpdated();
+    }
+
+    private void FaceMovedSquadAfterDrag()
+    {
+        foreach (var actor in GetActiveActors())
+        {
+            if (actor == null || !_movementStartPositions.TryGetValue(actor, out var startPos))
+            {
+                continue;
+            }
+
+            var delta = actor.GlobalPosition - startPos;
+            if (delta.LengthSquared() <= 0.01f)
+            {
+                continue;
+            }
+
+            BoardGeometry.FaceDelta(actor, delta);
+        }
+    }
+
+    private async Task RunPreGameDeploymentAsync(int firstDeploymentTeamId)
+    {
+        if (_battleHud == null)
+        {
+            return;
+        }
+
+        var secondDeploymentTeamId = firstDeploymentTeamId == 1 ? 2 : 1;
+        _battleHud.ShowToast("Pre-game Deployment", 4f);
+        await RunDeploymentForTeamAsync(firstDeploymentTeamId);
+        _battleHud.ShowToast("Pre-game Deployment", 4f);
+        await RunDeploymentForTeamAsync(secondDeploymentTeamId);
+    }
+
+    private async Task RunDeploymentForTeamAsync(int teamId)
+    {
+        _activeTeamId = teamId;
+        EnterPhase(BattlePhase.Movement, announce: false);
+        await MovingStuff(
+            movementAllowanceInches: 100f,
+            ignoreMaxDistance: true,
+            enemyBufferInches: 9.05f,
+            enforceAircraftMinMove: false,
+            completesPhase: false,
+            updateMoveVars: false,
+            prompt: string.Empty,
+            autoMove: true
+        );
+
+        _battleHud?.UpdateDistanceAndHud(_teamAActors, _teamBActors);
+    }
+
+    internal async Task EnterPhaseWithCadenceAsync(BattlePhase phase, string? overrideToast = null)
+    {
+        EnterPhase(phase, announce: false);
+        var toast = overrideToast ?? $"{phase.ToString().ToUpper()} PHASE";
+        _battleHud?.ShowToast(toast, 2f);
+        await DelaySecondsAsync(2f);
+    }
+
+
+    private static bool IsActorLive(BattleModelActor actor)
+    {
+        return actor != null && GodotObject.IsInstanceValid(actor) && actor.IsInsideTree() && actor.BoundModel != null;
+    }
+
+    internal void PruneDisposedActors(string context)
+    {
+        var removedA = _teamAActors.RemoveAll(actor => !IsActorLive(actor));
+        var removedB = _teamBActors.RemoveAll(actor => !IsActorLive(actor));
+        _selectedActors.RemoveAll(actor => !IsActorLive(actor));
+
+        if (removedA > 0 || removedB > 0)
+        {
+            GD.PushWarning($"[Battle] Removed stale actor references during {context}. TeamA removed: {removedA}, TeamB removed: {removedB}.");
+        }
+    }
+
+    internal async Task DelaySecondsAsync(float seconds)
+    {
+        await ToSignal(GetTree().CreateTimer(seconds), Timer.SignalName.Timeout);
+    }
+
+    internal string GetSquadName(int teamId)
+    {
+        var squad = CombatHelpers.GetActiveSquad(teamId, _teamASquad, _teamBSquad);
+        return squad?.Name ?? $"Team {teamId}";
+    }
+
+    private string DetermineFirstSquad(Squad teamA, Squad teamB)
+    {
+        return _rng.RandiRange(0, 1) == 0 ? teamA.Name : teamB.Name;
+    }
+
+    internal void CheckVictory()
+    {
+        PruneDisposedActors("CheckVictory");
+        if (_isBattleEnding)
+        {
+            return;
+        }
+
+        if (_teamAActors.Count == 0 || _teamASquad.Composition.Count == 0)
+        {
+            _ = EndBattleAsync(_teamBSquad);
+        }
+        else if (_teamBActors.Count == 0 || _teamBSquad.Composition.Count == 0)
+        {
+            _ = EndBattleAsync(_teamASquad);
+        }
+    }
+
+    private async Task EndBattleAsync(Squad winner)
+    {
+        if (_isBattleEnding)
+        {
+            return;
+        }
+
+        _isBattleEnding = true;
+        EnterPhase(BattlePhase.BattleOver, announce: false);
+        _awaitingMovement = false;
+        _movementTcs?.TrySetResult(true);
+        SyncGlobalTurnRound();
+
+        _battleHud?.SetDistanceUnavailable();
+        _battleHud?.ShowGameOverBanner($"Game Over. {winner.Name} Wins!");
+
+        var musicManager = GetNodeOrNull<AudioStreamPlayer>("/root/Musicmanager");
+        musicManager?.Stop();
+
+        var gameOverPlayer = new AudioStreamPlayer
+        {
+            Bus = "Music",
+            Stream = _gameOverMusic
+        };
+        AddChild(gameOverPlayer);
+        gameOverPlayer.Play();
+        await DelaySecondsAsync(14f);
+        gameOverPlayer.Stop();
+        gameOverPlayer.QueueFree();
+       
+        _battleHud?.HideGameOverBanner();
+        musicManager?.Play();
+        GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+        QueueFree();  // Ensure the banner is removed before changing scene back to main menu
+    }
+
+
+    internal void EnterPhase(BattlePhase phase, bool announce = true)
+    {
+        _currentPhase = phase;
+        if (GameGlobals.Instance != null)
+        {
+            GameGlobals.Instance.CurrentPhase = phase.ToString();
+        }
+
+        if (announce)
+        {
+            _battleHud?.ShowToast($"Phase: {phase}");
+        }
+    }
+
+    internal void SyncGlobalTurnRound()
+    {
+        if (GameGlobals.Instance == null)
+        {
+            return;
+        }
+
+        GameGlobals.Instance.CurrentRound = _round;
+        GameGlobals.Instance.CurrentTurn = _currentTurn;
+        GameGlobals.Instance.CurrentPhase = _currentPhase.ToString();
+    }
+
+    internal void AnnounceTurnStart()
+    {
+        var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
+        var squadName = activeSquad?.Name ?? $"Team {_activeTeamId}";
+        _battleHud?.ShowToast($"Round {_round} - Turn {_currentTurn}: ({squadName}).", 2f);
+    }
+
+
+    internal List<BattleModelActor> GetActorsForSquad(Squad squad)
+    {
+        PruneDisposedActors("GetActorsForSquad");
+        if (ReferenceEquals(squad, _teamASquad))
+        {
+            return _teamAActors;
+        }
+
+        if (ReferenceEquals(squad, _teamBSquad))
+        {
+            return _teamBActors;
+        }
+
+        return new List<BattleModelActor>();
+    }
+
+    internal List<BattleModelActor> GetOpposingActorsForSquad(Squad squad)
+    {
+        PruneDisposedActors("GetOpposingActorsForSquad");
+        if (ReferenceEquals(squad, _teamASquad))
+        {
+            return _teamBActors;
+        }
+
+        if (ReferenceEquals(squad, _teamBSquad))
+        {
+            return _teamAActors;
+        }
+
+        return new List<BattleModelActor>();
+    }
+
+    internal List<BattleModelActor> GetActiveActors()
+    {
+        PruneDisposedActors("GetActiveActors");
+        return _activeTeamId == 1 ? _teamAActors : _teamBActors;
+    }
+
+    internal List<BattleModelActor> GetInactiveActors()
+    {
+        PruneDisposedActors("GetInactiveActors");
+        return _activeTeamId == 1 ? _teamBActors : _teamAActors;
+    }
+
+
+    internal void PrepareMovementStartPositions(float movementAllowanceInches, bool ignoreMaxDistance, float enemyBufferInches, bool enforceAircraftMinMove)
+    {
+        _movementStartPositions.Clear();
+        foreach (var actor in GetActiveActors())
+        {
+            _movementStartPositions[actor] = actor.GlobalPosition;
+        }
+
+        _movementAllowanceInches = movementAllowanceInches;
+        _movementIgnoresMaxLimit = ignoreMaxDistance;
+        _movementEnemyBufferInches = enemyBufferInches;
+        _enforceAircraftMinMove = enforceAircraftMinMove;
+    }
+
+    internal MoveVars FinishMovementPhase(bool didAttemptMove)
+    {
+        ShapeHelpers.SetSelectableVisuals(GetActiveActors(), false);
+        var activeActors = GetActiveActors();
+        var maxMoved = 0f;
+        foreach (var actor in activeActors)
+        {
+            if (_movementStartPositions.TryGetValue(actor, out var startPos))
+            {
+                maxMoved = Mathf.Max(maxMoved, actor.GlobalPosition.DistanceTo(startPos));
+            }
+        }
+
+        var didMove = didAttemptMove && maxMoved > 0.1f;
+        if (didMove)
+        {
+            var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
+            var moveSound = activeSquad?.SquadType.Contains("Mounted") == true ? "motorcycle" : "moved";
+            AudioManager.Instance?.Play(moveSound);
+        }
+        if (_enforceAircraftMinMove)
+        {
+            if (maxMoved < 20f * GameGlobals.Instance.FakeInchPx)
+            {
+                foreach (var actor in activeActors)
+                {
+                    if (_movementStartPositions.TryGetValue(actor, out var startPos))
+                    {
+                        actor.GlobalPosition = startPos;
+                    }
+                }
+
+                didMove = false;
+                _battleHud?.ShowToast($"Aircraft must move at least 20\" ({maxMoved / GameGlobals.Instance.FakeInchPx:0.0}\").");
+            }
+        }
+
+        var moveVars = CombatHelpers.GetActiveMoveVars(_activeTeamId, _teamAMove, _teamBMove);
+        if (_movementUpdatesMoveVars)
+        {
+            moveVars.Move = didMove;
+        }
+
+        _battleHud?.UpdateDistanceAndHud(_teamAActors, _teamBActors);
+
+
+        return moveVars;
+    }
+
+    internal async Task<MoveVars> MovingStuff(
+        float movementAllowanceInches,
+        bool ignoreMaxDistance,
+        float enemyBufferInches,
+        bool enforceAircraftMinMove,
+        bool completesPhase,
+        bool updateMoveVars,
+        string prompt,
+        bool autoMove)
+    {
+        if (_battleHud == null)
+        {
+            return CombatHelpers.GetActiveMoveVars(_activeTeamId, _teamAMove, _teamBMove);
+        }
+
+        PrepareMovementStartPositions(movementAllowanceInches, ignoreMaxDistance, enemyBufferInches, enforceAircraftMinMove);
+        _movementCompletesPhase = completesPhase;
+        _movementUpdatesMoveVars = updateMoveVars;
+
+        var wantsMove = autoMove;
+        if (!autoMove)
+        {
+            wantsMove = await _battleHud.ConfirmActionAsync(prompt);
+        }
+
+        if (!wantsMove)
+        {
+            return FinishMovementPhase(false);
+        }
+
+        _awaitingMovement = true;
+        ShapeHelpers.SetSelectableVisuals(GetActiveActors(), true);
+        _movementTcs = new TaskCompletionSource<bool>();
+        _battleHud.ShowToast("Drag your squad to move.");
+        await _movementTcs.Task;
+        return CombatHelpers.GetActiveMoveVars(_activeTeamId, _teamAMove, _teamBMove);
+    }
+
+
+    internal void HandleExplosionProcess(Squad explodedSquad, Squad enemySquad, int demiseCheck)
+    {
+        if (explodedSquad == null || enemySquad == null || demiseCheck <= 0 ||
+            explodedSquad.SquadAbilities.All(ability => ability.Innate != "Explodes"))
+        {
+            return;
+        }
+
+        var manyExplosions = 0;
+        for (int i = 0; i < demiseCheck; i++)
+        {
+            if (DiceHelpers.SimpleRoll(6) == 1)
+            {
+                manyExplosions++;
+            }
+        }
+
+        if (manyExplosions <= 0)
+        {
+            return;
+        }
+
+        const int safetyLimit = 10;
+        var processedExplosions = 0;
+
+        while (manyExplosions > 0 && processedExplosions < safetyLimit)
+        {
+            var explodeDamage = explodedSquad.SquadAbilities.FirstOrDefault(ability => ability.Innate == "Explodes")?.Modifier ?? 1;
+            AudioManager.Instance?.Play("explodes");
+            var blastDamage = explodeDamage * manyExplosions;
+
+            CurrentBattleDistance = BoardGeometry.ClosestDistanceInches(GetActorsForSquad(explodedSquad), GetActorsForSquad(enemySquad));
+            if (CurrentBattleDistance <= 6f)
+            {
+                CombatRolls.AllocatePure(blastDamage, enemySquad);
+                foreach (var enemyActor in GetActorsForSquad(enemySquad))
+                {
+                    enemyActor.RefreshHp();
+                }
+            }
+
+            var newExplosions = CombatRolls.AllocatePure(blastDamage, explodedSquad);
+            foreach (var explodedActor in GetActorsForSquad(explodedSquad))
+            {
+                explodedActor.RefreshHp();
+            }
+
+            manyExplosions = 0;
+            for (int i = 0; i < newExplosions; i++)
+            {
+                if (DiceHelpers.SimpleRoll(6) == 1)
+                {
+                    manyExplosions++;
+                }
+            }
+
+            processedExplosions++;
+        }
+
+        CombatEngine.RemoveDeadModels(GetActorsForSquad(explodedSquad), explodedSquad);
+        CombatEngine.RemoveDeadModels(GetActorsForSquad(enemySquad), enemySquad);
+        _battleHud?.UpdateDistanceAndHud(_teamAActors, _teamBActors);
+        CheckVictory();
+    }
+
+    internal async Task ResolveShootingPhase()
+    {
+        var attackers = GetActiveActors().ToList();
+        var defenders = GetInactiveActors();
+        if (attackers.Count == 0 || defenders.Count == 0)
+        {
+            return;
+        }
+
+        var attacker = attackers.FirstOrDefault(actor => actor != null && actor.BoundModel != null && actor.BoundModel.Health > 0);
+        if (attacker == null)
+        {
+            return;
+        }
+
+        var target = BoardGeometry.GetClosestEnemy(attacker, defenders);
+        if (target == null)
+        {
+            return;
+        }
+
+        BoardGeometry.FaceGroupTowardsEnemies(attackers, defenders);
+        await CombatEngine.ResolveBatchedAttack(
+            attacker,
+            target,
+            false,
+            _teamASquad,
+            _teamBSquad,
+            _teamAActors,
+            _teamBActors,
+            _teamAMove,
+            _teamBMove,
+            _battleHud,
+            _battleField,
+            CheckVictory,
+            HandleExplosionProcess
+        );
+    }
+
+    internal async Task ResolveFightPhase()
+    {
+        var attackers = GetActiveActors().ToList();
+        var defenders = GetInactiveActors();
+        if (attackers.Count == 0 || defenders.Count == 0)
+        {
+            return;
+        }
+
+        var attacker = attackers.FirstOrDefault(actor => actor != null && actor.BoundModel != null && actor.BoundModel.Health > 0);
+        if (attacker == null)
+        {
+            return;
+        }
+
+        var target = BoardGeometry.GetClosestEnemy(attacker, defenders);
+        if (target == null)
+        {
+            return;
+        }
+
+        BoardGeometry.FaceGroupTowardsEnemies(attackers, defenders);
+        await CombatEngine.ResolveBatchedAttack(
+            attacker,
+            target,
+            true,
+            _teamASquad,
+            _teamBSquad,
+            _teamAActors,
+            _teamBActors,
+            _teamAMove,
+            _teamBMove,
+            _battleHud,
+            _battleField,
+            CheckVictory,
+            HandleExplosionProcess
+        );
+    }
+
+
+
+    internal float CurrentBattleDistance
+    {
+        get => GameGlobals.Instance?.CurrentBattleDistance ?? 0f;
+        set
+        {
+            if (GameGlobals.Instance != null)
+            {
+                GameGlobals.Instance.CurrentBattleDistance = value;
+            }
+        }
+    }
+
+    internal BattleHud Hud => _battleHud;
+    internal BattleField Field => _battleField;
+    internal int ActiveTeamId { get => _activeTeamId; set => _activeTeamId = value; }
+    internal int StartingTeamId => _startingTeamId;
+    internal int CurrentTurn { get => _currentTurn; set => _currentTurn = value; }
+    internal int Round { get => _round; set => _round = value; }
+    internal BattlePhase CurrentPhase { get => _currentPhase; set => _currentPhase = value; }
+    internal Squad TeamASquad => _teamASquad;
+    internal Squad TeamBSquad => _teamBSquad;
+    internal MoveVars TeamAMove { get => _teamAMove; set => _teamAMove = value; }
+    internal MoveVars TeamBMove { get => _teamBMove; set => _teamBMove = value; }
+    internal bool ActiveSquadChargedThisTurn { get => _activeSquadChargedThisTurn; set => _activeSquadChargedThisTurn = value; }
+    internal bool ActiveSquadMovedAfterShootingThisTurn { get => _activeSquadMovedAfterShootingThisTurn; set => _activeSquadMovedAfterShootingThisTurn = value; }
+    internal bool IsBattleEnding => _isBattleEnding;
+    internal List<BattleModelActor> TeamAActors => _teamAActors;
+    internal List<BattleModelActor> TeamBActors => _teamBActors;
+
+    internal void ResetMoveVarsForActiveTeam()
+    {
+        if (_activeTeamId == 1)
+        {
+            _teamAMove = new MoveVars(false, false, false);
+        }
+        else
+        {
+            _teamBMove = new MoveVars(false, false, false);
+        }
+    }
+
+    internal void ApplyRout(Squad squad)
+    {
+        var actors = GetActorsForSquad(squad);
+        var toRemove = actors
+            .Where(actor => actor?.BoundModel != null && DiceHelpers.SimpleRoll(6) < 3)
+            .ToList();
+
+        foreach (var actor in toRemove)
+        {
+            squad.Composition.Remove(actor.BoundModel);
+            actors.Remove(actor);
+            _battleField?.UnregisterActor(actor);
+            actor.QueueFree();
+            AudioManager.Instance?.Play("punch");
+        }
+
+        _battleHud?.UpdateDistanceAndHud(_teamAActors, _teamBActors);
+        CheckVictory();
+    }
+
+    internal int GetTeamIdForSquad(Squad squad)
+    {
+        return ReferenceEquals(squad, _teamASquad) ? 1 : 2;
+    }
+
+    internal void EndTurnAndQueueNext()
+    {
+        _sequence?.BeginTurn();
+    }
+
+}

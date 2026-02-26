@@ -1,0 +1,259 @@
+[gd_scene format=3 uid="uid://c6tcf5sj2ap3g"]
+
+[ext_resource type="Script" uid="uid://btqqf7cqgnhfl" path="res://C#Scripts/BattleField.cs" id="1_6m6d7"]
+[ext_resource type="Script" uid="uid://drsfnyord8sq4" path="res://C#Scripts/AudioManager.cs" id="2_audio"]
+[ext_resource type="AudioStream" uid="uid://cqx7br5elqfik" path="res://Assets/raw/battle_cry.mp3" id="3_10"]
+[ext_resource type="AudioStream" uid="uid://cxnvmcgmb2jt5" path="res://Assets/raw/bugle.mp3" id="3_11"]
+[ext_resource type="AudioStream" uid="uid://uf1ekry1wepk" path="res://Assets/raw/cannon.mp3" id="3_12"]
+[ext_resource type="AudioStream" uid="uid://bdnwkeqmtxiuk" path="res://Assets/raw/charge.mp3" id="3_13"]
+[ext_resource type="AudioStream" uid="uid://cl4fjx2dlhlsl" path="res://Assets/raw/chomp.mp3" id="3_14"]
+[ext_resource type="AudioStream" uid="uid://c6poua1femivl" path="res://Assets/raw/critical.mp3" id="3_15"]
+[ext_resource type="AudioStream" uid="uid://b6vqcfop5paad" path="res://Assets/raw/defensepassed.mp3" id="3_16"]
+[ext_resource type="AudioStream" uid="uid://bg6g6cx1qyib2" path="res://Assets/raw/demonlaugh.mp3" id="3_17"]
+[ext_resource type="AudioStream" uid="uid://b444xvw532irb" path="res://Assets/raw/driving.mp3" id="3_18"]
+[ext_resource type="AudioStream" uid="uid://bn65m78j2c35m" path="res://Assets/raw/energy.mp3" id="3_19"]
+[ext_resource type="AudioStream" uid="uid://d23ocbsrhb0ex" path="res://Assets/raw/explodes.mp3" id="3_20"]
+[ext_resource type="AudioStream" uid="uid://u02eu62ia4r2" path="res://Assets/raw/failedbravery.mp3" id="3_21"]
+[ext_resource type="AudioStream" uid="uid://lfqobxnvkoum" path="res://Assets/raw/failedcharge.mp3" id="3_22"]
+[ext_resource type="AudioStream" uid="uid://c44xjvrd4wp2h" path="res://Assets/raw/goodcharge.mp3" id="3_23"]
+[ext_resource type="AudioStream" uid="uid://cg23t5qcmsgvi" path="res://Assets/raw/grenade.mp3" id="3_24"]
+[ext_resource type="AudioStream" uid="uid://c45btiy81by71" path="res://Assets/raw/helicopter.mp3" id="3_25"]
+[ext_resource type="AudioStream" uid="uid://dhf7i02qcw0rk" path="res://Assets/raw/jetfly.mp3" id="3_26"]
+[ext_resource type="AudioStream" uid="uid://bmxlcct13duqu" path="res://Assets/raw/meleehit.mp3" id="3_27"]
+[ext_resource type="AudioStream" uid="uid://dhpym6bvsnpff" path="res://Assets/raw/meleemiss.mp3" id="3_28"]
+[ext_resource type="AudioStream" uid="uid://ouygxbbflh0k" path="res://Assets/raw/minigun.mp3" id="3_29"]
+[ext_resource type="AudioStream" uid="uid://cxvlbghjv13kv" path="res://Assets/raw/mortar.mp3" id="3_30"]
+[ext_resource type="AudioStream" uid="uid://chfkbv2wi6obr" path="res://Assets/raw/motorcycle.mp3" id="3_31"]
+[ext_resource type="AudioStream" uid="uid://ci1fr33054fc5" path="res://Assets/raw/moved.mp3" id="3_32"]
+[ext_resource type="AudioStream" uid="uid://drn8nsvmcty7d" path="res://Assets/raw/perilous.mp3" id="3_33"]
+[ext_resource type="AudioStream" uid="uid://uqi6ov5llvpr" path="res://Assets/raw/plasmablade.mp3" id="3_34"]
+[ext_resource type="AudioStream" uid="uid://13phw6814h4l" path="res://Assets/raw/punch.mp3" id="3_35"]
+[ext_resource type="AudioStream" uid="uid://djtl1ub6bwfkt" path="res://Assets/raw/rangedmiss.mp3" id="3_36"]
+[ext_resource type="AudioStream" uid="uid://s5j81p3l8rby" path="res://Assets/raw/resurrection.mp3" id="3_37"]
+[ext_resource type="AudioStream" uid="uid://bjixvp5wrwtx1" path="res://Assets/raw/rifleshot.mp3" id="3_38"]
+[ext_resource type="AudioStream" uid="uid://dwr2mfgv4h47" path="res://Assets/raw/rocketlauncher.mp3" id="3_39"]
+[ext_resource type="AudioStream" uid="uid://du8nhbxtb0bvb" path="res://Assets/raw/roundbell.mp3" id="3_40"]
+[ext_resource type="AudioStream" uid="uid://cxp0wlyhe5fs2" path="res://Assets/raw/running.mp3" id="3_41"]
+[ext_resource type="AudioStream" uid="uid://dxlbudf53a062" path="res://Assets/raw/screech.mp3" id="3_42"]
+[ext_resource type="AudioStream" uid="uid://brtl8cm0wf37o" path="res://Assets/raw/select.mp3" id="3_43"]
+[ext_resource type="AudioStream" uid="uid://bskd707puomkq" path="res://Assets/raw/stance.mp3" id="3_44"]
+[ext_resource type="AudioStream" uid="uid://ceenuvucj7gkr" path="res://Assets/raw/startbattle.mp3" id="3_45"]
+[ext_resource type="AudioStream" uid="uid://bp1340dmb1puo" path="res://Assets/raw/startfight.mp3" id="3_46"]
+[ext_resource type="AudioStream" uid="uid://cwneyuf0ns8aw" path="res://Assets/raw/startmovement.mp3" id="3_47"]
+[ext_resource type="AudioStream" uid="uid://bvlcd4tmby4bm" path="res://Assets/raw/startpsychic.mp3" id="3_48"]
+[ext_resource type="AudioStream" uid="uid://ejd35x0eggfd" path="res://Assets/raw/startshooting.mp3" id="3_49"]
+[ext_resource type="AudioStream" uid="uid://bcaqfsqonnb13" path="res://Assets/raw/stratagem.mp3" id="3_50"]
+[ext_resource type="AudioStream" uid="uid://c8ar84a5glqvi" path="res://Assets/raw/subroutine.mp3" id="3_51"]
+[ext_resource type="AudioStream" uid="uid://i1dra1s31etc" path="res://Assets/raw/swordinjury.mp3" id="3_52"]
+[ext_resource type="AudioStream" uid="uid://cnlnuxyrg2hwy" path="res://Assets/raw/tankmovement.mp3" id="3_53"]
+[ext_resource type="AudioStream" uid="uid://cn3k42q71p5gf" path="res://Assets/raw/turnover.mp3" id="3_54"]
+[ext_resource type="AudioStream" uid="uid://dy887svgqxb60" path="res://Assets/raw/victory.mp3" id="3_55"]
+[ext_resource type="AudioStream" uid="uid://c4qs8m6hagw45" path="res://Assets/raw/wilhelm_scream.ogg" id="3_56"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wx2gs"]
+load_path = "res://.godot/imported/battlebackground.jpg-6866cf063b553bdf60aa92fea124be47.ctex"
+
+[node name="BattleField" type="Node2D" unique_id=1479842921]
+script = ExtResource("1_6m6d7")
+
+[node name="BattleBackground" type="Sprite2D" parent="." unique_id=1468298049]
+z_index = -50
+position = Vector2(197, 6)
+texture = SubResource("CompressedTexture2D_wx2gs")
+
+[node name="UnitsTeamA" type="Node2D" parent="." unique_id=1434351887]
+
+[node name="UnitsTeamB" type="Node2D" parent="." unique_id=1407114455]
+
+[node name="AudioManager" type="Node" parent="." unique_id=1447000001]
+script = ExtResource("2_audio")
+
+[node name="SfxPlayers" type="Node" parent="." unique_id=1447000002]
+
+[node name="battle_cry" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001010]
+stream = ExtResource("3_10")
+bus = &"SFX"
+
+[node name="bugle" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001011]
+stream = ExtResource("3_11")
+bus = &"SFX"
+
+[node name="cannon" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001012]
+stream = ExtResource("3_12")
+bus = &"SFX"
+
+[node name="charge" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001013]
+stream = ExtResource("3_13")
+bus = &"SFX"
+
+[node name="chomp" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001014]
+stream = ExtResource("3_14")
+bus = &"SFX"
+
+[node name="critical" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001015]
+stream = ExtResource("3_15")
+bus = &"SFX"
+
+[node name="defensepassed" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001016]
+stream = ExtResource("3_16")
+bus = &"SFX"
+
+[node name="demonlaugh" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001017]
+stream = ExtResource("3_17")
+bus = &"SFX"
+
+[node name="driving" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001018]
+stream = ExtResource("3_18")
+bus = &"SFX"
+
+[node name="energy" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001019]
+stream = ExtResource("3_19")
+bus = &"SFX"
+
+[node name="explodes" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001020]
+stream = ExtResource("3_20")
+bus = &"SFX"
+
+[node name="failedbravery" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001021]
+stream = ExtResource("3_21")
+bus = &"SFX"
+
+[node name="failedcharge" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001022]
+stream = ExtResource("3_22")
+bus = &"SFX"
+
+[node name="goodcharge" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001023]
+stream = ExtResource("3_23")
+bus = &"SFX"
+
+[node name="grenade" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001024]
+stream = ExtResource("3_24")
+bus = &"SFX"
+
+[node name="helicopter" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001025]
+stream = ExtResource("3_25")
+bus = &"SFX"
+
+[node name="jetfly" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001026]
+stream = ExtResource("3_26")
+bus = &"SFX"
+
+[node name="meleehit" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001027]
+stream = ExtResource("3_27")
+bus = &"SFX"
+
+[node name="meleemiss" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001028]
+stream = ExtResource("3_28")
+bus = &"SFX"
+
+[node name="minigun" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001029]
+stream = ExtResource("3_29")
+bus = &"SFX"
+
+[node name="mortar" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001030]
+stream = ExtResource("3_30")
+bus = &"SFX"
+
+[node name="motorcycle" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001031]
+stream = ExtResource("3_31")
+bus = &"SFX"
+
+[node name="moved" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001032]
+stream = ExtResource("3_32")
+bus = &"SFX"
+
+[node name="perilous" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001033]
+stream = ExtResource("3_33")
+bus = &"SFX"
+
+[node name="plasmablade" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001034]
+stream = ExtResource("3_34")
+bus = &"SFX"
+
+[node name="punch" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001035]
+stream = ExtResource("3_35")
+bus = &"SFX"
+
+[node name="rangedmiss" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001036]
+stream = ExtResource("3_36")
+bus = &"SFX"
+
+[node name="resurrection" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001037]
+stream = ExtResource("3_37")
+bus = &"SFX"
+
+[node name="rifleshot" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001038]
+stream = ExtResource("3_38")
+bus = &"SFX"
+
+[node name="rocketlauncher" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001039]
+stream = ExtResource("3_39")
+bus = &"SFX"
+
+[node name="roundbell" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001040]
+stream = ExtResource("3_40")
+bus = &"SFX"
+
+[node name="running" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001041]
+stream = ExtResource("3_41")
+bus = &"SFX"
+
+[node name="screech" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001042]
+stream = ExtResource("3_42")
+bus = &"SFX"
+
+[node name="select" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001043]
+stream = ExtResource("3_43")
+bus = &"SFX"
+
+[node name="stance" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001044]
+stream = ExtResource("3_44")
+bus = &"SFX"
+
+[node name="startbattle" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001045]
+stream = ExtResource("3_45")
+bus = &"SFX"
+
+[node name="startfight" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001046]
+stream = ExtResource("3_46")
+bus = &"SFX"
+
+[node name="startmovement" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001047]
+stream = ExtResource("3_47")
+bus = &"SFX"
+
+[node name="startpsychic" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001048]
+stream = ExtResource("3_48")
+bus = &"SFX"
+
+[node name="startshooting" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001049]
+stream = ExtResource("3_49")
+bus = &"SFX"
+
+[node name="stratagem" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001050]
+stream = ExtResource("3_50")
+bus = &"SFX"
+
+[node name="subroutine" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001051]
+stream = ExtResource("3_51")
+bus = &"SFX"
+
+[node name="swordinjury" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001052]
+stream = ExtResource("3_52")
+bus = &"SFX"
+
+[node name="tankmovement" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001053]
+stream = ExtResource("3_53")
+bus = &"SFX"
+
+[node name="turnover" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001054]
+stream = ExtResource("3_54")
+bus = &"SFX"
+
+[node name="victory" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001055]
+stream = ExtResource("3_55")
+bus = &"Music"
+
+[node name="wilhelm_scream" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001056]
+stream = ExtResource("3_56")
+bus = &"SFX"

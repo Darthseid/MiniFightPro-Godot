@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://oncgiqs80fnl"
+path="res://.godot/imported/Cannon.mp3-22065aa695f9652a8942bb1c9d26a0ef.mp3str"
+
+[deps]
+
+source_file="res://Unused Assets/Conquest Sounds/Cannon.mp3"
+dest_files=["res://.godot/imported/Cannon.mp3-22065aa695f9652a8942bb1c9d26a0ef.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

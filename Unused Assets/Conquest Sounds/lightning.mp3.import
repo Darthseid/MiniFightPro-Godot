@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://t4unxgndme4i"
+path="res://.godot/imported/lightning.mp3-a920662644be83b8a39e98d8a73fdb9c.mp3str"
+
+[deps]
+
+source_file="res://Unused Assets/Conquest Sounds/lightning.mp3"
+dest_files=["res://.godot/imported/lightning.mp3-a920662644be83b8a39e98d8a73fdb9c.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

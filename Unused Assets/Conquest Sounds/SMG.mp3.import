@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dt7l5d1ys61y"
+path="res://.godot/imported/SMG.mp3-0707a1622887c968d05fb6ab86dabdc3.mp3str"
+
+[deps]
+
+source_file="res://Unused Assets/Conquest Sounds/SMG.mp3"
+dest_files=["res://.godot/imported/SMG.mp3-0707a1622887c968d05fb6ab86dabdc3.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

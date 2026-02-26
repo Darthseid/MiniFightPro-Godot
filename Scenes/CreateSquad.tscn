@@ -1,0 +1,210 @@
+[gd_scene format=3 uid="uid://cl0qj4m2k7k51"]
+
+[ext_resource type="Script" path="res://C#Scripts/CreateSquad.cs" id="1_9sbl4"]
+
+[node name="CreateSquad" type="Control" unique_id=1577653538]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_9sbl4")
+
+[node name="Panel" type="Panel" parent="." unique_id=803086072]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=777464117]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainContainer" type="VBoxContainer" parent="ScrollContainer" unique_id=1999258281]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleLabel" type="Label" parent="ScrollContainer/MainContainer" unique_id=1427342930]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Create Squad"
+
+[node name="Label_Name" type="Label" parent="ScrollContainer/MainContainer" unique_id=1776121246]
+layout_mode = 2
+text = "Squad Name"
+
+[node name="UnitNameInput" type="LineEdit" parent="ScrollContainer/MainContainer" unique_id=959859824]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BtnSquadTypes" type="Button" parent="ScrollContainer/MainContainer" unique_id=1214108531]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select Squad Types"
+
+[node name="SquadTypeLabel" type="Label" parent="ScrollContainer/MainContainer" unique_id=1980372881]
+unique_name_in_owner = true
+layout_mode = 2
+text = "No squad types selected."
+
+[node name="Label_Movement" type="Label" parent="ScrollContainer/MainContainer" unique_id=751580751]
+layout_mode = 2
+text = "Movement"
+
+[node name="MovementInput" type="SpinBox" parent="ScrollContainer/MainContainer" unique_id=2065504957]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 99.0
+step = 0.1
+
+[node name="Label_Hardness" type="Label" parent="ScrollContainer/MainContainer" unique_id=1780248070]
+layout_mode = 2
+text = "Hardness"
+
+[node name="HardnessInput" type="SpinBox" parent="ScrollContainer/MainContainer" unique_id=515261142]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 99.0
+step = 1.0
+
+[node name="Label_Defense" type="Label" parent="ScrollContainer/MainContainer" unique_id=1990722276]
+layout_mode = 2
+text = "Defense"
+
+[node name="DefenseInput" type="SpinBox" parent="ScrollContainer/MainContainer" unique_id=901488675]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 99.0
+step = 1.0
+
+[node name="Label_Dodge" type="Label" parent="ScrollContainer/MainContainer" unique_id=1940245956]
+layout_mode = 2
+text = "Dodge"
+
+[node name="DodgeInput" type="SpinBox" parent="ScrollContainer/MainContainer" unique_id=1836663905]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 99.0
+step = 1.0
+
+[node name="Label_DamageResistance" type="Label" parent="ScrollContainer/MainContainer" unique_id=1777155249]
+layout_mode = 2
+text = "Damage Resistance"
+
+[node name="DamageResistanceInput" type="SpinBox" parent="ScrollContainer/MainContainer" unique_id=1697572171]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 99.0
+step = 1.0
+
+[node name="Label_Bravery" type="Label" parent="ScrollContainer/MainContainer" unique_id=416883612]
+layout_mode = 2
+text = "Bravery"
+
+[node name="BraveryInput" type="SpinBox" parent="ScrollContainer/MainContainer" unique_id=188779606]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 99.0
+step = 1.0
+
+[node name="Label_AvailableModels" type="Label" parent="ScrollContainer/MainContainer" unique_id=736538971]
+layout_mode = 2
+text = "Available Models"
+
+[node name="AvailableModelsList" type="ItemList" parent="ScrollContainer/MainContainer" unique_id=2107516528]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+select_mode = 2
+
+[node name="ModelButtons" type="HBoxContainer" parent="ScrollContainer/MainContainer" unique_id=564119971]
+layout_mode = 2
+
+[node name="BtnAddModels" type="Button" parent="ScrollContainer/MainContainer/ModelButtons" unique_id=185806355]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add Selected Models"
+
+[node name="BtnRemoveModels" type="Button" parent="ScrollContainer/MainContainer/ModelButtons" unique_id=1024318044]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Remove Selected Models"
+
+[node name="Label_SelectedModels" type="Label" parent="ScrollContainer/MainContainer" unique_id=330652907]
+layout_mode = 2
+text = "Selected Models"
+
+[node name="SelectedModelsList" type="ItemList" parent="ScrollContainer/MainContainer" unique_id=1536760327]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+select_mode = 2
+
+[node name="BtnAbilities" type="Button" parent="ScrollContainer/MainContainer" unique_id=751440647]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select Unit Abilities"
+
+[node name="AbilitiesLabel" type="Label" parent="ScrollContainer/MainContainer" unique_id=574673679]
+unique_name_in_owner = true
+layout_mode = 2
+text = "No abilities selected."
+
+[node name="ActionsContainer" type="HBoxContainer" parent="ScrollContainer/MainContainer" unique_id=981586900]
+layout_mode = 2
+alignment = 2
+
+[node name="BtnDiscard" type="Button" parent="ScrollContainer/MainContainer/ActionsContainer" unique_id=2042097181]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Discard"
+
+[node name="BtnSave" type="Button" parent="ScrollContainer/MainContainer/ActionsContainer" unique_id=824918078]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save"
+
+[node name="SquadTypesDialog" type="AcceptDialog" parent="." unique_id=1379885424]
+unique_name_in_owner = true
+title = "Select Squad Types"
+size = Vector2i(420, 320)
+
+[node name="SquadTypesList" type="ItemList" parent="SquadTypesDialog" unique_id=1891425363]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+select_mode = 2
+allow_reselect = true
+
+[node name="AbilitiesDialog" type="AcceptDialog" parent="." unique_id=132924200]
+unique_name_in_owner = true
+title = "Select Unit Abilities"
+size = Vector2i(420, 320)
+
+[node name="AbilitiesList" type="ItemList" parent="AbilitiesDialog" unique_id=708287086]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+select_mode = 2
+allow_reselect = true

@@ -1,0 +1,3 @@
+The purpose of this application is to have a game where users can create weapons, models, and squads and have those two squads face off in turn-based combat. The application will have a splash screen, main menu screen, rules screen, 3 pages for creating and editing stuff like models, a start game screen, and finally the battle. 
+
+Battle rules are based off of Right of Conquest. An unreleased tabletop sci-fi wargame. This app ignores objectives and focuses purely on squad vs squad combat. The app will be developed in Godot and later on deployed to Android, iOS, Windows, and maybe a web application.

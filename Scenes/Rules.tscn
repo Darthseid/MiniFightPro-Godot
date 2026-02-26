@@ -1,0 +1,86 @@
+[gd_scene format=3 uid="uid://cldcu26jnlifu"]
+
+[ext_resource type="Script" uid="uid://b717glo0lpve4" path="res://GDScripts/MiniRulesFile.gd" id="1_kf4e7"]
+[ext_resource type="Script" uid="uid://cu1wo86ckndpr" path="res://GDScripts/Btn_Back.gd" id="2_dr23v"]
+[ext_resource type="Script" uid="uid://dbap0gqox0ty1" path="res://addons/markdownlabel/markdownlabel.gd" id="2_kf4e7"]
+[ext_resource type="Script" uid="uid://dcx7crs23nf4" path="res://addons/markdownlabel/header_formats/h1_format.gd" id="3_dr23v"]
+[ext_resource type="Script" uid="uid://d0sin64i4v3op" path="res://addons/markdownlabel/header_formats/h2_format.gd" id="4_1ud7n"]
+[ext_resource type="Script" uid="uid://dlok0dv1tq2bf" path="res://addons/markdownlabel/header_formats/h3_format.gd" id="5_rvdrs"]
+[ext_resource type="Script" uid="uid://bayuh2vafablg" path="res://addons/markdownlabel/header_formats/h4_format.gd" id="6_3jwr6"]
+[ext_resource type="Script" uid="uid://dfr1w7u3jgni3" path="res://addons/markdownlabel/header_formats/h5_format.gd" id="7_r5mbi"]
+[ext_resource type="Script" uid="uid://bsi6dexoofpe6" path="res://addons/markdownlabel/header_formats/h6_format.gd" id="8_qb3qx"]
+
+[sub_resource type="Resource" id="Resource_teh1u"]
+resource_local_to_scene = true
+script = ExtResource("3_dr23v")
+
+[sub_resource type="Resource" id="Resource_4ocan"]
+resource_local_to_scene = true
+script = ExtResource("4_1ud7n")
+
+[sub_resource type="Resource" id="Resource_uhxfv"]
+resource_local_to_scene = true
+script = ExtResource("5_rvdrs")
+
+[sub_resource type="Resource" id="Resource_4x4sf"]
+resource_local_to_scene = true
+script = ExtResource("6_3jwr6")
+
+[sub_resource type="Resource" id="Resource_vyptn"]
+resource_local_to_scene = true
+script = ExtResource("7_r5mbi")
+
+[sub_resource type="Resource" id="Resource_r5fix"]
+resource_local_to_scene = true
+script = ExtResource("8_qb3qx")
+
+[node name="RuleScene" type="Control" unique_id=1236648677]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_kf4e7")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1060240067]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer" unique_id=35838625]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/PanelContainer" unique_id=1665523546]
+layout_mode = 2
+
+[node name="BtnBack" type="Button" parent="VBoxContainer/PanelContainer/HBoxContainer" unique_id=2147268400]
+layout_mode = 2
+text = "Home"
+script = ExtResource("2_dr23v")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=720234438]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarkdownLabelFile" type="RichTextLabel" parent="VBoxContainer/ScrollContainer" unique_id=1290344884]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+script = ExtResource("2_kf4e7")
+h1 = SubResource("Resource_teh1u")
+h2 = SubResource("Resource_4ocan")
+h3 = SubResource("Resource_uhxfv")
+h4 = SubResource("Resource_4x4sf")
+h5 = SubResource("Resource_vyptn")
+h6 = SubResource("Resource_r5fix")
+hr_height = 5
+hr_width = 100.0
+metadata/_custom_type_script = "uid://dbap0gqox0ty1"
+
+[connection signal="pressed" from="VBoxContainer/PanelContainer/HBoxContainer/BtnBack" to="VBoxContainer/PanelContainer/HBoxContainer/BtnBack" method="_on_pressed"]
