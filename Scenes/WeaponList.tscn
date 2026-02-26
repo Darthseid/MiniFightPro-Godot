@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://blrvye35wop3i"]
 
-[ext_resource type="Script" uid="uid://b5343baii0uq5" path="res://C#Scripts/WeaponList.cs" id="1_gvfgo"]
-[ext_resource type="Script" uid="uid://cu1wo86ckndpr" path="res://GDScripts/Btn_Back.gd" id="2_gswwh"]
+[ext_resource type="Script" uid="uid://b5343baii0uq5" path="res://CSharpScripts/WeaponList.cs" id="1_gvfgo"]
+[ext_resource type="Script" uid="uid://ca7l51crigah6" path="res://GDScripts/Btn_Back.gd" id="2_gswwh"]
 
 [node name="WeaponList" type="Control" unique_id=784871730]
 layout_mode = 3

@@ -371,6 +371,7 @@ public partial class GameData : Node
         var weaponsPath = $"user://{WeaponsFileName}";
         var modelsPath = $"user://{ModelsFileName}";
         var squadsPath = $"user://{SquadsFileName}";
+        var PlayersPath = $"user://{PlayersFileName}";
         if (FileAccess.FileExists(weaponsPath) ||
             FileAccess.FileExists(modelsPath) ||
             FileAccess.FileExists(squadsPath))

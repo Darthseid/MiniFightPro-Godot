@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36930.0 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniatureFightFree", "MiniatureFightFree.csproj", "{3BD951C8-0AC8-4DE1-A96B-B360D1D4364F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		ExportDebug|Any CPU = ExportDebug|Any CPU
+		ExportRelease|Any CPU = ExportRelease|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3BD951C8-0AC8-4DE1-A96B-B360D1D4364F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BD951C8-0AC8-4DE1-A96B-B360D1D4364F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BD951C8-0AC8-4DE1-A96B-B360D1D4364F}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+		{3BD951C8-0AC8-4DE1-A96B-B360D1D4364F}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+		{3BD951C8-0AC8-4DE1-A96B-B360D1D4364F}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+		{3BD951C8-0AC8-4DE1-A96B-B360D1D4364F}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {50EB64FD-7115-4993-94E2-4300F7335DDA}
+	EndGlobalSection
+EndGlobal

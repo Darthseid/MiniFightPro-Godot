@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://gjv08ranrdew"]
 
-[ext_resource type="Script" uid="uid://ng7t63a6dgim" path="res://C#Scripts/CreateWeapon.cs" id="1_5whs7"]
+[ext_resource type="Script" uid="uid://ng7t63a6dgim" path="res://CSharpScripts/CreateWeapon.cs" id="1_5whs7"]
 
 [node name="CreateWeapon" type="Control" unique_id=836826962]
 layout_mode = 3

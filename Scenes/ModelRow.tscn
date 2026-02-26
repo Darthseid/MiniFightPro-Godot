@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cqdgk6vul7y5b"]
 
-[ext_resource type="Script" path="res://C#Scripts/ModelListItem.cs" id="1_3b6t0"]
+[ext_resource type="Script" uid="uid://bfxupspung7fi" path="res://CSharpScripts/ModelListItem.cs" id="1_3b6t0"]
 
 [node name="ModelListItem" type="Button" unique_id=389218620]
 custom_minimum_size = Vector2(0, 60)

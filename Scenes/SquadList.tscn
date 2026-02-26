@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b1mxxgkr3o5jh"]
 
-[ext_resource type="Script" uid="uid://bi6ro60aovjl7" path="res://C#Scripts/SquadList.cs" id="1_6v2e4"]
-[ext_resource type="Script" uid="uid://cu1wo86ckndpr" path="res://GDScripts/Btn_Back.gd" id="2_rsdpj"]
+[ext_resource type="Script" uid="uid://bi6ro60aovjl7" path="res://CSharpScripts/SquadList.cs" id="1_6v2e4"]
+[ext_resource type="Script" uid="uid://ca7l51crigah6" path="res://GDScripts/Btn_Back.gd" id="2_rsdpj"]
 
 [node name="SquadList" type="Control" unique_id=240093803]
 layout_mode = 3

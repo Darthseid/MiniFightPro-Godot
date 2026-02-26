@@ -814,7 +814,7 @@ public partial class Battle : Node2D
         var a = allSquads[first];
         var b = allSquads[second];
         var dist = BoardGeometry.ClosestDistanceInches(GetActorsForSquad(a), GetActorsForSquad(b));
-        _battleHud.ShowToast($"{a.Name} ↔ {b.Name}: {dist:0.0}"");
+        _battleHud.ShowToast($"{a.Name} ↔ {b.Name}: {dist:0.0}");
     }
 
     internal List<Squad> GetSquadsWithinRadius(Squad targetSquad, float radiusInches, bool includeSameTeam)

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cvrj3udnu8sk7"]
 
-[ext_resource type="Script" uid="uid://did3qec8vki44" path="res://C#Scripts/ModelList.cs" id="1_wn5v1"]
-[ext_resource type="Script" uid="uid://cu1wo86ckndpr" path="res://GDScripts/Btn_Back.gd" id="2_jaqde"]
+[ext_resource type="Script" uid="uid://did3qec8vki44" path="res://CSharpScripts/ModelList.cs" id="1_wn5v1"]
+[ext_resource type="Script" uid="uid://ca7l51crigah6" path="res://GDScripts/Btn_Back.gd" id="2_jaqde"]
 
 [node name="ModelList" type="Control" unique_id=809358120]
 layout_mode = 3

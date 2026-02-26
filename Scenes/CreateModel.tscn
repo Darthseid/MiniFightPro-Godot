@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://d1h6b2j7xg3h0"]
 
-[ext_resource type="Script" path="res://C#Scripts/CreateModel.cs" id="1_6hn3u"]
+[ext_resource type="Script" uid="uid://bcds0tk3xsvgl" path="res://CSharpScripts/CreateModel.cs" id="1_6hn3u"]
 
 [node name="CreateModel" type="Control" unique_id=1209391188]
 layout_mode = 3

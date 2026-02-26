@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cl0qj4m2k7k51"]
 
-[ext_resource type="Script" path="res://C#Scripts/CreateSquad.cs" id="1_9sbl4"]
+[ext_resource type="Script" uid="uid://decllkfhnufly" path="res://CSharpScripts/CreateSquad.cs" id="1_9sbl4"]
 
 [node name="CreateSquad" type="Control" unique_id=1577653538]
 layout_mode = 3

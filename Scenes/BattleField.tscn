@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c6tcf5sj2ap3g"]
 
-[ext_resource type="Script" uid="uid://btqqf7cqgnhfl" path="res://C#Scripts/BattleField.cs" id="1_6m6d7"]
-[ext_resource type="Script" uid="uid://drsfnyord8sq4" path="res://C#Scripts/AudioManager.cs" id="2_audio"]
+[ext_resource type="Script" uid="uid://btqqf7cqgnhfl" path="res://CSharpScripts/BattleField.cs" id="1_6m6d7"]
+[ext_resource type="Script" uid="uid://drsfnyord8sq4" path="res://CSharpScripts/AudioManager.cs" id="2_audio"]
 [ext_resource type="AudioStream" uid="uid://cqx7br5elqfik" path="res://Assets/raw/battle_cry.mp3" id="3_10"]
 [ext_resource type="AudioStream" uid="uid://cxnvmcgmb2jt5" path="res://Assets/raw/bugle.mp3" id="3_11"]
 [ext_resource type="AudioStream" uid="uid://uf1ekry1wepk" path="res://Assets/raw/cannon.mp3" id="3_12"]

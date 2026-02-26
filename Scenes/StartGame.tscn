@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://b43qt5s3u3myk"]
 
-[ext_resource type="Script" uid="uid://b3fyw4qiwn5em" path="res://C#Scripts/StartGame.cs" id="1_8t52n"]
+[ext_resource type="Script" uid="uid://b3fyw4qiwn5em" path="res://CSharpScripts/StartGame.cs" id="1_8t52n"]
 [ext_resource type="Texture2D" uid="uid://26yiw3s5e7mp" path="res://Assets/drawable/banner_ad.png" id="2_3ncd4"]
-[ext_resource type="Script" uid="uid://cu1wo86ckndpr" path="res://GDScripts/Btn_Back.gd" id="2_7p22t"]
+[ext_resource type="Script" uid="uid://ca7l51crigah6" path="res://GDScripts/Btn_Back.gd" id="2_7p22t"]
 
 [node name="StartGame" type="Control" unique_id=1413916367]
 layout_mode = 3

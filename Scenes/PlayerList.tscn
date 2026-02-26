@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://C#Scripts/PlayerList.cs" id="1_playerlist"]
-[ext_resource type="Script" path="res://GDScripts/Btn_Back.gd" id="2_back"]
+[ext_resource type="Script" uid="uid://cwum0hpkn82wy" path="res://CSharpScripts/PlayerList.cs" id="1_playerlist"]
+[ext_resource type="Script" uid="uid://ca7l51crigah6" path="res://GDScripts/Btn_Back.gd" id="2_back"]
 
 [node name="PlayerList" type="Control"]
 layout_mode = 3

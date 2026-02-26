@@ -1,14 +1,14 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://mjpndqp2tpev"]
 
-[ext_resource type="Script" path="res://C#Scripts/Battle.cs" id="1_7a5u2"]
-[ext_resource type="PackedScene" path="res://Scenes/BattleField.tscn" id="2_6av70"]
-[ext_resource type="PackedScene" path="res://Scenes/BattleHud.tscn" id="3_fq2ds"]
+[ext_resource type="Script" uid="uid://bf53nanyf35t7" path="res://CSharpScripts/Battle.cs" id="1_7a5u2"]
+[ext_resource type="PackedScene" uid="uid://c6tcf5sj2ap3g" path="res://Scenes/BattleField.tscn" id="2_6av70"]
+[ext_resource type="PackedScene" uid="uid://xdwk8qods8se" path="res://Scenes/BattleHud.tscn" id="3_fq2ds"]
 
-[node name="Battle" type="Node2D"]
+[node name="Battle" type="Node2D" unique_id=1467707157]
 script = ExtResource("1_7a5u2")
 
-[node name="BattleField" parent="." instance=ExtResource("2_6av70")]
+[node name="BattleField" parent="." unique_id=757350388 instance=ExtResource("2_6av70")]
 
-[node name="HudLayer" type="CanvasLayer" parent="."]
+[node name="HudLayer" type="CanvasLayer" parent="." unique_id=1514333167]
 
-[node name="BattleHud" parent="HudLayer" instance=ExtResource("3_fq2ds")]
+[node name="BattleHud" parent="HudLayer" unique_id=1168382878 instance=ExtResource("3_fq2ds")]

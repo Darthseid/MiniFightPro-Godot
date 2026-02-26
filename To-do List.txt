@@ -3,4 +3,3 @@ To do list for mini fight free godot:
 * Stress Test everything.
 * Make sure that all the option dialogs are fully readable on mobile devices.
 * Test on multiple devices.
-

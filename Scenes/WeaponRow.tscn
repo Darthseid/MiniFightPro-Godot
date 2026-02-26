@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://jh2rhxwnplu8"]
 
-[ext_resource type="Script" uid="uid://dceb5vcr4otqi" path="res://C#Scripts/WeaponListItem.cs" id="1_2hwhy"]
+[ext_resource type="Script" uid="uid://dceb5vcr4otqi" path="res://CSharpScripts/WeaponListItem.cs" id="1_2hwhy"]
 
 [node name="WeaponListItem" type="Button" unique_id=269078507]
 custom_minimum_size = Vector2(0, 60)

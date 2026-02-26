@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://xdwk8qods8se"]
 
-[ext_resource type="Script" uid="uid://wqv0lsgio81b" path="res://C#Scripts/BattleHud.cs" id="1_1fa65"]
+[ext_resource type="Script" uid="uid://wqv0lsgio81b" path="res://CSharpScripts/BattleHud.cs" id="1_1fa65"]
 [ext_resource type="Script" uid="uid://dj8ysf4fwrb2g" path="res://GDScripts/ResetGame.gd" id="2_2j38h"]
-[ext_resource type="Script" path="res://GDScripts/AudioOptionsPopup.gd" id="3_audioopts"]
+[ext_resource type="Script" uid="uid://rk5y65hwidcc" path="res://GDScripts/AudioOptionsPopup.gd" id="3_audioopts"]
 
 [node name="BattleHud" type="Control" unique_id=458598600]
 layout_mode = 3
@@ -55,7 +55,6 @@ unique_name_in_owner = true
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-
 [node name="BtnMeasure" type="Button" parent="." unique_id=1883164832]
 unique_name_in_owner = true
 layout_mode = 1
@@ -103,13 +102,15 @@ grow_horizontal = 0
 text = "Home"
 script = ExtResource("2_2j38h")
 
-
 [node name="OptionsPopup" type="PopupPanel" parent="." unique_id=200000010]
 script = ExtResource("3_audioopts")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="OptionsPopup" unique_id=200000011]
 custom_minimum_size = Vector2(380, 170)
-layout_mode = 2
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 384.0
+offset_bottom = 174.0
 
 [node name="Title" type="Label" parent="OptionsPopup/VBoxContainer" unique_id=200000012]
 layout_mode = 2
@@ -150,7 +151,6 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "100%"
 
-
 [node name="GameOverOverlay" type="ColorRect" parent="." unique_id=200000001]
 unique_name_in_owner = true
 visible = false
@@ -178,5 +178,6 @@ theme_override_font_sizes/font_size = 48
 text = "Game Over"
 horizontal_alignment = 1
 vertical_alignment = 1
-[connection signal="pressed" from="BtnBack" to="BtnBack" method="_on_pressed"]
+
 [connection signal="pressed" from="BtnOptions" to="OptionsPopup" method="OpenPopup"]
+[connection signal="pressed" from="BtnBack" to="BtnBack" method="_on_pressed"]
