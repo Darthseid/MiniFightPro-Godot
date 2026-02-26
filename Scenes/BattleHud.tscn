@@ -14,20 +14,6 @@ grow_vertical = 2
 mouse_filter = 1
 script = ExtResource("1_1fa65")
 
-[node name="DistancePanel" type="PanelContainer" parent="." unique_id=77432116]
-layout_mode = 0
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -180.0
-offset_top = 16.0
-offset_right = 180.0
-offset_bottom = 56.0
-
-[node name="DistanceLabel" type="Label" parent="DistancePanel" unique_id=190963345]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Distance Between Units: 0.00"
-
 [node name="Toast" type="PanelContainer" parent="." unique_id=1451953869]
 unique_name_in_owner = true
 layout_mode = 0
@@ -68,6 +54,31 @@ size = Vector2i(200, 200)
 unique_name_in_owner = true
 size_flags_horizontal = 3
 size_flags_vertical = 3
+
+
+[node name="BtnMeasure" type="Button" parent="." unique_id=1883164832]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -290.0
+offset_right = -225.0
+offset_bottom = 31.0
+grow_horizontal = 0
+text = "📏"
+
+[node name="BtnNextPhase" type="Button" parent="." unique_id=1883164831]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_right = -155.0
+offset_bottom = 31.0
+grow_horizontal = 0
+text = "➡️"
 
 [node name="BtnOptions" type="Button" parent="." unique_id=1883164829]
 unique_name_in_owner = true

@@ -6,17 +6,7 @@ using System.Threading.Tasks;
 
 public static class CombatEngine
 {
-    private static float CurrentBattleDistance
-    {
-        get => GameGlobals.Instance?.CurrentBattleDistance ?? 0f;
-        set
-        {
-            if (GameGlobals.Instance != null)
-            {
-                GameGlobals.Instance.CurrentBattleDistance = value;
-            }
-        }
-    }
+    private static float _currentDistance;
 
     public readonly struct WeaponBatch
     {
@@ -120,7 +110,7 @@ public static class CombatEngine
 
             var distance = attacker != null
                 ? BoardGeometry.DistanceInches(attacker, currentRecipient)
-                : CurrentBattleDistance;
+                : _currentDistance;
             var halfRange = distance <= weapon.Range / 2f;
             var baseDamage = CombatHelpers.DamageParser(weapon.Damage);
             var finalDamage = CombatHelpers.DamageMods(baseDamage, defenderSquad.SquadAbilities, weapon.Special, halfRange);
@@ -290,7 +280,7 @@ public static class CombatEngine
         {
             var weapon = batch.Weapon;
             if (!isMelee &&
-                !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad))
+                !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance))
             {
                 continue;
             }
@@ -303,7 +293,8 @@ public static class CombatEngine
                 attackerMove,
                 defenderSquad,
                 false,
-                isMelee
+                isMelee,
+                _currentDistance
             );
             var (hits, hardHits) = CombatRolls.HitSequence(
                 attacks,
@@ -334,7 +325,7 @@ public static class CombatEngine
             }
 
             var defenderHardness = defenderSquad.Hardness;
-            if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && CurrentBattleDistance <= 9f)
+            if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)
                 defenderHardness = System.Math.Max(1, defenderHardness - 1);
             var (injuries, devastating) = CombatRolls.WoundSequence(
                 hits,
@@ -359,7 +350,7 @@ public static class CombatEngine
             for (int i = 0; i < unsaved && remainingHealth > 0; i++)
             {
                 var baseDamage = CombatHelpers.DamageParser(weapon.Damage);
-                var halfRange = CurrentBattleDistance <= weapon.Range / 2f;
+                var halfRange = _currentDistance <= weapon.Range / 2f;
                 var finalDamage = CombatHelpers.DamageMods(baseDamage, defenderSquad.SquadAbilities, weapon.Special, halfRange);
                 var applied = finalDamage > remainingHealth ? remainingHealth : finalDamage;
                 totalApplied += applied;
@@ -449,7 +440,7 @@ public static class CombatEngine
         {
             return;
         }
-        CurrentBattleDistance = BoardGeometry.DistanceInches(attacker, defender);
+        _currentDistance = BoardGeometry.DistanceInches(attacker, defender);
         var result = ResolveAttack(
             attacker.BoundModel,
             attackerSquad,
@@ -475,7 +466,6 @@ public static class CombatEngine
             handleExplosionProcess?.Invoke(defenderSquad, attackerSquad, demiseCheck);
         }
         RemoveDeadModels(defenderActors, defenderSquad, battleField);
-        battleHud?.UpdateDistanceAndHud(teamAActors, teamBActors);
         checkVictory?.Invoke();
     }
 
@@ -510,7 +500,7 @@ public static class CombatEngine
             return;
         }
 
-        CurrentBattleDistance = BoardGeometry.ClosestDistanceInches(teamAActors, teamBActors);
+        _currentDistance = BoardGeometry.ClosestDistanceInches(teamAActors, teamBActors);
         var weaponBatches = BuildWeaponBatches(attackerSquad, isFight);
         var attackerMove = CombatHelpers.GetMoveVarsForTeam(attacker.TeamId, teamAMove, teamBMove);
         var currentRecipient = defender;
@@ -519,7 +509,7 @@ public static class CombatEngine
         {
             var weapon = batch.Weapon;
             if (!isFight &&
-                !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad))
+                !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance))
             {
                 continue;
             }
@@ -533,7 +523,8 @@ public static class CombatEngine
                 attackerMove,
                 defenderSquad,
                 false,
-                isFight
+                isFight,
+                _currentDistance
             );
 
             var (hits, hardHits) = CombatRolls.HitSequence(
@@ -565,7 +556,7 @@ public static class CombatEngine
             }
 
             var defenderHardness = defenderSquad.Hardness;
-            if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && CurrentBattleDistance <= 9f)
+            if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)
                 defenderHardness = System.Math.Max(1, defenderHardness - 1);
             var (injuries, devastating) = CombatRolls.WoundSequence(
                 hits,
@@ -623,8 +614,7 @@ public static class CombatEngine
             }
 
             RemoveDeadModels(defenderActors, defenderSquad, battleField);
-            battleHud?.UpdateDistanceAndHud(teamAActors, teamBActors);
-            checkVictory?.Invoke();
+                checkVictory?.Invoke();
 
             if (CountLivingActors(defenderActors) == 0)
             {
@@ -659,7 +649,7 @@ public static class CombatEngine
             return;
         }
 
-        CurrentBattleDistance = BoardGeometry.ClosestDistanceInches(teamAActors, teamBActors);
+        _currentDistance = BoardGeometry.ClosestDistanceInches(teamAActors, teamBActors);
         var attackerMove = CombatHelpers.GetMoveVarsForTeam(attackerTeamId, teamAMove, teamBMove);
         var weaponBatches = weaponBatchesOverride ?? BuildWeaponBatches(attackerSquad, isFight);
         var attackerActor = attackerActors.FirstOrDefault(IsActorAlive);
@@ -673,7 +663,7 @@ public static class CombatEngine
                 continue;
             }
 
-            if (!isFight && !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad))
+            if (!isFight && !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance))
             {
                 continue;
             }
@@ -681,7 +671,7 @@ public static class CombatEngine
             var attacks = batch.TotalAttacks;
             var aliveBeforeWeapon = CountLivingActors(defenderActors);
             var weaponSound = ResolveWeaponSound(weapon);
-            var modifiers = CombatHelpers.ObtainModifiers(weapon, attackerSquad, attackerMove, defenderSquad, false, isFight);
+            var modifiers = CombatHelpers.ObtainModifiers(weapon, attackerSquad, attackerMove, defenderSquad, false, isFight, _currentDistance);
             var (hits, hardHits) = CombatRolls.HitSequence(attacks, weapon.HitSkill, modifiers.HitMod, modifiers.HitReroll, modifiers.CritThreshold, weapon.Special);
             hits += hardHits;
 
@@ -704,7 +694,7 @@ public static class CombatEngine
             }
 
             var defenderHardness = defenderSquad.Hardness;
-            if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && CurrentBattleDistance <= 9f)
+            if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)
                 defenderHardness = System.Math.Max(1, defenderHardness - 1);
             var (injuries, devastating) = CombatRolls.WoundSequence(hits, weapon.Strength, defenderHardness, modifiers.WoundMod, modifiers.WoundReroll, weapon.Special, modifiers.AntiThreshold);
             injuries += devastating;
@@ -732,8 +722,7 @@ public static class CombatEngine
             }
 
             RemoveDeadModels(defenderActors, defenderSquad, battleField);
-            battleHud?.UpdateDistanceAndHud(teamAActors, teamBActors);
-            checkVictory?.Invoke();
+                checkVictory?.Invoke();
 
             if (CountLivingActors(defenderActors) == 0)
             {

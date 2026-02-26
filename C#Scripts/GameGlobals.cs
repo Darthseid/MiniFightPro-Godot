@@ -8,8 +8,6 @@ public partial class GameGlobals : Node
     public float FakeInchPx { get; private set; }
 
     // ---- RUNTIME GLOBALS ----
-    public float CurrentBattleDistance { get; set; }
-	
 	public int CurrentRound { get; set; }
     public int CurrentTurn { get; set; } = 1;
     public string CurrentPhase { get; set; } = "Command";

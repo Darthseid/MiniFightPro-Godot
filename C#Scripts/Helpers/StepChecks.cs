@@ -6,17 +6,6 @@ using System.Threading.Tasks;
 
 public static class StepChecks
 {
-    private static float CurrentBattleDistance
-    {
-        get => GameGlobals.Instance?.CurrentBattleDistance ?? 0f;
-        set
-        {
-            if (GameGlobals.Instance != null)
-            {
-                GameGlobals.Instance.CurrentBattleDistance = value;
-            }
-        }
-    }
 
     public static readonly SquadAbility UsedOfficerOrder = new SquadAbility("UOO", "Used Officer Order", 0, false);
     private static readonly SquadAbility ActiveAimBoost = new SquadAbility("", "activeAimBoost", 0, false);
@@ -26,6 +15,86 @@ public static class StepChecks
     private static readonly SquadAbility ActiveDuty = new SquadAbility("", "activeDuty", 0, false);
 
     public static Action<Squad> SquadRegenerationHandler { get; set; }
+
+    public static async Task RoundStartChecks(Player activePlayer, Player inactivePlayer, BattleHud hud)
+    {
+        if (activePlayer == null || inactivePlayer == null)
+        {
+            return;
+        }
+
+        ApplyPlayerWideAbilities(activePlayer);
+        ApplyPlayerWideAbilities(inactivePlayer);
+
+        var activeLead = activePlayer.TheirSquads?.FirstOrDefault();
+        var inactiveLead = inactivePlayer.TheirSquads?.FirstOrDefault();
+        if (activeLead != null && inactiveLead != null)
+        {
+            await RoundStartChecks(activeLead, inactiveLead, hud);
+        }
+    }
+
+    public static async Task CommandPhaseChecks(Player activePlayer, Player inactivePlayer, Squad activeSquad, Squad inactiveSquad, BattleHud hud)
+    {
+        if (activePlayer == null || inactivePlayer == null)
+        {
+            return;
+        }
+
+        ApplyPlayerWideAbilities(activePlayer);
+        ApplyPlayerWideAbilities(inactivePlayer);
+
+        var enemyReference = inactiveSquad ?? inactivePlayer.TheirSquads?.FirstOrDefault();
+        if (enemyReference == null)
+        {
+            return;
+        }
+
+        var squadsToCheck = activePlayer.TheirSquads ?? new List<Squad>();
+        if (squadsToCheck.Count == 0 && activeSquad != null)
+        {
+            squadsToCheck = new List<Squad> { activeSquad };
+        }
+
+        foreach (var squad in squadsToCheck)
+        {
+            if (squad != null)
+            {
+                await CommandPhaseChecks(squad, enemyReference, hud);
+            }
+        }
+    }
+
+    private static void ApplyPlayerWideAbilities(Player player)
+    {
+        if (player?.TheirSquads == null || player.PlayerAbilities == null)
+        {
+            return;
+        }
+
+        foreach (var squad in player.TheirSquads)
+        {
+            if (squad?.SquadAbilities == null)
+            {
+                continue;
+            }
+
+            if (player.PlayerAbilities.Contains(PlayerAbilities.HiveMind) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.hiveMind.Name))
+                squad.SquadAbilities.Add(SquadAbilities.hiveMind);
+
+            if (player.PlayerAbilities.Contains(PlayerAbilities.Berserk) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.berserking.Name))
+                squad.SquadAbilities.Add(SquadAbilities.berserking);
+
+            if (player.PlayerAbilities.Contains(PlayerAbilities.WarriorBless) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.warriorBless.Name))
+                squad.SquadAbilities.Add(SquadAbilities.warriorBless);
+
+            if (player.PlayerAbilities.Contains(PlayerAbilities.Martial) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.MartialStance.Name))
+                squad.SquadAbilities.Add(SquadAbilities.MartialStance);
+
+            if (player.PlayerAbilities.Contains(PlayerAbilities.Subroutines) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.SubRoutine.Name))
+                squad.SquadAbilities.Add(SquadAbilities.SubRoutine);
+        }
+    }
 
     public static List<SquadAbility> CleanupTemporaryAbilities(Squad unit)
     {
@@ -211,7 +280,7 @@ public static class StepChecks
             return;
         }
 
-        if (inactiveSquad.SquadAbilities.Any(ability => ability.Innate == "Run Away") && CurrentBattleDistance > 1.1f && CurrentBattleDistance <= 9.0f)
+        if (inactiveSquad.SquadAbilities.Any(ability => ability.Innate == "Run Away"))
         {
             return;
         }
@@ -506,7 +575,7 @@ public static class StepChecks
         {
             shellShockModifier += DiceHelpers.SimpleRoll(6);
         }
-        if (inActiveAbilities.Any(ability => ability.Innate == "Grim") && CurrentBattleDistance <= 12f)
+        if (inActiveAbilities.Any(ability => ability.Innate == "Grim"))
         {
             shellShockModifier -= 1;
         }

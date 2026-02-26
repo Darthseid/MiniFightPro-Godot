@@ -5,17 +5,6 @@ using System.Linq;
 
 public static class ShapeHelpers
 {
-    private static float CurrentBattleDistance
-    {
-        get => GameGlobals.Instance?.CurrentBattleDistance ?? 0f;
-        set
-        {
-            if (GameGlobals.Instance != null)
-            {
-                GameGlobals.Instance.CurrentBattleDistance = value;
-            }
-        }
-    }
 
     public readonly struct SelectionResult
     {
@@ -78,7 +67,6 @@ public static class ShapeHelpers
 
     public static void OnDragUpdated(BattleHud battleHud, IReadOnlyList<BattleModelActor> teamA, IReadOnlyList<BattleModelActor> teamB)
     {
-        battleHud?.UpdateDistanceAndHud(teamA, teamB);
     }
 
     public static void SetSelectableVisuals(IEnumerable<BattleModelActor> actors, bool selected)
@@ -89,14 +77,14 @@ public static class ShapeHelpers
         }
     }
 
-    public static bool CanCharge(Squad activeSquad, MoveVars moveVars)
+    public static bool CanCharge(Squad activeSquad, MoveVars moveVars, float distanceInches)
     {
-        if (CurrentBattleDistance <= 1f)
+        if (distanceInches <= 1f)
         {
             return false;
         }
 
-        if (CurrentBattleDistance > 12f)
+        if (distanceInches > 12f)
         {
             return false;
         }
@@ -126,6 +114,6 @@ public static class ShapeHelpers
 
     public static bool CheckFightRange(float radius)
     {
-        return CurrentBattleDistance <= radius;
+        return false;
     }
 }

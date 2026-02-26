@@ -9,10 +9,12 @@ public partial class GameData : Node
     public const string WeaponsFileName = "weapons.json";
     public const string ModelsFileName = "models.json";
     public const string SquadsFileName = "squads.json";
+    public const string PlayersFileName = "players.json";
     public static GameData Instance { get; private set; }
     private bool _weaponsLoaded = false;
     private bool _modelsLoaded = false;
     private bool _squadsLoaded = false;
+    private bool _playersLoaded = false;
     private bool _presetDataLoaded = false;
 
     public List<Weapon> WeaponList = new List<Weapon>();
@@ -21,6 +23,8 @@ public partial class GameData : Node
     public int SelectedModelIndex = -1;
     public List<Squad> SquadList = new List<Squad>();
     public int SelectedSquadIndex = -1;
+    public List<Player> PlayerList = new List<Player>();
+    public int SelectedPlayerIndex = -1;
 
     public override void _Ready()
     {
@@ -168,6 +172,54 @@ public partial class GameData : Node
         catch (Exception error)
         {
             GD.PrintErr($"Failed to save squads file: {error.Message}");
+        }
+    }
+
+    public void LoadPlayersFromFile()
+    {
+        if (_playersLoaded)
+        {
+            return;
+        }
+
+        var path = $"user://{PlayersFileName}";
+        if (!FileAccess.FileExists(path))
+        {
+            PlayerList = new List<Player>();
+            _playersLoaded = true;
+            return;
+        }
+
+        try
+        {
+            using var file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
+            var json = file.GetAsText();
+            var options = new JsonSerializerOptions { IncludeFields = true };
+            var loadedPlayers = JsonSerializer.Deserialize<List<Player>>(json, options);
+            PlayerList = loadedPlayers ?? new List<Player>();
+            _playersLoaded = true;
+        }
+        catch (Exception error)
+        {
+            GD.PrintErr($"Failed to load players file: {error.Message}");
+            PlayerList = new List<Player>();
+            _playersLoaded = true;
+        }
+    }
+
+    public void SavePlayersToFile()
+    {
+        var path = $"user://{PlayersFileName}";
+        try
+        {
+            var options = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };
+            var json = JsonSerializer.Serialize(PlayerList, options);
+            using var file = FileAccess.Open(path, FileAccess.ModeFlags.Write);
+            file.StoreString(json);
+        }
+        catch (Exception error)
+        {
+            GD.PrintErr($"Failed to save players file: {error.Message}");
         }
     }
 
@@ -495,22 +547,53 @@ public partial class GameData : Node
             new Squad("Guard Squad", 6f, 3, 5, 7, 7, 7, new List<string> { "Infantry" }, false, guardSquad, 20, new List<SquadAbility> { SquadAbilities.OfficerOrder }),
             new Squad("Marine Squad", 6f, 4, 3, 7, 7, 6, new List<string> { "Infantry" }, false, marineSquad, 20, new List<SquadAbility> { SquadAbilities.Satanic }),
             new Squad("Battle Tanks", 10f, 11, 2, 13, 7, 7, new List<string> { "Vehicle" }, false, tankSquad, 3, new List<SquadAbility> { SquadAbilities.DeathExplode2 }),
-            new Squad("Homemade Biplane", 99.9f, 9, 3, 4, 7, 7, new List<string> { "Aircraft", "Fly", "Vehicle" }, false, planeSquad, 1, new List<SquadAbility> { SquadAbilities.DeathExplode2, SquadAbilities.berserking }),
+            new Squad("Homemade Biplane", 99.9f, 9, 3, 4, 7, 7, new List<string> { "Aircraft", "Fly", "Vehicle" }, false, planeSquad, 1, new List<SquadAbility> { SquadAbilities.DeathExplode2 }),
             new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel, 1, new List<SquadAbility> { SquadAbilities.DeathExplode2, SquadAbilities.Reanimator, SquadAbilities.Teleport }),
             new Squad("Clairvoyant", 7f, 3, 6, 4, 7, 6, new List<string> { "Character", "Infantry", "Psychic" }, true, clairvoyantModels, 1, new List<SquadAbility>()),
             new Squad("Huge Mecha", 10f, 16, 2, 5, 7, 6, new List<string> { "Titanic", "Vehicle" }, false, mechaSquad, 1, new List<SquadAbility> { SquadAbilities.DeathExplode2 }),
             new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad, 3, new List<SquadAbility> { SquadAbilities.DeathExplode3 })
         };
 
+        var presetPlayers = new List<Player>
+        {
+            new Player(
+                new List<Squad>
+                {
+                    presetSquads[0].DeepCopy(),
+                    presetSquads[1].DeepCopy(),
+                    presetSquads[2].DeepCopy()
+                },
+                6,
+                new List<Order>(),
+                false,
+                "Alliance Vanguard",
+                new List<string> { PlayerAbilities.WarriorBless, PlayerAbilities.Grim }),
+            new Player(
+                new List<Squad>
+                {
+                    presetSquads[3].DeepCopy(),
+                    presetSquads[4].DeepCopy(),
+                    presetSquads[7].DeepCopy()
+                },
+                6,
+                new List<Order>(),
+                true,
+                "Ravager Swarm",
+                new List<string> { PlayerAbilities.HiveMind, PlayerAbilities.AlienTerror, PlayerAbilities.Berserk })
+        };
+
         WeaponList = presetWeapons;
         ModelList = presetModels;
         SquadList = presetSquads;
+        PlayerList = presetPlayers;
         SaveWeaponsToFile();
         SaveModelsToFile();
         SaveSquadsToFile();
+        SavePlayersToFile();
         _weaponsLoaded = true;
         _modelsLoaded = true;
         _squadsLoaded = true;
+        _playersLoaded = true;
     }
 }
 

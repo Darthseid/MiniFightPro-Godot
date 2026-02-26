@@ -6,7 +6,6 @@ using System.Collections.Generic;
 
 public partial class BattleHud : Control
 {
-    private Label? _distanceLabel;
     private Label? _toastLabel;
     private Timer? _toastTimer;
     private PanelContainer? _toastRoot;
@@ -15,10 +14,11 @@ public partial class BattleHud : Control
     private ItemList? _optionList;
     private Control? _gameOverOverlay;
     private Label? _gameOverLabel;
+    [Signal] public delegate void NextPhasePressedEventHandler();
+    [Signal] public delegate void MeasureRequestedEventHandler();
 
     public override void _Ready()
     {
-        _distanceLabel = GetNodeOrNull<Label>("%DistanceLabel");
         _toastLabel = GetNodeOrNull<Label>("%ToastLabel");
         _toastTimer = GetNodeOrNull<Timer>("%ToastTimer");
         _toastRoot = GetNodeOrNull<PanelContainer>("%Toast");
@@ -28,25 +28,20 @@ public partial class BattleHud : Control
         _gameOverOverlay = GetNodeOrNull<Control>("%GameOverOverlay");
         _gameOverLabel = GetNodeOrNull<Label>("%GameOverLabel");
 
+        var nextButton = GetNodeOrNull<Button>("%BtnNextPhase");
+        if (nextButton != null)
+        {
+            nextButton.Pressed += () => EmitSignal(SignalName.NextPhasePressed);
+        }
+
+        var rulerButton = GetNodeOrNull<Button>("%BtnMeasure");
+        if (rulerButton != null)
+        {
+            rulerButton.Pressed += () => EmitSignal(SignalName.MeasureRequested);
+        }
 
         if (_toastTimer != null)
             _toastTimer.Timeout += OnToastTimeout;
-    }
-
-    public void SetDistance(float distance)
-    {
-        if (_distanceLabel == null) return;
-        _distanceLabel.Text = $"Distance Between Units: {distance:0.0}\"";
-    }
-
-    public void SetDistanceUnavailable()
-    {
-        if (_distanceLabel == null)
-        {
-            return;
-        }
-
-        _distanceLabel.Text = "Distance Between Units: N/A";
     }
 
     public void ShowToast(string text, float seconds = 4f)
@@ -56,16 +51,6 @@ public partial class BattleHud : Control
         _toastLabel.Text = text;
         _toastRoot.Visible = true;
         _toastTimer.Start(seconds);
-    }
-
-    public void UpdateDistanceAndHud(IReadOnlyList<BattleModelActor> teamA, IReadOnlyList<BattleModelActor> teamB)
-    {
-        var distance = BoardGeometry.ClosestDistanceInches(teamA, teamB);
-        if (GameGlobals.Instance != null)
-        {
-            GameGlobals.Instance.CurrentBattleDistance = distance;
-        }
-        SetDistance(distance);
     }
 
     public void ShowGameOverBanner(string text)

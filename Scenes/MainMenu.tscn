@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://GDScripts/Btn_Rules.gd" id="3_df05h"]
 [ext_resource type="Script" uid="uid://dyj8d353ycrn7" path="res://GDScripts/Btn_Model.gd" id="4_b11t0"]
 [ext_resource type="Script" uid="uid://c2u6v01m240wv" path="res://GDScripts/Btn_Squad.gd" id="5_i5ak1"]
+[ext_resource type="Script" path="res://GDScripts/Btn_Player.gd" id="5_player"]
 [ext_resource type="Script" uid="uid://h2xxrd8n22wo" path="res://GDScripts/Btn_Start.gd" id="6_p4p8q"]
 [ext_resource type="AudioStream" uid="uid://brtl8cm0wf37o" path="res://Assets/raw/select.mp3" id="7_xim88"]
 [ext_resource type="Script" path="res://GDScripts/AudioOptionsPopup.gd" id="8_audioopts"]
@@ -64,6 +65,12 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Create Squad"
 script = ExtResource("5_i5ak1")
+
+[node name="BtnPlayer" type="Button" parent="ResponsiveLayout/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Create Player"
+script = ExtResource("5_player")
 
 [node name="BtnRules" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=809125656]
 unique_name_in_owner = true
@@ -130,3 +137,5 @@ text = "100%"
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnSquad" to="ResponsiveLayout/VBoxContainer/BtnSquad" method="_on_pressed"]
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnRules" to="ResponsiveLayout/VBoxContainer/BtnRules" method="_on_pressed"]
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnOptions" to="ResponsiveLayout/VBoxContainer/OptionsPopup" method="OpenPopup"]
+
+[connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnPlayer" to="ResponsiveLayout/VBoxContainer/BtnPlayer" method="_on_pressed"]
