@@ -1,0 +1,129 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://C#Scripts/CreatePlayer.cs" id="1_createplayer"]
+
+[node name="CreatePlayer" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_createplayer")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainContainer" type="VBoxContainer" parent="ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="ScrollContainer/MainContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Create Player"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+text = "Player Name"
+
+[node name="PlayerNameInput" type="LineEdit" parent="ScrollContainer/MainContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Enter player name"
+
+[node name="IsAICheckBox" type="CheckBox" parent="ScrollContainer/MainContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "AI Controlled"
+
+[node name="Label_AvailableSquads" type="Label" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+text = "Available Squads"
+
+[node name="AvailableSquadsList" type="ItemList" parent="ScrollContainer/MainContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+select_mode = 2
+
+[node name="SquadButtons" type="HBoxContainer" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+
+[node name="BtnAddSquads" type="Button" parent="ScrollContainer/MainContainer/SquadButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add Selected Squads"
+
+[node name="BtnRemoveSquads" type="Button" parent="ScrollContainer/MainContainer/SquadButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Remove Selected Squads"
+
+[node name="Label_SelectedSquads" type="Label" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+text = "Selected Squads"
+
+[node name="SelectedSquadsList" type="ItemList" parent="ScrollContainer/MainContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+select_mode = 2
+
+[node name="BtnAbilities" type="Button" parent="ScrollContainer/MainContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select Player Abilities"
+
+[node name="AbilitiesLabel" type="Label" parent="ScrollContainer/MainContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "No abilities selected."
+
+[node name="ActionsContainer" type="HBoxContainer" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="BtnDiscard" type="Button" parent="ScrollContainer/MainContainer/ActionsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Discard"
+
+[node name="BtnSave" type="Button" parent="ScrollContainer/MainContainer/ActionsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save"
+
+[node name="AbilitiesDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "Select Player Abilities"
+size = Vector2i(420, 320)
+
+[node name="AbilitiesList" type="ItemList" parent="AbilitiesDialog"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+select_mode = 2
+allow_reselect = true

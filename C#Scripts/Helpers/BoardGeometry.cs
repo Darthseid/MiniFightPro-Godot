@@ -183,6 +183,42 @@ public static class BoardGeometry
         return true;
     }
 
+    public static List<TSquad> GetSquadsWithinRadius<TSquad>(
+        TSquad targetSquad,
+        IReadOnlyList<BattleModelActor> targetActors,
+        IEnumerable<TSquad> candidateSquads,
+        System.Func<TSquad, IReadOnlyList<BattleModelActor>> actorSelector,
+        float radiusInches)
+    {
+        var result = new List<TSquad>();
+        if (targetActors == null || targetActors.Count == 0 || candidateSquads == null || actorSelector == null)
+        {
+            return result;
+        }
+
+        foreach (var squad in candidateSquads)
+        {
+            if (squad == null || EqualityComparer<TSquad>.Default.Equals(squad, targetSquad))
+            {
+                continue;
+            }
+
+            var actors = actorSelector(squad);
+            if (actors == null || actors.Count == 0)
+            {
+                continue;
+            }
+
+            var distance = ClosestDistanceInches(targetActors, actors);
+            if (distance <= radiusInches)
+            {
+                result.Add(squad);
+            }
+        }
+
+        return result;
+    }
+
     public static Vector2 GetActorsCenter(List<BattleModelActor> actors)
     {
         var sum = Vector2.Zero;

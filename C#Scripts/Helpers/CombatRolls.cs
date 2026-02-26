@@ -10,17 +10,6 @@ public static class CombatRolls
         GD.Print($"[Ability Triggered] {abilityType} ability '{abilityInnate}' triggered ({context}).");
     }
 
-    private static float CurrentBattleDistance
-    {
-        get => GameGlobals.Instance?.CurrentBattleDistance ?? 0f;
-        set
-        {
-            if (GameGlobals.Instance != null)
-            {
-                GameGlobals.Instance.CurrentBattleDistance = value;
-            }
-        }
-    }
 
     public static (int Hits, int HardHits) HitSequence(
         int attackRolls,

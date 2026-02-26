@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public partial class StartGame : Control
 {
@@ -10,7 +11,7 @@ public partial class StartGame : Control
     private Label _statusLabel;
     private TextureRect _proBanner;
     private readonly string _proBannerUrl = "https://play.google.com/store/apps/details?id=org.mozilla.firefox&hl=en_US&pli=1";
-    private readonly List<Squad> _selectableSquads = new List<Squad>();
+    private readonly List<Player> _selectablePlayers = new List<Player>();
 
     public override void _Ready()
     {
@@ -18,6 +19,7 @@ public partial class StartGame : Control
         data.LoadWeaponsFromFile();
         data.LoadModelsFromFile();
         data.LoadSquadsFromFile();
+        data.LoadPlayersFromFile();
         data.SyncModelsWithWeapons();
         data.SyncSquadsWithModels();
 
@@ -27,36 +29,36 @@ public partial class StartGame : Control
         _statusLabel = GetNode<Label>("%StatusLabel");
         _proBanner = GetNode<TextureRect>("%ProBanner");
 
-        PopulateSquads();
+        PopulatePlayers();
         _beginBattleButton.Pressed += OnBeginBattlePressed;
         _proBanner.GuiInput += OnProBannerInput;
     }
 
-    private void PopulateSquads()
+    private void PopulatePlayers()
     {
         _unit1Dropdown.Clear();
         _unit2Dropdown.Clear();
         var data = GameData.Instance;
-        if (data.SquadList.Count == 0)
+        if (data.PlayerList.Count == 0)
         {
-            _statusLabel.Text = "No units available. Please create units first.";
+            _statusLabel.Text = "No players available. Please create players first.";
             _beginBattleButton.Disabled = true;
             return;
         }
 
-        RefreshSelectableSquads(data);
+        RefreshSelectablePlayers(data);
 
-        if (_selectableSquads.Count == 0)
+        if (_selectablePlayers.Count < 2)
         {
-            _statusLabel.Text = "No valid units available. Please add models to squads first.";
+            _statusLabel.Text = "Need at least 2 players with squads.";
             _beginBattleButton.Disabled = true;
             return;
         }
 
-        for (int i = 0; i < _selectableSquads.Count; i++)
+        for (int i = 0; i < _selectablePlayers.Count; i++)
         {
-            _unit1Dropdown.AddItem(_selectableSquads[i].Name, i);
-            _unit2Dropdown.AddItem(_selectableSquads[i].Name, i);
+            _unit1Dropdown.AddItem(_selectablePlayers[i].PlayerName, i);
+            _unit2Dropdown.AddItem(_selectablePlayers[i].PlayerName, i);
         }
 
         _statusLabel.Text = "";
@@ -67,28 +69,28 @@ public partial class StartGame : Control
     {
         var unit1Index = _unit1Dropdown.Selected;
         var unit2Index = _unit2Dropdown.Selected;
-        if (unit1Index < 0 || unit2Index < 0)
+        if (unit1Index < 0 || unit2Index < 0 || unit1Index == unit2Index)
         {
-            _statusLabel.Text = "Please select two valid units.";
+            _statusLabel.Text = "Please select two different valid players.";
             return;
         }
 
         var data = GameData.Instance;
-        RefreshSelectableSquads(data);
+        RefreshSelectablePlayers(data);
 
-        if (unit1Index >= _selectableSquads.Count || unit2Index >= _selectableSquads.Count)
+        if (unit1Index >= _selectablePlayers.Count || unit2Index >= _selectablePlayers.Count)
         {
-            _statusLabel.Text = "Please select two valid units.";
+            _statusLabel.Text = "Please select two valid players.";
             return;
         }
 
-        var unit1 = _selectableSquads[unit1Index].DeepCopy();
-        var unit2 = _selectableSquads[unit2Index].DeepCopy();
+        var player1 = _selectablePlayers[unit1Index].DeepCopy();
+        var player2 = _selectablePlayers[unit2Index].DeepCopy();
 
         const string battleScenePath = "res://Scenes/Battle.tscn";
         if (!ResourceLoader.Exists(battleScenePath))
         {
-            _statusLabel.Text = $"Battle scene not available yet. Selected: {unit1.Name} vs {unit2.Name}.";
+            _statusLabel.Text = $"Battle scene not available yet. Selected: {player1.PlayerName} vs {player2.PlayerName}.";
             return;
         }
 
@@ -106,19 +108,19 @@ public partial class StartGame : Control
             return;
         }
 
-        battleRoot.SetupSquads(unit1, unit2);
+        battleRoot.SetupPlayers(player1, player2);
         GetTree().Root.AddChild(battleRoot);
         QueueFree();
     }
 
-    private void RefreshSelectableSquads(GameData data)
+    private void RefreshSelectablePlayers(GameData data)
     {
-        _selectableSquads.Clear();
-        foreach (var squad in data.SquadList)
+        _selectablePlayers.Clear();
+        foreach (var player in data.PlayerList)
         {
-            if (squad.Composition != null && squad.Composition.Count > 0)
+            if (player.TheirSquads != null && player.TheirSquads.Count > 0)
             {
-                _selectableSquads.Add(squad);
+                _selectablePlayers.Add(player);
             }
         }
     }

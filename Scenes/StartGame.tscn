@@ -31,7 +31,7 @@ grow_vertical = 2
 
 [node name="Label_Unit1" type="Label" parent="MainContainer" unique_id=1762072750]
 layout_mode = 2
-text = "Select Squad 1"
+text = "Select Player 1"
 
 [node name="Unit1Dropdown" type="OptionButton" parent="MainContainer" unique_id=208657112]
 unique_name_in_owner = true
@@ -39,7 +39,7 @@ layout_mode = 2
 
 [node name="Label_Unit2" type="Label" parent="MainContainer" unique_id=899084460]
 layout_mode = 2
-text = "Select Squad 2"
+text = "Select Player 2"
 
 [node name="Unit2Dropdown" type="OptionButton" parent="MainContainer" unique_id=1417145308]
 unique_name_in_owner = true

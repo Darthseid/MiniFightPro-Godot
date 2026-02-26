@@ -10,17 +10,6 @@ public static class CombatHelpers
         GD.Print($"[Ability Triggered] {abilityType} ability '{abilityInnate}' triggered ({context}).");
     }
 
-    private static float CurrentBattleDistance
-    {
-        get => GameGlobals.Instance?.CurrentBattleDistance ?? 0f;
-        set
-        {
-            if (GameGlobals.Instance != null)
-            {
-                GameGlobals.Instance.CurrentBattleDistance = value;
-            }
-        }
-    }
 
     public static Squad GetActiveSquad(int activeTeamId, Squad teamASquad, Squad teamBSquad)
     {
@@ -53,11 +42,11 @@ public static class CombatHelpers
         return weaponList.GroupBy(weapon => weapon.WeaponName).Select(group => group.First()).ToList();
     }
 
-    public static bool CheckValidShooting(Squad shooterSquad, MoveVars shooterMove, Weapon firearm, Squad targetSquad)
+    public static bool CheckValidShooting(Squad shooterSquad, MoveVars shooterMove, Weapon firearm, Squad targetSquad, float currentDistance)
     {
-        var validShooting = CurrentBattleDistance <= firearm.Range;
+        var validShooting = currentDistance <= firearm.Range;
         var shotAbilities = firearm.Special;
-        var fightRange = CurrentBattleDistance <= 1f;
+        var fightRange = currentDistance <= 1f;
         if (firearm.IsMelee)
         {
             return false;
@@ -77,7 +66,7 @@ public static class CombatHelpers
                 validShooting = false;
             }
         }
-        if (targetSquad.SquadAbilities.Any(ability => ability.Innate == "12 inch or bust") && CurrentBattleDistance > 12f)
+        if (targetSquad.SquadAbilities.Any(ability => ability.Innate == "12 inch or bust") && currentDistance > 12f)
         {
             LogAbilityTrigger("Squad", "12 inch or bust", "invalidated shooting beyond 12 inches");
             validShooting = false;
@@ -96,7 +85,8 @@ public static class CombatHelpers
         MoveVars attackerMove,
         Squad defenderSquad,
         bool coverType,
-        bool isFight
+        bool isFight,
+        float currentDistance
     )
     {
         var hitMod = 0;
@@ -126,9 +116,9 @@ public static class CombatHelpers
             }
         }
 
-        if (CurrentBattleDistance <= 1f && attackerSquad.SquadType.Any(type => type == "Monster" || type == "Vehicle") && !firearm.IsMelee)
+        if (currentDistance <= 1f && attackerSquad.SquadType.Any(type => type == "Monster" || type == "Vehicle") && !firearm.IsMelee)
             hitMod -= 1;
-        if (CurrentBattleDistance > 12f && firearm.Special.Any(ability => ability.Innate == "Convert"))
+        if (currentDistance > 12f && firearm.Special.Any(ability => ability.Innate == "Convert"))
         {
             critThreshold = Math.Min(critThreshold, 4);
             LogAbilityTrigger("Weapon", "Convert", $"set crit threshold to {critThreshold}");

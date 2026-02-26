@@ -187,8 +187,6 @@ public static class SquadAbilities
     public static readonly IReadOnlyList<SquadAbility> All = new List<SquadAbility>
     {
         MinusHitRanged,
-        MartialStance,
-        SubRoutine,
         MinusHitBrawl,
         DeathExplode1,
         DeathExplode2,
@@ -215,7 +213,6 @@ public static class SquadAbilities
         Satanic,
         ReRollBravery,
         Infect,
-        hiveMind,
         ResistFirstDamage,
         WeakenStrongAttack,
         ReduceDamageBy1,
@@ -230,7 +227,5 @@ public static class SquadAbilities
         SquadrerollInjuries,
         StopRerolls,
         NoModifiers,
-        berserking,
-        warriorBless
     };
 }
