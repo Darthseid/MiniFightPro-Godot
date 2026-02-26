@@ -1,0 +1,74 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Model Name -->
+        <EditText
+            android:id="@+id/modelNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/model_name_hint"
+            android:inputType="text"
+            android:autofillHints="modelName" />
+
+        <!-- Model Health -->
+        <EditText
+            android:id="@+id/modelHealthInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/model_health_hint"
+            android:inputType="number"
+            android:autofillHints="modelHealth" />
+
+        <!-- Low Health critThreshold -->
+        <EditText
+            android:id="@+id/modelBracketedInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/model_bracketed_health_hint"
+            android:inputType="number"
+            android:autofillHints="lowHealthThreshold" />
+
+        <!-- Weapons Selection -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/select_weapons"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <ListView
+            android:id="@+id/weaponListView"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Buttons for Save and Discard -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/discardButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/discard" />
+
+            <Button
+                android:id="@+id/saveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="@string/save" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
