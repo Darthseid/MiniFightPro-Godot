@@ -48,6 +48,7 @@ public partial class Battle : Node2D
     private TaskCompletionSource<Squad?>? _enemyTargetSelectionTcs;
     private bool _awaitingEnemyTargetSelection;
     private int _enemyTargetTeamId = -1;
+    private HashSet<Squad>? _enemyTargetAllowedSquads;
     private readonly AudioStream _gameOverMusic = GD.Load<AudioStream>("res://Assets/raw/victory.mp3");
     private CombatSequence _sequence;
     private bool _measureModeEnabled;
@@ -250,7 +251,8 @@ public partial class Battle : Node2D
             if (actor != null && actor.TeamId == _enemyTargetTeamId)
             {
                 var squad = FindSquadByActor(actor, _enemyTargetTeamId);
-                if (squad != null)
+                var squadAllowed = squad != null && (_enemyTargetAllowedSquads == null || _enemyTargetAllowedSquads.Contains(squad));
+                if (squadAllowed)
                 {
                     AudioManager.Instance?.Play("select");
                     _awaitingEnemyTargetSelection = false;
@@ -599,10 +601,11 @@ public partial class Battle : Node2D
         }
     }
 
-    internal async Task<Squad?> PromptForEnemySquadTargetAsync(string prompt, int enemyTeamId)
+    internal async Task<Squad?> PromptForEnemySquadTargetAsync(string prompt, int enemyTeamId, IReadOnlyCollection<Squad>? allowedSquads = null)
     {
         _battleHud?.ShowToast(prompt, 2.5f);
         _enemyTargetTeamId = enemyTeamId;
+        _enemyTargetAllowedSquads = allowedSquads == null ? null : new HashSet<Squad>(allowedSquads.Where(s => s != null));
         _awaitingEnemyTargetSelection = true;
         _enemyTargetSelectionTcs = new TaskCompletionSource<Squad?>();
 
@@ -612,6 +615,7 @@ public partial class Battle : Node2D
 
         _enemyTargetSelectionTcs = null;
         _enemyTargetTeamId = -1;
+        _enemyTargetAllowedSquads = null;
         _awaitingEnemyTargetSelection = false;
 
         return selectedSquad;
@@ -755,7 +759,7 @@ public partial class Battle : Node2D
             var moveSound = activeSquad?.SquadType.Contains("Mounted") == true ? "motorcycle" : "moved";
             AudioManager.Instance?.Play(moveSound);
         }
-        if (_enforceAircraftMinMove)
+        if (_enforceAircraftMinMove && activeSquad?.SquadType?.Contains("Aircraft") == true)
         {
             if (maxMoved < 20f * GameGlobals.Instance.FakeInchPx)
             {
@@ -919,8 +923,8 @@ public partial class Battle : Node2D
             false,
             _teamASquad,
             _teamBSquad,
-            _teamAActors,
-            _teamBActors,
+            attackers,
+            defenders,
             _teamAMove,
             _teamBMove,
             _battleHud,
@@ -958,8 +962,8 @@ public partial class Battle : Node2D
             true,
             _teamASquad,
             _teamBSquad,
-            _teamAActors,
-            _teamBActors,
+            attackers,
+            defenders,
             _teamAMove,
             _teamBMove,
             _battleHud,

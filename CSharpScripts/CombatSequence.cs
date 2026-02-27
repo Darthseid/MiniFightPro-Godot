@@ -186,8 +186,22 @@ public sealed class CombatSequence
         {
             if (i < firstTier.Count)
             {
-                _battle.SetActiveSquadForTeam(firstTeamId, firstTier[i]);
-                _battle.SetActiveSquadForTeam(secondTeamId, secondTier.FirstOrDefault() ?? secondTier.LastOrDefault());
+                var actingSquad = firstTier[i];
+                _battle.SetActiveSquadForTeam(firstTeamId, actingSquad);
+
+                var validTargets = GetFightTargetsInRange(actingSquad, secondTeamId);
+                if (validTargets.Count == 0)
+                {
+                    continue;
+                }
+
+                var targetSquad = await PickFightTargetAsync(actingSquad, secondTeamId, validTargets);
+                if (targetSquad == null)
+                {
+                    continue;
+                }
+
+                _battle.SetActiveSquadForTeam(secondTeamId, targetSquad);
                 var prev = _battle.ActiveTeamId;
                 _battle.ActiveTeamId = firstTeamId;
                 await _battle.ResolveFightPhase();
@@ -198,13 +212,49 @@ public sealed class CombatSequence
 
             if (i < secondTier.Count)
             {
-                _battle.SetActiveSquadForTeam(secondTeamId, secondTier[i]);
-                _battle.SetActiveSquadForTeam(firstTeamId, firstTier.FirstOrDefault() ?? firstTier.LastOrDefault());
+                var actingSquad = secondTier[i];
+                _battle.SetActiveSquadForTeam(secondTeamId, actingSquad);
+
+                var validTargets = GetFightTargetsInRange(actingSquad, firstTeamId);
+                if (validTargets.Count == 0)
+                {
+                    continue;
+                }
+
+                var targetSquad = await PickFightTargetAsync(actingSquad, firstTeamId, validTargets);
+                if (targetSquad == null)
+                {
+                    continue;
+                }
+
+                _battle.SetActiveSquadForTeam(firstTeamId, targetSquad);
                 await _battle.ResolveFightPhase();
                 _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
         }
+    }
+
+    private System.Collections.Generic.List<Squad> GetFightTargetsInRange(Squad attackerSquad, int enemyTeamId)
+    {
+        var attackerActors = _battle.GetActorsForSquad(attackerSquad);
+        return _battle.GetAliveSquadsForTeam(enemyTeamId)
+            .Where(enemySquad => BoardGeometry.ClosestDistanceInches(attackerActors, _battle.GetActorsForSquad(enemySquad)) <= 1f)
+            .ToList();
+    }
+
+    private async Task<Squad?> PickFightTargetAsync(Squad actingSquad, int enemyTeamId, System.Collections.Generic.IReadOnlyCollection<Squad> validTargets)
+    {
+        if (validTargets.Count == 1)
+        {
+            return validTargets.First();
+        }
+
+        return await _battle.PromptForEnemySquadTargetAsync(
+            $"{actingSquad.Name}: Click enemy squad to fight",
+            enemyTeamId,
+            validTargets
+        );
     }
 
     private void EndTurn()
