@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -108,7 +109,13 @@ public sealed class CombatSequence
 
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
 
-            await _battle.ResolveShootingPhase();
+            var selectedRangedProfile = await ChooseMultiProfileWeaponFingerprintAsync(squad, isMelee: false, "shoot");
+            if (selectedRangedProfile == string.Empty)
+            {
+                continue;
+            }
+
+            await _battle.ResolveShootingPhase(selectedRangedProfile);
             _battle.CheckVictory();
             if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
         }
@@ -202,9 +209,15 @@ public sealed class CombatSequence
                 }
 
                 _battle.SetActiveSquadForTeam(secondTeamId, targetSquad);
+                var selectedMeleeProfile = await ChooseMultiProfileWeaponFingerprintAsync(actingSquad, isMelee: true, "fight");
+                if (selectedMeleeProfile == string.Empty)
+                {
+                    continue;
+                }
+
                 var prev = _battle.ActiveTeamId;
                 _battle.ActiveTeamId = firstTeamId;
-                await _battle.ResolveFightPhase();
+                await _battle.ResolveFightPhase(selectedMeleeProfile);
                 _battle.ActiveTeamId = prev;
                 _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
@@ -228,7 +241,13 @@ public sealed class CombatSequence
                 }
 
                 _battle.SetActiveSquadForTeam(firstTeamId, targetSquad);
-                await _battle.ResolveFightPhase();
+                var selectedMeleeProfile = await ChooseMultiProfileWeaponFingerprintAsync(actingSquad, isMelee: true, "fight");
+                if (selectedMeleeProfile == string.Empty)
+                {
+                    continue;
+                }
+
+                await _battle.ResolveFightPhase(selectedMeleeProfile);
                 _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
@@ -255,6 +274,52 @@ public sealed class CombatSequence
             enemyTeamId,
             validTargets
         );
+    }
+
+    private async Task<string?> ChooseMultiProfileWeaponFingerprintAsync(Squad squad, bool isMelee, string actionLabel)
+    {
+        var allPhaseWeapons = squad?.Composition
+            ?.Where(model => model != null && model.Health > 0)
+            .SelectMany(model => model.Tools)
+            .Where(weapon => weapon != null && weapon.IsMelee == isMelee)
+            .ToList() ?? new List<Weapon>();
+
+        if (allPhaseWeapons.Count == 0)
+        {
+            return null;
+        }
+
+        var multiProfileGroups = allPhaseWeapons
+            .Where(weapon => weapon.Special?.Any(ability => ability?.Innate == "MultiProfile") == true)
+            .GroupBy(CombatEngine.GetWeaponFingerprint)
+            .ToList();
+
+        if (multiProfileGroups.Count <= 1)
+        {
+            return null;
+        }
+
+        var options = multiProfileGroups
+            .Select(group => group.First())
+            .OrderBy(weapon => weapon.WeaponName)
+            .ThenBy(weapon => weapon.Range)
+            .ToList();
+
+        var optionLabels = options
+            .Select(weapon => $"{weapon.WeaponName} (R:{weapon.Range:0.#} A:{weapon.Attacks} HS:{weapon.HitSkill}+ S:{weapon.Strength} AP:{weapon.ArmorPenetration} D:{weapon.Damage})")
+            .ToList();
+
+        var selectedIndex = await _battle.Hud.ChooseOptionAsync(
+            $"{squad.Name}: choose Multi-profile weapon to {actionLabel}",
+            optionLabels
+        );
+
+        if (selectedIndex < 0 || selectedIndex >= options.Count)
+        {
+            return string.Empty;
+        }
+
+        return CombatEngine.GetWeaponFingerprint(options[selectedIndex]);
     }
 
     private void EndTurn()

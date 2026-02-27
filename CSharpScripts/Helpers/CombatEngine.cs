@@ -204,15 +204,28 @@ public static class CombatEngine
 
     public static List<WeaponBatch> BuildWeaponBatches(Squad attackerSquad, bool isMelee)
     {
+        return BuildWeaponBatches(attackerSquad, isMelee, null);
+    }
+
+    public static List<WeaponBatch> BuildWeaponBatches(Squad attackerSquad, bool isMelee, string requiredWeaponFingerprint)
+    {
         if (attackerSquad == null)
         {
             return new List<WeaponBatch>();
         }
 
-        return attackerSquad.Composition
+        var eligibleWeapons = attackerSquad.Composition
             .Where(model => model != null && model.Health > 0)
             .SelectMany(model => model.Tools)
-            .Where(weapon => weapon != null && weapon.IsMelee == isMelee)
+            .Where(weapon => weapon != null && weapon.IsMelee == isMelee);
+
+        if (!string.IsNullOrWhiteSpace(requiredWeaponFingerprint))
+        {
+            eligibleWeapons = eligibleWeapons
+                .Where(weapon => BuildWeaponFingerprint(weapon) == requiredWeaponFingerprint);
+        }
+
+        return eligibleWeapons
             .GroupBy(BuildWeaponFingerprint)
             .Select(group =>
             {
@@ -224,6 +237,11 @@ public static class CombatEngine
             .OrderBy(batch => batch.Weapon?.WeaponName)
             .ThenBy(batch => batch.Weapon?.Range ?? 0f)
             .ToList();
+    }
+
+    public static string GetWeaponFingerprint(Weapon weapon)
+    {
+        return BuildWeaponFingerprint(weapon);
     }
 
     private static bool HasPrecision(Weapon weapon)
@@ -518,7 +536,8 @@ public static class CombatEngine
         BattleHud battleHud,
         BattleField battleField,
         System.Action checkVictory,
-        System.Action<Squad, Squad, int> handleExplosionProcess = null
+        System.Action<Squad, Squad, int> handleExplosionProcess = null,
+        string selectedWeaponFingerprint = null
     )
     {
         if (attacker == null || defender == null)
@@ -537,7 +556,7 @@ public static class CombatEngine
         }
 
         _currentDistance = BoardGeometry.ClosestDistanceInches(teamAActors, teamBActors);
-        var weaponBatches = BuildWeaponBatches(attackerSquad, isFight);
+        var weaponBatches = BuildWeaponBatches(attackerSquad, isFight, selectedWeaponFingerprint);
         var attackerMove = CombatHelpers.GetMoveVarsForTeam(attacker.TeamId, teamAMove, teamBMove);
         var currentRecipient = defender;
 
