@@ -14,6 +14,7 @@ public partial class BattleHud : Control
     private ItemList? _optionList;
     private Control? _gameOverOverlay;
     private Label? _gameOverLabel;
+    private Button? _measureButton;
     [Signal] public delegate void NextPhasePressedEventHandler();
     [Signal] public delegate void MeasureRequestedEventHandler();
 
@@ -34,11 +35,13 @@ public partial class BattleHud : Control
             nextButton.Pressed += () => EmitSignal(SignalName.NextPhasePressed);
         }
 
-        var rulerButton = GetNodeOrNull<Button>("%BtnMeasure");
-        if (rulerButton != null)
+        _measureButton = GetNodeOrNull<Button>("%BtnMeasure");
+        if (_measureButton != null)
         {
-            rulerButton.Pressed += () => EmitSignal(SignalName.MeasureRequested);
+            _measureButton.Pressed += () => EmitSignal(SignalName.MeasureRequested);
         }
+
+        SetMeasureButtonEnabledVisual(false);
 
         if (_toastTimer != null)
             _toastTimer.Timeout += OnToastTimeout;
@@ -168,5 +171,15 @@ public partial class BattleHud : Control
         _optionDialog.PopupCentered();
 
         return tcs.Task;
+    }
+
+    public void SetMeasureButtonEnabledVisual(bool enabled)
+    {
+        if (_measureButton == null)
+        {
+            return;
+        }
+
+        _measureButton.Modulate = enabled ? new Color(1f, 0.92f, 0.35f, 1f) : Colors.White;
     }
 }

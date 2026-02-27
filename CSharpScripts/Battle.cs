@@ -38,12 +38,17 @@ public partial class Battle : Node2D
     private bool _enforceAircraftMinMove;
     private bool _movementCompletesPhase = true;
     private bool _movementUpdatesMoveVars = true;
+    private bool _movementAllowsTeleport;
     private bool _awaitingMovement;
     private bool _activeSquadChargedThisTurn;
     private bool _activeSquadMovedAfterShootingThisTurn;
     private bool _isBattleEnding;
     private TaskCompletionSource<bool> _movementTcs;
     private TaskCompletionSource<bool> _phaseAdvanceTcs;
+    private TaskCompletionSource<Squad?>? _enemyTargetSelectionTcs;
+    private bool _awaitingEnemyTargetSelection;
+    private int _enemyTargetTeamId = -1;
+    private HashSet<Squad>? _enemyTargetAllowedSquads;
     private readonly AudioStream _gameOverMusic = GD.Load<AudioStream>("res://Assets/raw/victory.mp3");
     private CombatSequence _sequence;
     private bool _measureModeEnabled;
@@ -240,6 +245,26 @@ public partial class Battle : Node2D
     private void HandleActorSelected(BattleModelActor actor, Vector2 pointerGlobal)
     {
         PruneDisposedActors("HandleActorSelected");
+
+        if (_awaitingEnemyTargetSelection)
+        {
+            if (actor != null && actor.TeamId == _enemyTargetTeamId)
+            {
+                var squad = FindSquadByActor(actor, _enemyTargetTeamId);
+                var squadAllowed = squad != null && (_enemyTargetAllowedSquads == null || _enemyTargetAllowedSquads.Contains(squad));
+                if (squadAllowed)
+                {
+                    AudioManager.Instance?.Play("select");
+                    _awaitingEnemyTargetSelection = false;
+                    ShapeHelpers.SetSelectableVisuals(GetInactiveActors(), false);
+                    _enemyTargetSelectionTcs?.TrySetResult(squad);
+                    return;
+                }
+            }
+
+            return;
+        }
+
         if (_awaitingMovement)
         {
             ShapeHelpers.SetSelectableVisuals(GetActiveActors(), false);
@@ -261,6 +286,11 @@ public partial class Battle : Node2D
         );
         _selectedTeamId = selection.SelectedTeamId;
         _selectedActors = selection.SelectedActors;
+
+        if (actor != null && actor.TeamId == _activeTeamId && _selectedActors.Count > 0)
+        {
+            AudioManager.Instance?.Play("select");
+        }
     }
 
     private void HandleDragUpdated()
@@ -404,8 +434,8 @@ public partial class Battle : Node2D
             return;
         }
 
-        _teamAPlayer.TheirSquads.RemoveAll(s => s == null || s.Composition == null || s.Composition.Count == 0);
-        _teamBPlayer.TheirSquads.RemoveAll(s => s == null || s.Composition == null || s.Composition.Count == 0);
+        _teamAPlayer.TheirSquads.RemoveAll(s => s == null || s.Composition == null || !s.Composition.Any(m => m != null && m.Health > 0));
+        _teamBPlayer.TheirSquads.RemoveAll(s => s == null || s.Composition == null || !s.Composition.Any(m => m != null && m.Health > 0));
 
         var teamAModelCount = CountPlayerModels(_teamAPlayer);
         var teamBModelCount = CountPlayerModels(_teamBPlayer);
@@ -444,7 +474,65 @@ public partial class Battle : Node2D
             return 0;
         }
 
-        return player.TheirSquads.Sum(squad => squad?.Composition?.Count ?? 0);
+        return player.TheirSquads.Sum(squad => squad?.Composition?.Count(model => model != null && model.Health > 0) ?? 0);
+    }
+
+    internal void PostDamageCleanupAndVictoryCheck()
+    {
+        var allSquads = (_teamAPlayer?.TheirSquads ?? new List<Squad>())
+            .Concat(_teamBPlayer?.TheirSquads ?? new List<Squad>())
+            .Where(squad => squad != null)
+            .ToList();
+
+        foreach (var squad in allSquads)
+        {
+            CombatEngine.RemoveDeadModels(GetActorsForSquad(squad), squad, _battleField);
+        }
+
+        CheckVictory();
+    }
+
+    internal bool SquadHasFirstStrike(Squad squad)
+    {
+        return squad?.SquadAbilities?.Any(ability => ability?.Innate == SquadAbilities.FirstStrike.Innate) == true;
+    }
+
+    internal void GrantTemporaryFirstStrike(Squad squad)
+    {
+        if (squad?.SquadAbilities == null)
+        {
+            return;
+        }
+
+        if (squad.SquadAbilities.Any(ability => ability?.Innate == SquadAbilities.FirstStrikeTemp.Innate && ability.IsTemporary))
+        {
+            return;
+        }
+
+        squad.SquadAbilities.Add(new SquadAbility(
+            SquadAbilities.FirstStrikeTemp.Innate,
+            SquadAbilities.FirstStrikeTemp.Name,
+            SquadAbilities.FirstStrikeTemp.Modifier,
+            true
+        ));
+    }
+
+    internal void ClearTemporaryAbilitiesAndTurnFlags()
+    {
+        foreach (var squad in (_teamAPlayer?.TheirSquads ?? new List<Squad>()).Concat(_teamBPlayer?.TheirSquads ?? new List<Squad>()))
+        {
+            if (squad == null)
+            {
+                continue;
+            }
+
+            squad.SquadAbilities = StepChecks.CleanupTemporaryAbilities(squad);
+        }
+
+        _teamAMove = new MoveVars(false, false, false);
+        _teamBMove = new MoveVars(false, false, false);
+        _activeSquadChargedThisTurn = false;
+        _activeSquadMovedAfterShootingThisTurn = false;
     }
 
     private async Task EndBattleAsync(Player winner)
@@ -495,6 +583,53 @@ public partial class Battle : Node2D
         {
             _battleHud?.ShowToast($"Phase: {phase}");
         }
+
+        var phaseSound = phase switch
+        {
+            BattlePhase.Command => "stratagem",
+            BattlePhase.Movement => "startmovement",
+            BattlePhase.Shooting => "startshooting",
+            BattlePhase.Charge => "charge",
+            BattlePhase.Fight => "startfight",
+            BattlePhase.EndTurn => "turnover",
+            _ => null
+        };
+
+        if (!string.IsNullOrWhiteSpace(phaseSound))
+        {
+            AudioManager.Instance?.Play(phaseSound);
+        }
+    }
+
+    internal async Task<Squad?> PromptForEnemySquadTargetAsync(string prompt, int enemyTeamId, IReadOnlyCollection<Squad>? allowedSquads = null)
+    {
+        _battleHud?.ShowToast(prompt, 2.5f);
+        _enemyTargetTeamId = enemyTeamId;
+        _enemyTargetAllowedSquads = allowedSquads == null ? null : new HashSet<Squad>(allowedSquads.Where(s => s != null));
+        _awaitingEnemyTargetSelection = true;
+        _enemyTargetSelectionTcs = new TaskCompletionSource<Squad?>();
+
+        ShapeHelpers.SetSelectableVisuals(GetInactiveActors(), true);
+        var selectedSquad = await _enemyTargetSelectionTcs.Task;
+        ShapeHelpers.SetSelectableVisuals(GetInactiveActors(), false);
+
+        _enemyTargetSelectionTcs = null;
+        _enemyTargetTeamId = -1;
+        _enemyTargetAllowedSquads = null;
+        _awaitingEnemyTargetSelection = false;
+
+        return selectedSquad;
+    }
+
+    private Squad? FindSquadByActor(BattleModelActor actor, int teamId)
+    {
+        if (actor?.BoundModel == null)
+        {
+            return null;
+        }
+
+        var squads = GetAliveSquadsForTeam(teamId);
+        return squads.FirstOrDefault(squad => squad?.Composition?.Contains(actor.BoundModel) == true);
     }
 
     internal void SyncGlobalTurnRound()
@@ -573,6 +708,13 @@ public partial class Battle : Node2D
         _movementIgnoresMaxLimit = ignoreMaxDistance;
         _movementEnemyBufferInches = enemyBufferInches;
         _enforceAircraftMinMove = enforceAircraftMinMove;
+
+        var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
+        _movementAllowsTeleport = activeSquad?.SquadAbilities?.Any(ability => ability?.Innate == "Tele") == true;
+        if (_movementAllowsTeleport)
+        {
+            _movementEnemyBufferInches = 0f;
+        }
     }
 
     internal MoveVars FinishMovementPhase(bool didAttemptMove)
@@ -589,13 +731,35 @@ public partial class Battle : Node2D
         }
 
         var didMove = didAttemptMove && maxMoved > 0.1f;
+        var movedInches = maxMoved / Mathf.Max(0.001f, GameGlobals.Instance.FakeInchPx);
+
+        var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
+
+        if (_movementAllowsTeleport && didMove)
+        {
+            const float teleportMaxInches = 12f;
+            if (movedInches > teleportMaxInches)
+            {
+                foreach (var actor in activeActors)
+                {
+                    if (_movementStartPositions.TryGetValue(actor, out var startPos))
+                    {
+                        actor.GlobalPosition = startPos;
+                    }
+                }
+
+                didMove = false;
+                _battleHud?.ShowToast($"Teleport move is limited to {teleportMaxInches:0.#}\".");
+                GD.Print($"[Rules] Blocked teleport move > {teleportMaxInches}\" (attempted {movedInches:0.0}\").");
+            }
+        }
+
         if (didMove)
         {
-            var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
             var moveSound = activeSquad?.SquadType.Contains("Mounted") == true ? "motorcycle" : "moved";
             AudioManager.Instance?.Play(moveSound);
         }
-        if (_enforceAircraftMinMove)
+        if (_enforceAircraftMinMove && activeSquad?.SquadType?.Contains("Aircraft") == true)
         {
             if (maxMoved < 20f * GameGlobals.Instance.FakeInchPx)
             {
@@ -609,6 +773,7 @@ public partial class Battle : Node2D
 
                 didMove = false;
                 _battleHud?.ShowToast($"Aircraft must move at least 20\" ({maxMoved / GameGlobals.Instance.FakeInchPx:0.0}\").");
+                GD.Print($"[Rules] Blocked aircraft move under 20\" (attempted {movedInches:0.0}\").");
             }
         }
 
@@ -658,6 +823,12 @@ public partial class Battle : Node2D
         _movementTcs = new TaskCompletionSource<bool>();
         _battleHud.ShowToast("Drag your squad to move.");
         await _movementTcs.Task;
+
+        if (_movementAllowsTeleport)
+        {
+            GD.Print("[Rules] Teleport movement validation applied for this squad.");
+        }
+
         return CombatHelpers.GetActiveMoveVars(_activeTeamId, _teamAMove, _teamBMove);
     }
 
@@ -721,9 +892,7 @@ public partial class Battle : Node2D
             processedExplosions++;
         }
 
-        CombatEngine.RemoveDeadModels(GetActorsForSquad(explodedSquad), explodedSquad);
-        CombatEngine.RemoveDeadModels(GetActorsForSquad(enemySquad), enemySquad);
-                CheckVictory();
+        PostDamageCleanupAndVictoryCheck();
     }
 
     internal async Task ResolveShootingPhase()
@@ -754,13 +923,13 @@ public partial class Battle : Node2D
             false,
             _teamASquad,
             _teamBSquad,
-            _teamAActors,
-            _teamBActors,
+            attackers,
+            defenders,
             _teamAMove,
             _teamBMove,
             _battleHud,
             _battleField,
-            CheckVictory,
+            PostDamageCleanupAndVictoryCheck,
             HandleExplosionProcess
         );
     }
@@ -793,13 +962,13 @@ public partial class Battle : Node2D
             true,
             _teamASquad,
             _teamBSquad,
-            _teamAActors,
-            _teamBActors,
+            attackers,
+            defenders,
             _teamAMove,
             _teamBMove,
             _battleHud,
             _battleField,
-            CheckVictory,
+            PostDamageCleanupAndVictoryCheck,
             HandleExplosionProcess
         );
     }
@@ -812,13 +981,7 @@ public partial class Battle : Node2D
     {
         _measureModeEnabled = !_measureModeEnabled;
         _battleField?.SetMeasuringMode(_measureModeEnabled);
-
-        if (_battleHud == null)
-        {
-            return;
-        }
-
-        _battleHud.ShowToast(_measureModeEnabled ? "Ruler ON" : "Ruler OFF", 1.2f);
+        _battleHud?.SetMeasureButtonEnabledVisual(_measureModeEnabled);
     }
 
     internal List<Squad> GetSquadsWithinRadius(Squad targetSquad, float radiusInches, bool includeSameTeam)
@@ -914,7 +1077,7 @@ public partial class Battle : Node2D
             AudioManager.Instance?.Play("punch");
         }
 
-                CheckVictory();
+        PostDamageCleanupAndVictoryCheck();
     }
 
     internal int GetTeamIdForSquad(Squad squad)

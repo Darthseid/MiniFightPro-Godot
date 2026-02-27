@@ -35,6 +35,8 @@ public sealed class CombatSequence
 
         await StepChecks.RoundStartChecks(activePlayer, inactivePlayer, _battle.Hud);
         await StepChecks.CommandPhaseChecks(activePlayer, inactivePlayer, null, null, _battle.Hud);
+        _battle.PostDamageCleanupAndVictoryCheck();
+        if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
         _battle.Hud?.ShowToast("Press ➡️ for Movement");
         await _battle.WaitForPhaseAdvanceAsync();
 
@@ -76,7 +78,7 @@ public sealed class CombatSequence
             var wantsMove = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Move/Advance this phase?");
             if (!wantsMove) continue;
 
-            var moveVars = await _battle.MovingStuff(squad.Movement, false, 1.05f, false, true, true, string.Empty, true);
+            var moveVars = await _battle.MovingStuff(squad.Movement, false, 1.05f, true, true, true, string.Empty, true);
             if (moveVars.Retreat && squad.ShellShock && !squad.SquadType.Contains("Titanic"))
             {
                 _battle.ApplyRout(squad);
@@ -101,9 +103,9 @@ public sealed class CombatSequence
             var wantsShoot = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Shoot this phase?");
             if (!wantsShoot) continue;
 
-            var targetIndex = await _battle.Hud.ChooseOptionAsync($"{squad.Name}: Select target squad", enemyOptions.Select(s => s.Name).ToList());
-            if (targetIndex < 0 || targetIndex >= enemyOptions.Count) continue;
-            var target = enemyOptions[targetIndex];
+            var target = await _battle.PromptForEnemySquadTargetAsync($"{squad.Name}: Click enemy squad to shoot", enemyTeamId);
+            if (target == null) continue;
+
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
 
             await _battle.ResolveShootingPhase();
@@ -127,15 +129,28 @@ public sealed class CombatSequence
             var wantsCharge = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Charge this phase?");
             if (!wantsCharge) continue;
 
-            var targetIndex = await _battle.Hud.ChooseOptionAsync($"{squad.Name}: Select charge target", enemyOptions.Select(s => s.Name).ToList());
-            if (targetIndex < 0 || targetIndex >= enemyOptions.Count) continue;
-            var target = enemyOptions[targetIndex];
+            var target = await _battle.PromptForEnemySquadTargetAsync($"{squad.Name}: Click enemy squad to charge", enemyTeamId);
+            if (target == null) continue;
+
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
 
-            var moved = await BoardGeometry.TryMoveIntoEngagement(_battle.GetActiveActors(), _battle.GetInactiveActors(), _battle.Field);
+            var activeActors = _battle.GetActiveActors();
+            var inactiveActors = _battle.GetInactiveActors();
+            var distanceInches = BoardGeometry.ClosestDistanceInches(activeActors, inactiveActors);
+            var moveVars = CombatHelpers.GetMoveVarsForTeam(_battle.ActiveTeamId, _battle.TeamAMove, _battle.TeamBMove);
+            if (!ShapeHelpers.CanCharge(squad, moveVars, distanceInches))
+            {
+                _battle.Hud?.ShowToast("Charge not allowed (must be within 12\" and follow rules).");
+                AudioManager.Instance?.Play("failedcharge");
+                GD.Print($"[Rules] Charge blocked. Distance: {distanceInches:0.0}\" Squad: {squad.Name}.");
+                continue;
+            }
+
+            var moved = await BoardGeometry.TryMoveIntoEngagement(activeActors, inactiveActors, _battle.Field);
             if (moved)
             {
                 _battle.ActiveSquadChargedThisTurn = true;
+                _battle.GrantTemporaryFirstStrike(squad);
             }
         }
     }
@@ -153,35 +168,99 @@ public sealed class CombatSequence
             .Where(s => BoardGeometry.ClosestDistanceInches(_battle.GetActorsForSquad(s), _battle.GetAliveSquadsForTeam(activeTeamId).SelectMany(es => _battle.GetActorsForSquad(es)).ToList()) <= 1f)
             .ToList();
 
-        int rounds = System.Math.Max(activeRucks.Count, inactiveRucks.Count);
+        var activeFirstStrike = activeRucks.Where(_battle.SquadHasFirstStrike).ToList();
+        var activeNormal = activeRucks.Where(s => !_battle.SquadHasFirstStrike(s)).ToList();
+        var inactiveFirstStrike = inactiveRucks.Where(_battle.SquadHasFirstStrike).ToList();
+        var inactiveNormal = inactiveRucks.Where(s => !_battle.SquadHasFirstStrike(s)).ToList();
+
+        await ResolveFightTierAlternating(inactiveTeamId, activeTeamId, inactiveFirstStrike, activeFirstStrike);
+        if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
+
+        await ResolveFightTierAlternating(inactiveTeamId, activeTeamId, inactiveNormal, activeNormal);
+    }
+
+    private async Task ResolveFightTierAlternating(int firstTeamId, int secondTeamId, System.Collections.Generic.List<Squad> firstTier, System.Collections.Generic.List<Squad> secondTier)
+    {
+        int rounds = System.Math.Max(firstTier.Count, secondTier.Count);
         for (int i = 0; i < rounds; i++)
         {
-            if (i < inactiveRucks.Count)
+            if (i < firstTier.Count)
             {
-                _battle.SetActiveSquadForTeam(inactiveTeamId, inactiveRucks[i]);
-                _battle.SetActiveSquadForTeam(activeTeamId, activeRucks.FirstOrDefault() ?? activeRucks.LastOrDefault());
+                var actingSquad = firstTier[i];
+                _battle.SetActiveSquadForTeam(firstTeamId, actingSquad);
+
+                var validTargets = GetFightTargetsInRange(actingSquad, secondTeamId);
+                if (validTargets.Count == 0)
+                {
+                    continue;
+                }
+
+                var targetSquad = await PickFightTargetAsync(actingSquad, secondTeamId, validTargets);
+                if (targetSquad == null)
+                {
+                    continue;
+                }
+
+                _battle.SetActiveSquadForTeam(secondTeamId, targetSquad);
                 var prev = _battle.ActiveTeamId;
-                _battle.ActiveTeamId = inactiveTeamId;
+                _battle.ActiveTeamId = firstTeamId;
                 await _battle.ResolveFightPhase();
                 _battle.ActiveTeamId = prev;
-                _battle.CheckVictory();
+                _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
 
-            if (i < activeRucks.Count)
+            if (i < secondTier.Count)
             {
-                _battle.SetActiveSquadForTeam(activeTeamId, activeRucks[i]);
-                _battle.SetActiveSquadForTeam(inactiveTeamId, inactiveRucks.FirstOrDefault() ?? inactiveRucks.LastOrDefault());
+                var actingSquad = secondTier[i];
+                _battle.SetActiveSquadForTeam(secondTeamId, actingSquad);
+
+                var validTargets = GetFightTargetsInRange(actingSquad, firstTeamId);
+                if (validTargets.Count == 0)
+                {
+                    continue;
+                }
+
+                var targetSquad = await PickFightTargetAsync(actingSquad, firstTeamId, validTargets);
+                if (targetSquad == null)
+                {
+                    continue;
+                }
+
+                _battle.SetActiveSquadForTeam(firstTeamId, targetSquad);
                 await _battle.ResolveFightPhase();
-                _battle.CheckVictory();
+                _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
         }
     }
 
+    private System.Collections.Generic.List<Squad> GetFightTargetsInRange(Squad attackerSquad, int enemyTeamId)
+    {
+        var attackerActors = _battle.GetActorsForSquad(attackerSquad);
+        return _battle.GetAliveSquadsForTeam(enemyTeamId)
+            .Where(enemySquad => BoardGeometry.ClosestDistanceInches(attackerActors, _battle.GetActorsForSquad(enemySquad)) <= 1f)
+            .ToList();
+    }
+
+    private async Task<Squad?> PickFightTargetAsync(Squad actingSquad, int enemyTeamId, System.Collections.Generic.IReadOnlyCollection<Squad> validTargets)
+    {
+        if (validTargets.Count == 1)
+        {
+            return validTargets.First();
+        }
+
+        return await _battle.PromptForEnemySquadTargetAsync(
+            $"{actingSquad.Name}: Click enemy squad to fight",
+            enemyTeamId,
+            validTargets
+        );
+    }
+
     private void EndTurn()
     {
         _battle.EnterPhase(BattlePhase.EndTurn);
+        _battle.ClearTemporaryAbilitiesAndTurnFlags();
         var nextTurn = _battle.CurrentTurn + 1;
         while (nextTurn > 2)
         {

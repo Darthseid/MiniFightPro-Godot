@@ -44,6 +44,17 @@ public partial class BattleField : Node2D
         _measureLabel = GetNodeOrNull<Label>("MeasureLabel");
         _moveLine = GetNodeOrNull<Line2D>("MoveLine");
         _moveLabel = GetNodeOrNull<Label>("MoveLabel");
+
+        if (_measureLine == null || _measureLabel == null)
+        {
+            GD.PushError("[BattleField] Missing required ruler nodes. Expected root children named 'MeasureLine' (Line2D) and 'MeasureLabel' (Label).");
+        }
+
+        if (_moveLine == null || _moveLabel == null)
+        {
+            GD.PushError("[BattleField] Missing required move ruler nodes. Expected root children named 'MoveLine' (Line2D) and 'MoveLabel' (Label).");
+        }
+
         ResetMeasureVisuals();
         ResetMoveRulerVisuals();
         FitBackgroundToViewport();
@@ -405,7 +416,7 @@ public partial class BattleField : Node2D
             var centerLocal = ToLocal(newCenterWorld);
             var mid = (originLocal + centerLocal) * 0.5f;
             var dir = centerLocal - originLocal;
-            var angle = dir.Angle();
+            var angle = GetReadableLabelAngle(dir.Angle());
             var normal = new Vector2(-Mathf.Sin(angle), Mathf.Cos(angle));
             _moveLabel.Position = mid + normal * 12f;
             _moveLabel.Rotation = angle;
@@ -585,6 +596,7 @@ public partial class BattleField : Node2D
         {
             _measureLabel.Visible = false;
             _measureLabel.Text = string.Empty;
+            _measureLabel.Rotation = 0f;
         }
     }
 
@@ -635,14 +647,27 @@ public partial class BattleField : Node2D
         {
             var mid = (startLocal + currentLocal) * 0.5f;
             var delta = currentLocal - startLocal;
-            var dir = delta.LengthSquared() > 0.001f ? delta.Normalized() : Vector2.Right;
-            var normal = new Vector2(-dir.Y, dir.X);
+            var rawAngle = delta.LengthSquared() > 0.001f ? delta.Angle() : 0f;
+            var angle = GetReadableLabelAngle(rawAngle);
+            var normal = new Vector2(-Mathf.Sin(angle), Mathf.Cos(angle));
             var offset = normal * 14f;
 
             _measureLabel.Visible = true;
             _measureLabel.Text = $"{inches:0.0}\"";
             _measureLabel.Position = mid + offset;
+            _measureLabel.Rotation = angle;
         }
+    }
+
+    private static float GetReadableLabelAngle(float angleRadians)
+    {
+        var wrapped = Mathf.Wrap(angleRadians, -Mathf.Pi, Mathf.Pi);
+        if (wrapped > Mathf.Pi * 0.5f || wrapped < -Mathf.Pi * 0.5f)
+        {
+            wrapped += Mathf.Pi;
+        }
+
+        return Mathf.Wrap(wrapped, -Mathf.Pi, Mathf.Pi);
     }
 
     private void EndMeasure()
@@ -653,7 +678,34 @@ public partial class BattleField : Node2D
 
     private bool IsPointerOverUi()
     {
-        return GetViewport()?.GuiGetHoveredControl() != null;
+        var hovered = GetViewport()?.GuiGetHoveredControl();
+        if (hovered == null)
+        {
+            return false;
+        }
+
+        if (hovered.Name == "BattleHud")
+        {
+            return false;
+        }
+
+        var current = hovered;
+        while (current != null)
+        {
+            if (current is BaseButton || current is ItemList)
+            {
+                return true;
+            }
+
+            if (current.Name == "BattleHud")
+            {
+                return false;
+            }
+
+            current = current.GetParentControl();
+        }
+
+        return false;
     }
 
     public override void _Input(InputEvent @event)
