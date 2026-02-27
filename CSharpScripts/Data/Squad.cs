@@ -202,7 +202,6 @@ public static class SquadAbilities
         PureDefense,
         Teleport,
         ShootShellshock,
-        OfficerOrder,
         Reanimator,
         AdvBoost1,
         AdvBoost6,

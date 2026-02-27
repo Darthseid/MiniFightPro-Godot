@@ -93,6 +93,9 @@ public static class StepChecks
 
             if (player.PlayerAbilities.Contains(PlayerAbilities.Subroutines) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.SubRoutine.Name))
                 squad.SquadAbilities.Add(SquadAbilities.SubRoutine);
+
+            if (player.PlayerAbilities.Contains(PlayerAbilities.OfficerOrder) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.OfficerOrder.Name))
+                squad.SquadAbilities.Add(SquadAbilities.OfficerOrder);
         }
     }
 

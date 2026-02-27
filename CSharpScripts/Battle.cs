@@ -46,6 +46,7 @@ public partial class Battle : Node2D
     private TaskCompletionSource<bool> _phaseAdvanceTcs;
     private readonly AudioStream _gameOverMusic = GD.Load<AudioStream>("res://Assets/raw/victory.mp3");
     private CombatSequence _sequence;
+    private bool _measureModeEnabled;
 
     public override void _Ready()
     {
@@ -152,6 +153,7 @@ public partial class Battle : Node2D
         {
             var squad = _teamAPlayer.TheirSquads[i];
             var spawned = _battleField.SpawnSquad(squad, true, LoadSquadTexture(squad, true)).ToList();
+            _teamAActors.AddRange(spawned);
             var offset = new Vector2(i * GameGlobals.Instance.FakeInchPx * 10f, 0f);
             foreach (var actor in spawned)
             {
@@ -163,6 +165,7 @@ public partial class Battle : Node2D
         {
             var squad = _teamBPlayer.TheirSquads[i];
             var spawned = _battleField.SpawnSquad(squad, false, LoadSquadTexture(squad, false)).ToList();
+            _teamBActors.AddRange(spawned);
             var offset = new Vector2(-i * GameGlobals.Instance.FakeInchPx * 10f, 0f);
             foreach (var actor in spawned)
             {
@@ -321,18 +324,34 @@ public partial class Battle : Node2D
     {
         _activeTeamId = teamId;
         EnterPhase(BattlePhase.Movement, announce: false);
-        await MovingStuff(
-            movementAllowanceInches: 100f,
-            ignoreMaxDistance: true,
-            enemyBufferInches: 9.05f,
-            enforceAircraftMinMove: false,
-            completesPhase: false,
-            updateMoveVars: false,
-            prompt: string.Empty,
-            autoMove: true
-        );
 
-            }
+        var squads = GetAliveSquadsForTeam(teamId);
+        var playerName = GetSquadName(teamId);
+        if (squads.Count == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < squads.Count; i++)
+        {
+            var squad = squads[i];
+            SetActiveSquadForTeam(teamId, squad);
+            _battleHud?.ShowToast($"{playerName}: Deploy {squad.Name} ({i + 1}/{squads.Count})", 2f);
+
+            await MovingStuff(
+                movementAllowanceInches: 100f,
+                ignoreMaxDistance: true,
+                enemyBufferInches: 9.05f,
+                enforceAircraftMinMove: false,
+                completesPhase: false,
+                updateMoveVars: false,
+                prompt: $"{squad.Name}: Move this squad during deployment?",
+                autoMove: false
+            );
+        }
+
+        SetActiveSquadForTeam(teamId, squads.FirstOrDefault());
+    }
 
     internal async Task EnterPhaseWithCadenceAsync(BattlePhase phase, string? overrideToast = null)
     {
@@ -788,33 +807,17 @@ public partial class Battle : Node2D
 
 
 
-    private async void OnMeasureRequested()
+    private void OnMeasureRequested()
     {
+        _measureModeEnabled = !_measureModeEnabled;
+        _battleField?.SetMeasuringMode(_measureModeEnabled);
+
         if (_battleHud == null)
         {
             return;
         }
 
-        var allSquads = _teamAPlayer.TheirSquads.Concat(_teamBPlayer.TheirSquads)
-            .Where(s => s != null && s.Composition != null && s.Composition.Count > 0)
-            .ToList();
-
-        if (allSquads.Count < 2)
-        {
-            _battleHud.ShowToast("Need at least two squads to measure.");
-            return;
-        }
-
-        var first = await _battleHud.ChooseOptionAsync("Select first squad", allSquads.Select(s => s.Name).ToList());
-        if (first < 0 || first >= allSquads.Count) return;
-
-        var second = await _battleHud.ChooseOptionAsync("Select second squad", allSquads.Select(s => s.Name).ToList());
-        if (second < 0 || second >= allSquads.Count) return;
-
-        var a = allSquads[first];
-        var b = allSquads[second];
-        var dist = BoardGeometry.ClosestDistanceInches(GetActorsForSquad(a), GetActorsForSquad(b));
-        _battleHud.ShowToast($"{a.Name} ↔ {b.Name}: {dist:0.0}");
+        _battleHud.ShowToast(_measureModeEnabled ? "Ruler ON" : "Ruler OFF", 1.2f);
     }
 
     internal List<Squad> GetSquadsWithinRadius(Squad targetSquad, float radiusInches, bool includeSameTeam)
