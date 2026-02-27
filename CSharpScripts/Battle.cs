@@ -884,13 +884,7 @@ public partial class Battle : Node2D
     {
         _measureModeEnabled = !_measureModeEnabled;
         _battleField?.SetMeasuringMode(_measureModeEnabled);
-
-        if (_battleHud == null)
-        {
-            return;
-        }
-
-        _battleHud.ShowToast(_measureModeEnabled ? "Ruler ON" : "Ruler OFF", 1.2f);
+        _battleHud?.SetMeasureButtonEnabledVisual(_measureModeEnabled);
     }
 
     internal List<Squad> GetSquadsWithinRadius(Squad targetSquad, float radiusInches, bool includeSameTeam)
