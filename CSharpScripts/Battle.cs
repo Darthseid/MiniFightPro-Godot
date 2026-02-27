@@ -432,8 +432,8 @@ public partial class Battle : Node2D
             return;
         }
 
-        _teamAPlayer.TheirSquads.RemoveAll(s => s == null || s.Composition == null || s.Composition.Count == 0);
-        _teamBPlayer.TheirSquads.RemoveAll(s => s == null || s.Composition == null || s.Composition.Count == 0);
+        _teamAPlayer.TheirSquads.RemoveAll(s => s == null || s.Composition == null || !s.Composition.Any(m => m != null && m.Health > 0));
+        _teamBPlayer.TheirSquads.RemoveAll(s => s == null || s.Composition == null || !s.Composition.Any(m => m != null && m.Health > 0));
 
         var teamAModelCount = CountPlayerModels(_teamAPlayer);
         var teamBModelCount = CountPlayerModels(_teamBPlayer);
@@ -472,7 +472,65 @@ public partial class Battle : Node2D
             return 0;
         }
 
-        return player.TheirSquads.Sum(squad => squad?.Composition?.Count ?? 0);
+        return player.TheirSquads.Sum(squad => squad?.Composition?.Count(model => model != null && model.Health > 0) ?? 0);
+    }
+
+    internal void PostDamageCleanupAndVictoryCheck()
+    {
+        var allSquads = (_teamAPlayer?.TheirSquads ?? new List<Squad>())
+            .Concat(_teamBPlayer?.TheirSquads ?? new List<Squad>())
+            .Where(squad => squad != null)
+            .ToList();
+
+        foreach (var squad in allSquads)
+        {
+            CombatEngine.RemoveDeadModels(GetActorsForSquad(squad), squad, _battleField);
+        }
+
+        CheckVictory();
+    }
+
+    internal bool SquadHasFirstStrike(Squad squad)
+    {
+        return squad?.SquadAbilities?.Any(ability => ability?.Innate == SquadAbilities.FirstStrike.Innate) == true;
+    }
+
+    internal void GrantTemporaryFirstStrike(Squad squad)
+    {
+        if (squad?.SquadAbilities == null)
+        {
+            return;
+        }
+
+        if (squad.SquadAbilities.Any(ability => ability?.Innate == SquadAbilities.FirstStrikeTemp.Innate && ability.IsTemporary))
+        {
+            return;
+        }
+
+        squad.SquadAbilities.Add(new SquadAbility(
+            SquadAbilities.FirstStrikeTemp.Innate,
+            SquadAbilities.FirstStrikeTemp.Name,
+            SquadAbilities.FirstStrikeTemp.Modifier,
+            true
+        ));
+    }
+
+    internal void ClearTemporaryAbilitiesAndTurnFlags()
+    {
+        foreach (var squad in (_teamAPlayer?.TheirSquads ?? new List<Squad>()).Concat(_teamBPlayer?.TheirSquads ?? new List<Squad>()))
+        {
+            if (squad == null)
+            {
+                continue;
+            }
+
+            squad.SquadAbilities = StepChecks.CleanupTemporaryAbilities(squad);
+        }
+
+        _teamAMove = new MoveVars(false, false, false);
+        _teamBMove = new MoveVars(false, false, false);
+        _activeSquadChargedThisTurn = false;
+        _activeSquadMovedAfterShootingThisTurn = false;
     }
 
     private async Task EndBattleAsync(Player winner)
@@ -830,9 +888,7 @@ public partial class Battle : Node2D
             processedExplosions++;
         }
 
-        CombatEngine.RemoveDeadModels(GetActorsForSquad(explodedSquad), explodedSquad);
-        CombatEngine.RemoveDeadModels(GetActorsForSquad(enemySquad), enemySquad);
-                CheckVictory();
+        PostDamageCleanupAndVictoryCheck();
     }
 
     internal async Task ResolveShootingPhase()
@@ -869,7 +925,7 @@ public partial class Battle : Node2D
             _teamBMove,
             _battleHud,
             _battleField,
-            CheckVictory,
+            PostDamageCleanupAndVictoryCheck,
             HandleExplosionProcess
         );
     }
@@ -908,7 +964,7 @@ public partial class Battle : Node2D
             _teamBMove,
             _battleHud,
             _battleField,
-            CheckVictory,
+            PostDamageCleanupAndVictoryCheck,
             HandleExplosionProcess
         );
     }
@@ -1017,7 +1073,7 @@ public partial class Battle : Node2D
             AudioManager.Instance?.Play("punch");
         }
 
-                CheckVictory();
+        PostDamageCleanupAndVictoryCheck();
     }
 
     internal int GetTeamIdForSquad(Squad squad)

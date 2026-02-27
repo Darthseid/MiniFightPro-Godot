@@ -35,6 +35,8 @@ public sealed class CombatSequence
 
         await StepChecks.RoundStartChecks(activePlayer, inactivePlayer, _battle.Hud);
         await StepChecks.CommandPhaseChecks(activePlayer, inactivePlayer, null, null, _battle.Hud);
+        _battle.PostDamageCleanupAndVictoryCheck();
+        if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
         _battle.Hud?.ShowToast("Press ➡️ for Movement");
         await _battle.WaitForPhaseAdvanceAsync();
 
@@ -148,6 +150,7 @@ public sealed class CombatSequence
             if (moved)
             {
                 _battle.ActiveSquadChargedThisTurn = true;
+                _battle.GrantTemporaryFirstStrike(squad);
             }
         }
     }
@@ -165,27 +168,40 @@ public sealed class CombatSequence
             .Where(s => BoardGeometry.ClosestDistanceInches(_battle.GetActorsForSquad(s), _battle.GetAliveSquadsForTeam(activeTeamId).SelectMany(es => _battle.GetActorsForSquad(es)).ToList()) <= 1f)
             .ToList();
 
-        int rounds = System.Math.Max(activeRucks.Count, inactiveRucks.Count);
+        var activeFirstStrike = activeRucks.Where(_battle.SquadHasFirstStrike).ToList();
+        var activeNormal = activeRucks.Where(s => !_battle.SquadHasFirstStrike(s)).ToList();
+        var inactiveFirstStrike = inactiveRucks.Where(_battle.SquadHasFirstStrike).ToList();
+        var inactiveNormal = inactiveRucks.Where(s => !_battle.SquadHasFirstStrike(s)).ToList();
+
+        await ResolveFightTierAlternating(inactiveTeamId, activeTeamId, inactiveFirstStrike, activeFirstStrike);
+        if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
+
+        await ResolveFightTierAlternating(inactiveTeamId, activeTeamId, inactiveNormal, activeNormal);
+    }
+
+    private async Task ResolveFightTierAlternating(int firstTeamId, int secondTeamId, System.Collections.Generic.List<Squad> firstTier, System.Collections.Generic.List<Squad> secondTier)
+    {
+        int rounds = System.Math.Max(firstTier.Count, secondTier.Count);
         for (int i = 0; i < rounds; i++)
         {
-            if (i < inactiveRucks.Count)
+            if (i < firstTier.Count)
             {
-                _battle.SetActiveSquadForTeam(inactiveTeamId, inactiveRucks[i]);
-                _battle.SetActiveSquadForTeam(activeTeamId, activeRucks.FirstOrDefault() ?? activeRucks.LastOrDefault());
+                _battle.SetActiveSquadForTeam(firstTeamId, firstTier[i]);
+                _battle.SetActiveSquadForTeam(secondTeamId, secondTier.FirstOrDefault() ?? secondTier.LastOrDefault());
                 var prev = _battle.ActiveTeamId;
-                _battle.ActiveTeamId = inactiveTeamId;
+                _battle.ActiveTeamId = firstTeamId;
                 await _battle.ResolveFightPhase();
                 _battle.ActiveTeamId = prev;
-                _battle.CheckVictory();
+                _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
 
-            if (i < activeRucks.Count)
+            if (i < secondTier.Count)
             {
-                _battle.SetActiveSquadForTeam(activeTeamId, activeRucks[i]);
-                _battle.SetActiveSquadForTeam(inactiveTeamId, inactiveRucks.FirstOrDefault() ?? inactiveRucks.LastOrDefault());
+                _battle.SetActiveSquadForTeam(secondTeamId, secondTier[i]);
+                _battle.SetActiveSquadForTeam(firstTeamId, firstTier.FirstOrDefault() ?? firstTier.LastOrDefault());
                 await _battle.ResolveFightPhase();
-                _battle.CheckVictory();
+                _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
         }
@@ -194,6 +210,7 @@ public sealed class CombatSequence
     private void EndTurn()
     {
         _battle.EnterPhase(BattlePhase.EndTurn);
+        _battle.ClearTemporaryAbilitiesAndTurnFlags();
         var nextTurn = _battle.CurrentTurn + 1;
         while (nextTurn > 2)
         {
