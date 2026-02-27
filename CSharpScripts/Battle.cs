@@ -44,6 +44,9 @@ public partial class Battle : Node2D
     private bool _isBattleEnding;
     private TaskCompletionSource<bool> _movementTcs;
     private TaskCompletionSource<bool> _phaseAdvanceTcs;
+    private TaskCompletionSource<Squad?>? _enemyTargetSelectionTcs;
+    private bool _awaitingEnemyTargetSelection;
+    private int _enemyTargetTeamId = -1;
     private readonly AudioStream _gameOverMusic = GD.Load<AudioStream>("res://Assets/raw/victory.mp3");
     private CombatSequence _sequence;
     private bool _measureModeEnabled;
@@ -240,6 +243,25 @@ public partial class Battle : Node2D
     private void HandleActorSelected(BattleModelActor actor, Vector2 pointerGlobal)
     {
         PruneDisposedActors("HandleActorSelected");
+
+        if (_awaitingEnemyTargetSelection)
+        {
+            if (actor != null && actor.TeamId == _enemyTargetTeamId)
+            {
+                var squad = FindSquadByActor(actor, _enemyTargetTeamId);
+                if (squad != null)
+                {
+                    AudioManager.Instance?.Play("select");
+                    _awaitingEnemyTargetSelection = false;
+                    ShapeHelpers.SetSelectableVisuals(GetInactiveActors(), false);
+                    _enemyTargetSelectionTcs?.TrySetResult(squad);
+                    return;
+                }
+            }
+
+            return;
+        }
+
         if (_awaitingMovement)
         {
             ShapeHelpers.SetSelectableVisuals(GetActiveActors(), false);
@@ -261,6 +283,11 @@ public partial class Battle : Node2D
         );
         _selectedTeamId = selection.SelectedTeamId;
         _selectedActors = selection.SelectedActors;
+
+        if (actor != null && actor.TeamId == _activeTeamId && _selectedActors.Count > 0)
+        {
+            AudioManager.Instance?.Play("select");
+        }
     }
 
     private void HandleDragUpdated()
@@ -495,6 +522,51 @@ public partial class Battle : Node2D
         {
             _battleHud?.ShowToast($"Phase: {phase}");
         }
+
+        var phaseSound = phase switch
+        {
+            BattlePhase.Command => "stratagem",
+            BattlePhase.Movement => "startmovement",
+            BattlePhase.Shooting => "startshooting",
+            BattlePhase.Charge => "charge",
+            BattlePhase.Fight => "startfight",
+            BattlePhase.EndTurn => "turnover",
+            _ => null
+        };
+
+        if (!string.IsNullOrWhiteSpace(phaseSound))
+        {
+            AudioManager.Instance?.Play(phaseSound);
+        }
+    }
+
+    internal async Task<Squad?> PromptForEnemySquadTargetAsync(string prompt, int enemyTeamId)
+    {
+        _battleHud?.ShowToast(prompt, 2.5f);
+        _enemyTargetTeamId = enemyTeamId;
+        _awaitingEnemyTargetSelection = true;
+        _enemyTargetSelectionTcs = new TaskCompletionSource<Squad?>();
+
+        ShapeHelpers.SetSelectableVisuals(GetInactiveActors(), true);
+        var selectedSquad = await _enemyTargetSelectionTcs.Task;
+        ShapeHelpers.SetSelectableVisuals(GetInactiveActors(), false);
+
+        _enemyTargetSelectionTcs = null;
+        _enemyTargetTeamId = -1;
+        _awaitingEnemyTargetSelection = false;
+
+        return selectedSquad;
+    }
+
+    private Squad? FindSquadByActor(BattleModelActor actor, int teamId)
+    {
+        if (actor?.BoundModel == null)
+        {
+            return null;
+        }
+
+        var squads = GetAliveSquadsForTeam(teamId);
+        return squads.FirstOrDefault(squad => squad?.Composition?.Contains(actor.BoundModel) == true);
     }
 
     internal void SyncGlobalTurnRound()

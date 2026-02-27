@@ -101,9 +101,9 @@ public sealed class CombatSequence
             var wantsShoot = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Shoot this phase?");
             if (!wantsShoot) continue;
 
-            var targetIndex = await _battle.Hud.ChooseOptionAsync($"{squad.Name}: Select target squad", enemyOptions.Select(s => s.Name).ToList());
-            if (targetIndex < 0 || targetIndex >= enemyOptions.Count) continue;
-            var target = enemyOptions[targetIndex];
+            var target = await _battle.PromptForEnemySquadTargetAsync($"{squad.Name}: Click enemy squad to shoot", enemyTeamId);
+            if (target == null) continue;
+
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
 
             await _battle.ResolveShootingPhase();
@@ -127,9 +127,9 @@ public sealed class CombatSequence
             var wantsCharge = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Charge this phase?");
             if (!wantsCharge) continue;
 
-            var targetIndex = await _battle.Hud.ChooseOptionAsync($"{squad.Name}: Select charge target", enemyOptions.Select(s => s.Name).ToList());
-            if (targetIndex < 0 || targetIndex >= enemyOptions.Count) continue;
-            var target = enemyOptions[targetIndex];
+            var target = await _battle.PromptForEnemySquadTargetAsync($"{squad.Name}: Click enemy squad to charge", enemyTeamId);
+            if (target == null) continue;
+
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
 
             var moved = await BoardGeometry.TryMoveIntoEngagement(_battle.GetActiveActors(), _battle.GetInactiveActors(), _battle.Field);
