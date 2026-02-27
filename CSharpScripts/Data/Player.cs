@@ -59,6 +59,7 @@ public static class PlayerAbilities
     public const string Berserk = "Berserk";
     public const string Grief = "Demonic Grief";
     public const string Subroutines = "Subroutines";
+    public const string OfficerOrder = "Officer Order";
 
     public static readonly IReadOnlyList<string> All = new List<string>
     {
@@ -69,6 +70,7 @@ public static class PlayerAbilities
         Martial,
         Berserk,
         Grief,
-        Subroutines
+        Subroutines,
+        OfficerOrder
     };
 }

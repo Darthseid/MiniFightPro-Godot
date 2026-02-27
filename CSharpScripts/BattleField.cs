@@ -24,6 +24,15 @@ public partial class BattleField : Node2D
     private bool _isDragging;
     private AudioManager? _audioManager;
     private Sprite2D? _battleBackground;
+    private Line2D? _measureLine;
+    private Label? _measureLabel;
+    private bool _isMeasuringMode;
+    private bool _measureActive;
+    private Vector2 _measureStartWorld;
+    private Line2D? _moveLine;
+    private Label? _moveLabel;
+    private bool _moveRulerActive;
+    private Vector2 _moveOrigin;
 
     public override void _Ready()
     {
@@ -31,6 +40,12 @@ public partial class BattleField : Node2D
         _unitsTeamB = GetNodeOrNull<Node2D>("UnitsTeamB");
         _audioManager = GetNodeOrNull<AudioManager>("AudioManager");
         _battleBackground = GetNodeOrNull<Sprite2D>("BattleBackground");
+        _measureLine = GetNodeOrNull<Line2D>("MeasureLine");
+        _measureLabel = GetNodeOrNull<Label>("MeasureLabel");
+        _moveLine = GetNodeOrNull<Line2D>("MoveLine");
+        _moveLabel = GetNodeOrNull<Label>("MoveLabel");
+        ResetMeasureVisuals();
+        ResetMoveRulerVisuals();
         FitBackgroundToViewport();
 
         var sfxRoot = GetNodeOrNull<Node>("SfxPlayers");
@@ -200,6 +215,8 @@ public partial class BattleField : Node2D
         _dragStartPositions.Clear();
         _lastValidPositions.Clear();
         _isDragging = false;
+        _moveRulerActive = false;
+        ResetMoveRulerVisuals();
     }
 
     public IReadOnlyList<BattleModelActor> SpawnSquad(Squad theSquad, bool isTeamA, Texture2D teamTexture)
@@ -322,6 +339,80 @@ public partial class BattleField : Node2D
         return actor;
     }
 
+    private Vector2 GetSquadCenter(IReadOnlyList<BattleModelActor> actors)
+    {
+        if (actors == null || actors.Count == 0)
+        {
+            return Vector2.Zero;
+        }
+
+        var sum = Vector2.Zero;
+        var count = 0;
+        foreach (var actor in actors)
+        {
+            if (!IsActorUsable(actor))
+            {
+                continue;
+            }
+
+            sum += actor.GlobalPosition;
+            count++;
+        }
+
+        if (count <= 0)
+        {
+            return Vector2.Zero;
+        }
+
+        return sum / count;
+    }
+
+    private void ResetMoveRulerVisuals()
+    {
+        if (_moveLine != null)
+        {
+            _moveLine.Visible = false;
+            _moveLine.ClearPoints();
+        }
+
+        if (_moveLabel != null)
+        {
+            _moveLabel.Visible = false;
+            _moveLabel.Text = string.Empty;
+            _moveLabel.Rotation = 0f;
+        }
+    }
+
+    private void UpdateMoveRuler(Vector2 newCenterWorld)
+    {
+        if (_moveLine != null)
+        {
+            var originLocal = ToLocal(_moveOrigin);
+            var centerLocal = ToLocal(newCenterWorld);
+            _moveLine.Visible = true;
+            _moveLine.ClearPoints();
+            _moveLine.AddPoint(originLocal);
+            _moveLine.AddPoint(centerLocal);
+        }
+
+        if (_moveLabel != null)
+        {
+            var fakeInchPx = GameGlobals.Instance?.FakeInchPx ?? 1f;
+            var distInches = _moveOrigin.DistanceTo(newCenterWorld) / Mathf.Max(0.001f, fakeInchPx);
+            _moveLabel.Text = $"{distInches:0.0}\"";
+
+            var originLocal = ToLocal(_moveOrigin);
+            var centerLocal = ToLocal(newCenterWorld);
+            var mid = (originLocal + centerLocal) * 0.5f;
+            var dir = centerLocal - originLocal;
+            var angle = dir.Angle();
+            var normal = new Vector2(-Mathf.Sin(angle), Mathf.Cos(angle));
+            _moveLabel.Position = mid + normal * 12f;
+            _moveLabel.Rotation = angle;
+            _moveLabel.Visible = true;
+        }
+    }
+
     public void BeginDragSquad(IReadOnlyList<BattleModelActor> actors, Vector2 pointerPosGlobal, float maxMoveInches = -1f, float enemyBufferInches = 1.05f)
     {
         PruneTrackingState("BeginDragSquad");
@@ -366,6 +457,12 @@ public partial class BattleField : Node2D
         _dragStartPointer = pointerPosGlobal;
         _maxMoveInches = maxMoveInches;
         _enemyBufferInches = enemyBufferInches;
+
+        SetMeasuringMode(false);
+        _moveOrigin = GetSquadCenter(_draggingActors);
+        _moveRulerActive = true;
+        UpdateMoveRuler(_moveOrigin);
+
         _isDragging = true;
     }
 
@@ -437,6 +534,12 @@ public partial class BattleField : Node2D
             }
         }
 
+        if (_moveRulerActive)
+        {
+            var newCenter = GetSquadCenter(_draggingActors);
+            UpdateMoveRuler(newCenter);
+        }
+
         DragUpdated?.Invoke();
     }
 
@@ -454,12 +557,176 @@ public partial class BattleField : Node2D
         _draggingEnemies.Clear();
         _maxMoveInches = -1f;
         _enemyBufferInches = 1.05f;
+        _moveRulerActive = false;
+        ResetMoveRulerVisuals();
         DragEnded?.Invoke();
+    }
+
+
+    public void SetMeasuringMode(bool enabled)
+    {
+        _isMeasuringMode = enabled;
+        if (!enabled)
+        {
+            _measureActive = false;
+            ResetMeasureVisuals();
+        }
+    }
+
+    private void ResetMeasureVisuals()
+    {
+        if (_measureLine != null)
+        {
+            _measureLine.Visible = false;
+            _measureLine.ClearPoints();
+        }
+
+        if (_measureLabel != null)
+        {
+            _measureLabel.Visible = false;
+            _measureLabel.Text = string.Empty;
+        }
+    }
+
+    private void StartMeasure(Vector2 pointerWorld)
+    {
+        _measureStartWorld = pointerWorld;
+        _measureActive = true;
+
+        if (_measureLine != null)
+        {
+            _measureLine.Visible = true;
+            _measureLine.ClearPoints();
+            var startLocal = ToLocal(pointerWorld);
+            _measureLine.AddPoint(startLocal);
+            _measureLine.AddPoint(startLocal);
+        }
+
+        if (_measureLabel != null)
+        {
+            _measureLabel.Visible = true;
+            _measureLabel.Text = "0.0\"";
+            _measureLabel.Position = ToLocal(pointerWorld);
+        }
+    }
+
+    private void UpdateMeasure(Vector2 pointerWorld)
+    {
+        if (!_measureActive)
+        {
+            return;
+        }
+
+        var startLocal = ToLocal(_measureStartWorld);
+        var currentLocal = ToLocal(pointerWorld);
+
+        if (_measureLine != null)
+        {
+            _measureLine.Visible = true;
+            _measureLine.ClearPoints();
+            _measureLine.AddPoint(startLocal);
+            _measureLine.AddPoint(currentLocal);
+        }
+
+        var fakeInchPx = GameGlobals.Instance?.FakeInchPx ?? 1f;
+        var inches = _measureStartWorld.DistanceTo(pointerWorld) / Mathf.Max(0.001f, fakeInchPx);
+
+        if (_measureLabel != null)
+        {
+            var mid = (startLocal + currentLocal) * 0.5f;
+            var delta = currentLocal - startLocal;
+            var dir = delta.LengthSquared() > 0.001f ? delta.Normalized() : Vector2.Right;
+            var normal = new Vector2(-dir.Y, dir.X);
+            var offset = normal * 14f;
+
+            _measureLabel.Visible = true;
+            _measureLabel.Text = $"{inches:0.0}\"";
+            _measureLabel.Position = mid + offset;
+        }
+    }
+
+    private void EndMeasure()
+    {
+        _measureActive = false;
+        ResetMeasureVisuals();
+    }
+
+
+    private bool IsPointerOverUi()
+    {
+        return GetViewport()?.GuiGetHoveredControl() != null;
     }
 
     public override void _Input(InputEvent @event)
     {
         PruneTrackingState("_Input");
+
+        if (_isMeasuringMode && !_isDragging)
+        {
+            switch (@event)
+            {
+                case InputEventMouseButton button when button.ButtonIndex == MouseButton.Left && button.Pressed:
+                    if (IsPointerOverUi())
+                    {
+                        if (_measureActive)
+                        {
+                            EndMeasure();
+                        }
+                        return;
+                    }
+
+                    StartMeasure(GetPointerGlobal(button.Position));
+                    GetViewport().SetInputAsHandled();
+                    return;
+
+                case InputEventScreenTouch touch when touch.Pressed:
+                    if (IsPointerOverUi())
+                    {
+                        if (_measureActive)
+                        {
+                            EndMeasure();
+                        }
+                        return;
+                    }
+
+                    StartMeasure(GetPointerGlobal(touch.Position));
+                    GetViewport().SetInputAsHandled();
+                    return;
+
+                case InputEventMouseMotion motion when _measureActive:
+                    if (IsPointerOverUi())
+                    {
+                        EndMeasure();
+                        return;
+                    }
+
+                    UpdateMeasure(GetPointerGlobal(motion.Position));
+                    GetViewport().SetInputAsHandled();
+                    return;
+
+                case InputEventScreenDrag drag when _measureActive:
+                    if (IsPointerOverUi())
+                    {
+                        EndMeasure();
+                        return;
+                    }
+
+                    UpdateMeasure(GetPointerGlobal(drag.Position));
+                    GetViewport().SetInputAsHandled();
+                    return;
+
+                case InputEventMouseButton button when button.ButtonIndex == MouseButton.Left && !button.Pressed && _measureActive:
+                    EndMeasure();
+                    GetViewport().SetInputAsHandled();
+                    return;
+
+                case InputEventScreenTouch touch when !touch.Pressed && _measureActive:
+                    EndMeasure();
+                    GetViewport().SetInputAsHandled();
+                    return;
+            }
+        }
+
         if (!_isDragging)
             return;
 
