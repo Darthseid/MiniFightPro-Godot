@@ -651,7 +651,6 @@ public partial class BattleField : Node2D
         ResetMeasureVisuals();
     }
 
-
     private bool IsPointerOverUi()
     {
         return GetViewport()?.GuiGetHoveredControl() != null;
