@@ -65,6 +65,32 @@ texture = SubResource("CompressedTexture2D_wx2gs")
 
 [node name="UnitsTeamB" type="Node2D" parent="." unique_id=1407114455]
 
+[node name="MeasureLine" type="Line2D" parent="." unique_id=1407114456]
+visible = false
+z_index = 90
+width = 4.0
+default_color = Color(1, 0.35, 0.1, 1)
+
+[node name="MeasureLabel" type="Label" parent="." unique_id=1407114457]
+visible = false
+z_index = 91
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+text = "0.0\""
+
+[node name="MoveLine" type="Line2D" parent="." unique_id=1407114458]
+visible = false
+z_index = 88
+width = 4.0
+default_color = Color(0.2, 1, 0.45, 1)
+
+[node name="MoveLabel" type="Label" parent="." unique_id=1407114459]
+visible = false
+z_index = 89
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+text = "0.0\""
+
 [node name="AudioManager" type="Node" parent="." unique_id=1447000001]
 script = ExtResource("2_audio")
 

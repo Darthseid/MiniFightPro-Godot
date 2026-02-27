@@ -543,44 +543,35 @@ public partial class GameData : Node
             tankSquad.Add(presetModels[5].DeepCopy());
         }
 
+        var ast = new Squad("Guard Squad", 6f, 3, 5, 7, 7, 7, new List<string> { "Infantry" }, false, guardSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility> { SquadAbilities.SubRoutine });
+        var ade = new Squad("Marine Squad", 6f, 4, 3, 7, 7, 6, new List<string> { "Infantry" }, false, marineSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility> { SquadAbilities.Satanic });
+        var tnk = new Squad("Battle Tanks", 10f, 11, 2, 13, 7, 7, new List<string> { "Vehicle" }, false, tankSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.DeathExplode2 });
+        var vert = new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.MartialStance });
+        var dak = new Squad("Homemade Biplane", 99.9f, 9, 3, 4, 7, 7, new List<string> { "Aircraft", "Fly", "Vehicle" }, false, planeSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.MinusHitRanged });
+        var pyl = new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.DeathExplode2, SquadAbilities.Reanimator, SquadAbilities.Teleport });
+        var seer = new Squad("Clairvoyant", 7f, 3, 6, 4, 7, 6, new List<string> { "Character", "Infantry", "Psychic" }, true, clairvoyantModels.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.PsiDefense });
+
         var presetSquads = new List<Squad>
         {
-            new Squad("Guard Squad", 6f, 3, 5, 7, 7, 7, new List<string> { "Infantry" }, false, guardSquad, 20, new List<SquadAbility> { SquadAbilities.OfficerOrder }),
-            new Squad("Marine Squad", 6f, 4, 3, 7, 7, 6, new List<string> { "Infantry" }, false, marineSquad, 20, new List<SquadAbility> { SquadAbilities.Satanic }),
-            new Squad("Battle Tanks", 10f, 11, 2, 13, 7, 7, new List<string> { "Vehicle" }, false, tankSquad, 3, new List<SquadAbility> { SquadAbilities.DeathExplode2 }),
-            new Squad("Homemade Biplane", 99.9f, 9, 3, 4, 7, 7, new List<string> { "Aircraft", "Fly", "Vehicle" }, false, planeSquad, 1, new List<SquadAbility> { SquadAbilities.DeathExplode2 }),
-            new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel, 1, new List<SquadAbility> { SquadAbilities.DeathExplode2, SquadAbilities.Reanimator, SquadAbilities.Teleport }),
-            new Squad("Clairvoyant", 7f, 3, 6, 4, 7, 6, new List<string> { "Character", "Infantry", "Psychic" }, true, clairvoyantModels, 1, new List<SquadAbility>()),
-            new Squad("Huge Mecha", 10f, 16, 2, 5, 7, 6, new List<string> { "Titanic", "Vehicle" }, false, mechaSquad, 1, new List<SquadAbility> { SquadAbilities.DeathExplode2 }),
-            new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad, 3, new List<SquadAbility> { SquadAbilities.DeathExplode3 })
+            new Squad("Guard Squad", 6f, 3, 5, 7, 7, 7, new List<string> { "Infantry" }, false, guardSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility>()),
+            new Squad("Marine Squad", 6f, 4, 3, 7, 7, 6, new List<string> { "Infantry" }, false, marineSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility> { SquadAbilities.Satanic }),
+            new Squad("Battle Tanks", 10f, 11, 2, 13, 7, 7, new List<string> { "Vehicle" }, false, tankSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.DeathExplode2 }),
+            new Squad("Homemade Biplane", 99.9f, 9, 3, 4, 7, 7, new List<string> { "Aircraft", "Fly", "Vehicle" }, false, planeSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.MinusHitRanged }),
+            new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.DeathExplode2, SquadAbilities.Reanimator, SquadAbilities.Teleport }),
+            new Squad("Clairvoyant", 7f, 3, 6, 4, 7, 6, new List<string> { "Character", "Infantry", "Psychic" }, true, clairvoyantModels.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.PsiDefense }),
+            new Squad("Huge Mecha", 10f, 16, 2, 5, 7, 6, new List<string> { "Titanic", "Vehicle" }, false, mechaSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.DeathExplode3 }),
+            new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.MartialStance })
         };
+
+        var infForces = new List<Squad> { ast, ade };
+        var vehForces = new List<Squad> { tnk, vert };
+        var xeno = new List<Squad> { seer, dak, pyl };
 
         var presetPlayers = new List<Player>
         {
-            new Player(
-                new List<Squad>
-                {
-                    presetSquads[0].DeepCopy(),
-                    presetSquads[1].DeepCopy(),
-                    presetSquads[2].DeepCopy()
-                },
-                6,
-                new List<Order>(),
-                false,
-                "Alliance Vanguard",
-                new List<string> { PlayerAbilities.WarriorBless, PlayerAbilities.Grim }),
-            new Player(
-                new List<Squad>
-                {
-                    presetSquads[3].DeepCopy(),
-                    presetSquads[4].DeepCopy(),
-                    presetSquads[7].DeepCopy()
-                },
-                6,
-                new List<Order>(),
-                true,
-                "Ravager Swarm",
-                new List<string> { PlayerAbilities.HiveMind, PlayerAbilities.AlienTerror, PlayerAbilities.Berserk })
+            new Player(infForces, 5, new List<Order>(), false, "Human Dominion", new List<string>()),
+            new Player(vehForces, 5, new List<Order>(), false, "Cyborg Alliance", new List<string> { PlayerAbilities.Subroutines }),
+            new Player(xeno, 6, new List<Order>(), false, "Saint Xelia's Armies", new List<string> { PlayerAbilities.AlienTerror })
         };
 
         WeaponList = presetWeapons;
