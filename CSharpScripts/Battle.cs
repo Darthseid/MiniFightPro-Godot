@@ -38,6 +38,7 @@ public partial class Battle : Node2D
     private bool _enforceAircraftMinMove;
     private bool _movementCompletesPhase = true;
     private bool _movementUpdatesMoveVars = true;
+    private bool _movementAllowsTeleport;
     private bool _awaitingMovement;
     private bool _activeSquadChargedThisTurn;
     private bool _activeSquadMovedAfterShootingThisTurn;
@@ -645,6 +646,13 @@ public partial class Battle : Node2D
         _movementIgnoresMaxLimit = ignoreMaxDistance;
         _movementEnemyBufferInches = enemyBufferInches;
         _enforceAircraftMinMove = enforceAircraftMinMove;
+
+        var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
+        _movementAllowsTeleport = activeSquad?.SquadAbilities?.Any(ability => ability?.Innate == "Tele") == true;
+        if (_movementAllowsTeleport)
+        {
+            _movementEnemyBufferInches = 0f;
+        }
     }
 
     internal MoveVars FinishMovementPhase(bool didAttemptMove)
@@ -661,9 +669,31 @@ public partial class Battle : Node2D
         }
 
         var didMove = didAttemptMove && maxMoved > 0.1f;
+        var movedInches = maxMoved / Mathf.Max(0.001f, GameGlobals.Instance.FakeInchPx);
+
+        var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
+
+        if (_movementAllowsTeleport && didMove)
+        {
+            const float teleportMaxInches = 12f;
+            if (movedInches > teleportMaxInches)
+            {
+                foreach (var actor in activeActors)
+                {
+                    if (_movementStartPositions.TryGetValue(actor, out var startPos))
+                    {
+                        actor.GlobalPosition = startPos;
+                    }
+                }
+
+                didMove = false;
+                _battleHud?.ShowToast($"Teleport move is limited to {teleportMaxInches:0.#}\".");
+                GD.Print($"[Rules] Blocked teleport move > {teleportMaxInches}\" (attempted {movedInches:0.0}\").");
+            }
+        }
+
         if (didMove)
         {
-            var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
             var moveSound = activeSquad?.SquadType.Contains("Mounted") == true ? "motorcycle" : "moved";
             AudioManager.Instance?.Play(moveSound);
         }
@@ -681,6 +711,7 @@ public partial class Battle : Node2D
 
                 didMove = false;
                 _battleHud?.ShowToast($"Aircraft must move at least 20\" ({maxMoved / GameGlobals.Instance.FakeInchPx:0.0}\").");
+                GD.Print($"[Rules] Blocked aircraft move under 20\" (attempted {movedInches:0.0}\").");
             }
         }
 
@@ -730,6 +761,12 @@ public partial class Battle : Node2D
         _movementTcs = new TaskCompletionSource<bool>();
         _battleHud.ShowToast("Drag your squad to move.");
         await _movementTcs.Task;
+
+        if (_movementAllowsTeleport)
+        {
+            GD.Print("[Rules] Teleport movement validation applied for this squad.");
+        }
+
         return CombatHelpers.GetActiveMoveVars(_activeTeamId, _teamAMove, _teamBMove);
     }
 

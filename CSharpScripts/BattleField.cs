@@ -44,6 +44,17 @@ public partial class BattleField : Node2D
         _measureLabel = GetNodeOrNull<Label>("MeasureLabel");
         _moveLine = GetNodeOrNull<Line2D>("MoveLine");
         _moveLabel = GetNodeOrNull<Label>("MoveLabel");
+
+        if (_measureLine == null || _measureLabel == null)
+        {
+            GD.PushError("[BattleField] Missing required ruler nodes. Expected root children named 'MeasureLine' (Line2D) and 'MeasureLabel' (Label).");
+        }
+
+        if (_moveLine == null || _moveLabel == null)
+        {
+            GD.PushError("[BattleField] Missing required move ruler nodes. Expected root children named 'MoveLine' (Line2D) and 'MoveLabel' (Label).");
+        }
+
         ResetMeasureVisuals();
         ResetMoveRulerVisuals();
         FitBackgroundToViewport();
@@ -667,7 +678,34 @@ public partial class BattleField : Node2D
 
     private bool IsPointerOverUi()
     {
-        return GetViewport()?.GuiGetHoveredControl() != null;
+        var hovered = GetViewport()?.GuiGetHoveredControl();
+        if (hovered == null)
+        {
+            return false;
+        }
+
+        if (hovered.Name == "BattleHud")
+        {
+            return false;
+        }
+
+        var current = hovered;
+        while (current != null)
+        {
+            if (current is BaseButton || current is ItemList)
+            {
+                return true;
+            }
+
+            if (current.Name == "BattleHud")
+            {
+                return false;
+            }
+
+            current = current.GetParentControl();
+        }
+
+        return false;
     }
 
     public override void _Input(InputEvent @event)

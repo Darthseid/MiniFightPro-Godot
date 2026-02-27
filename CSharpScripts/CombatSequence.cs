@@ -76,7 +76,7 @@ public sealed class CombatSequence
             var wantsMove = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Move/Advance this phase?");
             if (!wantsMove) continue;
 
-            var moveVars = await _battle.MovingStuff(squad.Movement, false, 1.05f, false, true, true, string.Empty, true);
+            var moveVars = await _battle.MovingStuff(squad.Movement, false, 1.05f, true, true, true, string.Empty, true);
             if (moveVars.Retreat && squad.ShellShock && !squad.SquadType.Contains("Titanic"))
             {
                 _battle.ApplyRout(squad);
@@ -132,7 +132,19 @@ public sealed class CombatSequence
 
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
 
-            var moved = await BoardGeometry.TryMoveIntoEngagement(_battle.GetActiveActors(), _battle.GetInactiveActors(), _battle.Field);
+            var activeActors = _battle.GetActiveActors();
+            var inactiveActors = _battle.GetInactiveActors();
+            var distanceInches = BoardGeometry.ClosestDistanceInches(activeActors, inactiveActors);
+            var moveVars = CombatHelpers.GetMoveVarsForTeam(_battle.ActiveTeamId, _battle.TeamAMove, _battle.TeamBMove);
+            if (!ShapeHelpers.CanCharge(squad, moveVars, distanceInches))
+            {
+                _battle.Hud?.ShowToast("Charge not allowed (must be within 12\" and follow rules).");
+                AudioManager.Instance?.Play("failedcharge");
+                GD.Print($"[Rules] Charge blocked. Distance: {distanceInches:0.0}\" Squad: {squad.Name}.");
+                continue;
+            }
+
+            var moved = await BoardGeometry.TryMoveIntoEngagement(activeActors, inactiveActors, _battle.Field);
             if (moved)
             {
                 _battle.ActiveSquadChargedThisTurn = true;
