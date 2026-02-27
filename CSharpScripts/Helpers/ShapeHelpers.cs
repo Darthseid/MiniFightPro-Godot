@@ -26,6 +26,7 @@ public static class ShapeHelpers
         int activeTeamId,
         int selectedTeamId,
         List<BattleModelActor> selectedActors,
+        List<BattleModelActor> activeSquadActors,
         List<BattleModelActor> teamAActors,
         List<BattleModelActor> teamBActors,
         BattleField battleField,
@@ -43,7 +44,7 @@ public static class ShapeHelpers
             return new SelectionResult(selectedTeamId, selectedActors);
         }
 
-        var selection = actor.TeamId == 1 ? teamAActors : teamBActors;
+        var selection = (activeSquadActors ?? new List<BattleModelActor>()).Where(a => a != null && a.TeamId == actor.TeamId).ToList();
         if (selection.Count == 0)
         {
             return new SelectionResult(selectedTeamId, selectedActors);

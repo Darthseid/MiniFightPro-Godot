@@ -651,6 +651,11 @@ public partial class BattleField : Node2D
         ResetMeasureVisuals();
     }
 
+    private bool IsPointerOverUi()
+    {
+        return GetViewport()?.GuiGetHoveredControl() != null;
+    }
+
     public override void _Input(InputEvent @event)
     {
         PruneTrackingState("_Input");
@@ -660,21 +665,51 @@ public partial class BattleField : Node2D
             switch (@event)
             {
                 case InputEventMouseButton button when button.ButtonIndex == MouseButton.Left && button.Pressed:
+                    if (IsPointerOverUi())
+                    {
+                        if (_measureActive)
+                        {
+                            EndMeasure();
+                        }
+                        return;
+                    }
+
                     StartMeasure(GetPointerGlobal(button.Position));
                     GetViewport().SetInputAsHandled();
                     return;
 
                 case InputEventScreenTouch touch when touch.Pressed:
+                    if (IsPointerOverUi())
+                    {
+                        if (_measureActive)
+                        {
+                            EndMeasure();
+                        }
+                        return;
+                    }
+
                     StartMeasure(GetPointerGlobal(touch.Position));
                     GetViewport().SetInputAsHandled();
                     return;
 
                 case InputEventMouseMotion motion when _measureActive:
+                    if (IsPointerOverUi())
+                    {
+                        EndMeasure();
+                        return;
+                    }
+
                     UpdateMeasure(GetPointerGlobal(motion.Position));
                     GetViewport().SetInputAsHandled();
                     return;
 
                 case InputEventScreenDrag drag when _measureActive:
+                    if (IsPointerOverUi())
+                    {
+                        EndMeasure();
+                        return;
+                    }
+
                     UpdateMeasure(GetPointerGlobal(drag.Position));
                     GetViewport().SetInputAsHandled();
                     return;

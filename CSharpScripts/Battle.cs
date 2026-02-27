@@ -252,6 +252,7 @@ public partial class Battle : Node2D
             _activeTeamId,
             _selectedTeamId,
             _selectedActors,
+            GetActiveActors(),
             _teamAActors,
             _teamBActors,
             _battleField,
