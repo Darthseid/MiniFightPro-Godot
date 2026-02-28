@@ -28,7 +28,7 @@ public static class CombatRolls
         }
 
         var hitChange = Mathf.Clamp(hitModifier, -1, 1);
-        var bonusHits = abilityCheck.FirstOrDefault(ability => ability.Innate == "Bonus Hits")?.Modifier ?? 0;
+        var bonusHits = abilityCheck.FirstOrDefault(ability => ability.Innate == "Bonus Hits")?.ResolveModifier() ?? 0;
         var hardHitsTest = abilityCheck.Any(ability => ability.Innate == "HH");
         var oneReroll = abilityCheck.Any(ability => ability.Innate == "!");
 
@@ -163,7 +163,7 @@ public static class CombatRolls
         var specialDef = unit.SquadAbilities.FirstOrDefault(ability => ability.Innate == "Special Def");
         if (specialDef != null)
         {
-            resist = specialDef.Modifier;
+            resist = specialDef.ResolveModifier();
             LogAbilityTrigger("Squad", "Special Def", $"set damage resistance threshold to {resist}");
         }
 

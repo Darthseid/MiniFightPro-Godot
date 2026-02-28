@@ -277,7 +277,7 @@ public static class StepChecks
             return -12f;
         }
 
-        var chargeBoost = activeSquad.SquadAbilities.FirstOrDefault(ability => ability.Innate == "+Charge")?.Modifier ?? 1;
+        var chargeBoost = activeSquad.SquadAbilities.FirstOrDefault(ability => ability.Innate == "+Charge")?.ResolveModifier() ?? 1;
         return chargeBoost;
     }
 

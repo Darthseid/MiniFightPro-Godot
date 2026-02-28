@@ -407,14 +407,14 @@ public partial class GameData : Node
             new Weapon("Disc Handgun", 12f, "1", 2, 4, -1, "1", new List<WeaponAbility> { WeaponAbilities.Skirmish, WeaponAbilities.Pistol }),
             new Weapon("Psi Pole", 0f, "2", 2, 3, 0, "D3", new List<WeaponAbility> { WeaponAbilities.AntiInfantry2 }),
             new Weapon("Twin Kannon", 36f, "D3", 4, 12, -2, "D6", new List<WeaponAbility> { WeaponAbilities.Blast, WeaponAbilities.Perilous, WeaponAbilities.InjuryReroll }),
-            new Weapon("Twin Shooter", 36f, "4", 4, 6, -1, "1", new List<WeaponAbility> { WeaponAbilities.Rapid2, WeaponAbilities.BonusHits1, WeaponAbilities.InjuryReroll }),
+            new Weapon("Twin Shooter", 36f, "4", 4, 6, -1, "1", new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "2"), WeaponAbilities.BonusHits1, WeaponAbilities.InjuryReroll }),
             new Weapon("Apoc Release", 200f, "20", 3, 8, -2, "2", new List<WeaponAbility> { WeaponAbilities.Blast }),
             new Weapon("Defense Lasers", 48f, "1", 3, 12, -3, "D6+1", new List<WeaponAbility>()),
             new Weapon("Maul Gun", 36f, "6", 3, 6, -2, "2", new List<WeaponAbility>()),
             new Weapon("Smash Gun", 48f, "D3", 4, 9, -3, "4", new List<WeaponAbility> { WeaponAbilities.Blast }),
             new Weapon("Multi-Blaster", 100f, "30", 3, 9, -2, "3", new List<WeaponAbility> { WeaponAbilities.BonusHits1 }),
             new Weapon("Mecha Feet", 1f, "6", 4, 12, -2, "4", new List<WeaponAbility>()),
-            new Weapon("Tornado Fragger", 18f, "3", 2, 4, -1, "2", new List<WeaponAbility> { WeaponAbilities.Rapid3, WeaponAbilities.InjuryReroll }),
+            new Weapon("Tornado Fragger", 18f, "3", 2, 4, -1, "2", new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "3"), WeaponAbilities.InjuryReroll }),
             new Weapon("Bike Pike", 1f, "5", 2, 7, -2, "2", new List<WeaponAbility> { WeaponAbilities.Pike })
         };
 
@@ -422,7 +422,7 @@ public partial class GameData : Node
         {
             new Weapon("Smash Gun", 48f, "D3", 4, 9, -3, "4", new List<WeaponAbility> { WeaponAbilities.Blast }),
             new Weapon("Twin Kannon", 36f, "D3", 4, 12, -2, "D6", new List<WeaponAbility> { WeaponAbilities.Blast, WeaponAbilities.Perilous, WeaponAbilities.InjuryReroll }),
-            new Weapon("Twin Shooter", 36f, "4", 4, 6, -1, "1", new List<WeaponAbility> { WeaponAbilities.Rapid2, WeaponAbilities.BonusHits1, WeaponAbilities.InjuryReroll })
+            new Weapon("Twin Shooter", 36f, "4", 4, 6, -1, "1", new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "2"), WeaponAbilities.BonusHits1, WeaponAbilities.InjuryReroll })
         };
 
         var guardWeapons = new List<Weapon>
@@ -439,7 +439,7 @@ public partial class GameData : Node
 
         var jetBikeWeapons = new List<Weapon>
         {
-            new Weapon("Tornado Fragger", 18f, "3", 2, 4, -1, "2", new List<WeaponAbility> { WeaponAbilities.Rapid3, WeaponAbilities.InjuryReroll }),
+            new Weapon("Tornado Fragger", 18f, "3", 2, 4, -1, "2", new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "3"), WeaponAbilities.InjuryReroll }),
             new Weapon("Bike Pike", 1f, "5", 2, 7, -2, "2", new List<WeaponAbility> { WeaponAbilities.Pike })
         };
 
@@ -547,21 +547,21 @@ public partial class GameData : Node
 
         var ast = new Squad("Guard Squad", 6f, 3, 5, 7, 7, 7, new List<string> { "Infantry" }, false, guardSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility> { SquadAbilities.SubRoutine });
         var ade = new Squad("Marine Squad", 6f, 4, 3, 7, 7, 6, new List<string> { "Infantry" }, false, marineSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility> { SquadAbilities.Satanic });
-        var tnk = new Squad("Battle Tanks", 10f, 11, 2, 13, 7, 7, new List<string> { "Vehicle" }, false, tankSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.DeathExplode2 });
+        var tnk = new Squad("Battle Tanks", 10f, 11, 2, 13, 7, 7, new List<string> { "Vehicle" }, false, tankSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "2") });
         var vert = new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.MartialStance });
         var dak = new Squad("Homemade Biplane", 99.9f, 9, 3, 4, 7, 7, new List<string> { "Aircraft", "Fly", "Vehicle" }, false, planeSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.MinusHitRanged });
-        var pyl = new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.DeathExplode2, SquadAbilities.Reanimator, SquadAbilities.Teleport });
+        var pyl = new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "2"), SquadAbilities.Reanimator, SquadAbilities.Teleport });
         var seer = new Squad("Clairvoyant", 7f, 3, 6, 4, 7, 6, new List<string> { "Character", "Infantry", "Psychic" }, true, clairvoyantModels.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.PsiDefense });
 
         var presetSquads = new List<Squad>
         {
             new Squad("Guard Squad", 6f, 3, 5, 7, 7, 7, new List<string> { "Infantry" }, false, guardSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility>()),
             new Squad("Marine Squad", 6f, 4, 3, 7, 7, 6, new List<string> { "Infantry" }, false, marineSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility> { SquadAbilities.Satanic }),
-            new Squad("Battle Tanks", 10f, 11, 2, 13, 7, 7, new List<string> { "Vehicle" }, false, tankSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.DeathExplode2 }),
+            new Squad("Battle Tanks", 10f, 11, 2, 13, 7, 7, new List<string> { "Vehicle" }, false, tankSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "2") }),
             new Squad("Homemade Biplane", 99.9f, 9, 3, 4, 7, 7, new List<string> { "Aircraft", "Fly", "Vehicle" }, false, planeSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.MinusHitRanged }),
-            new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.DeathExplode2, SquadAbilities.Reanimator, SquadAbilities.Teleport }),
+            new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "2"), SquadAbilities.Reanimator, SquadAbilities.Teleport }),
             new Squad("Clairvoyant", 7f, 3, 6, 4, 7, 6, new List<string> { "Character", "Infantry", "Psychic" }, true, clairvoyantModels.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.PsiDefense }),
-            new Squad("Huge Mecha", 10f, 16, 2, 5, 7, 6, new List<string> { "Titanic", "Vehicle" }, false, mechaSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.DeathExplode3 }),
+            new Squad("Huge Mecha", 10f, 16, 2, 5, 7, 6, new List<string> { "Titanic", "Vehicle" }, false, mechaSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "3") }),
             new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.MartialStance })
         };
 
