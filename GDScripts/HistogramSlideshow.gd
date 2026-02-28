@@ -46,7 +46,7 @@ func _render_current_slide() -> void:
 	_prev_button.disabled = _current_index == 0
 	_next_button.disabled = _current_index >= _slides.size() - 1
 
-	_chart.set_data(
+	_chart.SetData(
 		slide.get("title", "Histogram"),
 		slide.get("x_label", "Value"),
 		slide.get("series_a_values", []),
