@@ -311,7 +311,7 @@ public sealed class DuelSimulator
             var specialDef = defender.WorkingSquad.SquadAbilities.FirstOrDefault(a => a?.Innate == "Special Def");
             if (specialDef != null)
             {
-                resist = specialDef.Modifier;
+                resist = specialDef.ResolveModifier();
             }
 
             for (var p = 0; p < finalDamage && target.Health > 0; p++)
@@ -343,7 +343,7 @@ public sealed class DuelSimulator
             return;
         }
 
-        var explodeDamage = exploded.WorkingSquad.SquadAbilities.FirstOrDefault(a => a?.Innate == "Explodes")?.Modifier ?? 1;
+        var explodeDamage = exploded.WorkingSquad.SquadAbilities.FirstOrDefault(a => a?.Innate == "Explodes")?.ResolveModifier() ?? 1;
         var triggers = 0;
         for (var i = 0; i < deadCount; i++)
         {

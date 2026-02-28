@@ -115,7 +115,7 @@ public static class CombatHelpers
             if (firearm.Special.Any(ability => ability.Innate == pair.Key) &&
                 defenderSquad.SquadType.Contains(pair.Value))
             {
-                var modifier = firearm.Special.FirstOrDefault(ability => ability.Innate == pair.Key)?.Modifier ?? antiThreshold;
+                var modifier = firearm.Special.FirstOrDefault(ability => ability.Innate == pair.Key)?.ResolveModifier() ?? antiThreshold;
                 antiThreshold = modifier;
                 LogAbilityTrigger("Weapon", pair.Key, $"set anti threshold to {antiThreshold}");
             }
@@ -250,7 +250,7 @@ public static class CombatHelpers
         }
 
         var newDamage = damage;
-        var fusionModifier = specials.FirstOrDefault(ability => ability.Innate == "Fusion")?.Modifier ?? 0;
+        var fusionModifier = specials.FirstOrDefault(ability => ability.Innate == "Fusion")?.ResolveModifier() ?? 0;
         if (half && fusionModifier > 0)
         {
             newDamage += fusionModifier;

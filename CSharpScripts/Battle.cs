@@ -860,7 +860,7 @@ public partial class Battle : Node2D
 
         while (manyExplosions > 0 && processedExplosions < safetyLimit)
         {
-            var explodeDamage = explodedSquad.SquadAbilities.FirstOrDefault(ability => ability.Innate == "Explodes")?.Modifier ?? 1;
+            var explodeDamage = explodedSquad.SquadAbilities.FirstOrDefault(ability => ability.Innate == "Explodes")?.ResolveModifier() ?? 1;
             AudioManager.Instance?.Play("explodes");
             var blastDamage = explodeDamage * manyExplosions;
 

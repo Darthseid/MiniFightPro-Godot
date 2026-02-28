@@ -58,14 +58,25 @@ public class WeaponAbility
     public string Name;
     public int Modifier;
     public bool IsTemporary;
+    public bool IsVariableGenerated;
+    public string ModifierExpression;
 
     [JsonConstructor]
-    public WeaponAbility(string innate, string name, int modifier, bool isTemporary)
+    public WeaponAbility(string innate, string name, int modifier, bool isTemporary, bool isVariableGenerated = false, string modifierExpression = "")
     {
         Innate = innate;
         Name = name;
         Modifier = modifier;
         IsTemporary = isTemporary;
+        IsVariableGenerated = isVariableGenerated;
+        ModifierExpression = modifierExpression ?? string.Empty;
+    }
+
+    public int ResolveModifier()
+    {
+        return string.IsNullOrWhiteSpace(ModifierExpression)
+            ? Modifier
+            : DiceHelpers.DamageParser(ModifierExpression);
     }
 }
 
@@ -73,10 +84,6 @@ public static class WeaponAbilities
 {
     public static readonly WeaponAbility BonusHits1 = new WeaponAbility("Bonus Hits", "Bonus Hits 1", 1, false);
     public static readonly WeaponAbility BonusHits1Temp = new WeaponAbility("Bonus Hits", "TBonus Hits", 1, true);
-    public static readonly WeaponAbility BonusHits2 = new WeaponAbility("Bonus Hits", "Bonus Hits 2", 2, false);
-    public static readonly WeaponAbility BonusHits2Temp = new WeaponAbility("Bonus Hits", "Temp Bonus Hits 2", 2, true);
-    public static readonly WeaponAbility BonusHits3 = new WeaponAbility("Bonus Hits", "Bonus Hits 3", 3, false);
-    public static readonly WeaponAbility BonusHits3Temp = new WeaponAbility("Bonus Hits", "Temp Bonus Hits 3", 3, true);
     public static readonly WeaponAbility Precision = new WeaponAbility("rareFirst", "Precision", 0, false);
     public static readonly WeaponAbility TempPrecision = new WeaponAbility("rareFirst", "Temp Precision", 0, true);
     public static readonly WeaponAbility HardHits = new WeaponAbility("HH", "Hard Hits", 0, false);
@@ -94,25 +101,15 @@ public static class WeaponAbilities
     public static readonly WeaponAbility IgnoresCoverTemp = new WeaponAbility("Temp noCover", "Temp Ignores Cover", 0, true);
     public static readonly WeaponAbility Fusion1 = new WeaponAbility("Fusion", "Fusion 1", 1, false);
     public static readonly WeaponAbility Fusion1Temp = new WeaponAbility("Fusion", "Temp Fusion 1", 1, true);
-    public static readonly WeaponAbility Fusion2 = new WeaponAbility("Fusion", "Fusion 2", 2, false);
-    public static readonly WeaponAbility Fusion2Temp = new WeaponAbility("Fusion", "Temp Fusion 2", 2, true);
-    public static readonly WeaponAbility Fusion3 = new WeaponAbility("Fusion", "Fusion 3", 3, false);
-    public static readonly WeaponAbility Fusion3Temp = new WeaponAbility("Fusion", "Temp Fusion 3", 3, true);
     public static readonly WeaponAbility OneShot = new WeaponAbility("1 Shot", "One Shot", 0, false);
     public static readonly WeaponAbility OneShotTemp = new WeaponAbility("1 Shot", "Temp One Shot", 0, true);
     public static readonly WeaponAbility Pistol = new WeaponAbility("Handgun", "Pistol", 0, false);
     public static readonly WeaponAbility PistolTemp = new WeaponAbility("Handgun", "Temp Pistol", 0, true);
     public static readonly WeaponAbility Rapid1 = new WeaponAbility("Dakka", "Rapid Fire 1", 1, false);
     public static readonly WeaponAbility Rapid1Temp = new WeaponAbility("Dakka", "Temp Rapid Fire 1", 1, true);
-    public static readonly WeaponAbility Rapid2 = new WeaponAbility("Dakka", "Rapid Fire 2", 2, false);
-    public static readonly WeaponAbility Rapid2Temp = new WeaponAbility("Dakka", "Temp Rapid Fire 2", 2, true);
-    public static readonly WeaponAbility Rapid3 = new WeaponAbility("Dakka", "Rapid Fire 3", 3, false);
-    public static readonly WeaponAbility Rapid3Temp = new WeaponAbility("Dakka", "Temp Rapid Fire 3", 3, true);
     public static readonly WeaponAbility Skirmish = new WeaponAbility("RunGun", "Skirmish", 0, false);
     public static readonly WeaponAbility SkirmishTemp = new WeaponAbility("RunGun", "Skirmish", 0, true);
     public static readonly WeaponAbility AntiInfantry2 = new WeaponAbility("Mobkiller", "Anti-Infantry 2", 2, false);
-    public static readonly WeaponAbility AntiInfantry3 = new WeaponAbility("Mobkiller", "Anti-Infantry 3", 3, false);
-    public static readonly WeaponAbility AntiInfantry4 = new WeaponAbility("Mobkiller", "Anti-Infantry 4", 4, false);
     public static readonly WeaponAbility AntiMonster = new WeaponAbility("KaijuKiller", "Anti-Monster 2", 2, false);
     public static readonly WeaponAbility AntiVehicle = new WeaponAbility("TankKiller", "Anti-Vehicle 2", 2, false);
     public static readonly WeaponAbility AntiFly = new WeaponAbility("Ack-Ack", "Anti-Fly 2", 2, false);
@@ -138,11 +135,53 @@ public static class WeaponAbilities
     public static readonly WeaponAbility PlusOneInjuriesTemp = new WeaponAbility("Temp ^", "Temp +1 to Injury Rolls", 0, true);
     public static readonly WeaponAbility MultiProfile = new WeaponAbility("MultiProfile", "Multi-profile", 0, false);
 
+    public static readonly IReadOnlyList<WeaponAbility> VariableBaseAbilities = new List<WeaponAbility>
+    {
+        BonusHits1,
+        Fusion1,
+        Rapid1,
+        AntiInfantry2,
+        AntiMonster,
+        AntiVehicle,
+        AntiFly,
+        AntiCharacter,
+        AntiPsi,
+    };
+
+
+    private static string GetVariableBaseDisplayName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return name;
+        }
+
+        var trimmed = name.Trim();
+        var parts = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length > 1 && int.TryParse(parts[^1], out _))
+        {
+            return string.Join(" ", parts, 0, parts.Length - 1);
+        }
+
+        return trimmed;
+    }
+
+    public static WeaponAbility CreateVariableAbility(WeaponAbility baseAbility, string modifierInput)
+    {
+        var parsedModifier = DiceHelpers.DamageParser(modifierInput);
+        return new WeaponAbility(
+            baseAbility.Innate,
+            $"{GetVariableBaseDisplayName(baseAbility.Name)} {modifierInput}",
+            parsedModifier,
+            false,
+            true,
+            modifierInput
+        );
+    }
+
     public static readonly IReadOnlyList<WeaponAbility> All = new List<WeaponAbility>
     {
         BonusHits1,
-        BonusHits2,
-        BonusHits3,
         Precision,
         HardHits,
         Pike,
@@ -152,17 +191,11 @@ public static class WeaponAbilities
         Hefty,
         IgnoresCover,
         Fusion1,
-        Fusion2,
-        Fusion3,
         OneShot,
         Pistol,
         Rapid1,
-        Rapid2,
-        Rapid3,
         Skirmish,
         AntiInfantry2,
-        AntiInfantry3,
-        AntiInfantry4,
         AntiMonster,
         AntiVehicle,
         AntiFly,

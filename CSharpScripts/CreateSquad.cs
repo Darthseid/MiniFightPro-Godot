@@ -25,12 +25,16 @@ public partial class CreateSquad : Control
     private ItemList _squadTypesList = null!;
     private AcceptDialog _abilitiesDialog = null!;
     private ItemList _abilitiesList = null!;
+    private OptionButton _variableAbilityBaseDropdown = null!;
+    private LineEdit _variableAbilityModifierInput = null!;
+    private Button _addVariableAbilityButton = null!;
 
     private readonly List<string> _selectedSquadTypes = new();
     private readonly List<SquadAbility> _selectedAbilities = new();
 
     private List<string> _sortedSquadTypes = new();
     private List<SquadAbility> _sortedAbilities = new();
+    private List<SquadAbility> _sortedVariableBaseAbilities = new();
 
     private static IReadOnlyList<string> SquadTypes => Squad.KnownSquadTypes;
     private static IReadOnlyList<SquadAbility> AbilityOptions => SquadAbilities.All;
@@ -62,6 +66,9 @@ public partial class CreateSquad : Control
         _squadTypesList = GetNode<ItemList>("%SquadTypesList");
         _abilitiesDialog = GetNode<AcceptDialog>("%AbilitiesDialog");
         _abilitiesList = GetNode<ItemList>("%AbilitiesList");
+        _variableAbilityBaseDropdown = GetNode<OptionButton>("%VariableAbilityBase");
+        _variableAbilityModifierInput = GetNode<LineEdit>("%VariableAbilityModifier");
+        _addVariableAbilityButton = GetNode<Button>("%BtnAddVariableAbility");
 
         GetNode<Button>("%BtnSave").Pressed += OnSavePressed;
         GetNode<Button>("%BtnDiscard").Pressed += OnDiscardPressed;
@@ -71,9 +78,11 @@ public partial class CreateSquad : Control
         _abilitiesButton.Pressed += ShowAbilitiesDialog;
         _squadTypesDialog.Confirmed += ApplySquadTypesSelection;
         _abilitiesDialog.Confirmed += ApplyAbilitiesSelection;
+        _addVariableAbilityButton.Pressed += AddVariableAbility;
 
         PopulateModelLists();
         PopulateDialogs();
+        PopulateVariableAbilityDropdown();
         LoadDataIfEditing();
         UpdateSquadTypeLabel();
         UpdateAbilitiesLabel();
@@ -84,7 +93,6 @@ public partial class CreateSquad : Control
         _availableModels.Clear();
         _selectedModels.Clear();
 
-        // Add models to the available list in alphabetical order
         foreach (var model in GameData.Instance.ModelList
                      .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase))
         {
@@ -111,6 +119,18 @@ public partial class CreateSquad : Control
             _abilitiesList.AddItem(ability.Name);
     }
 
+    private void PopulateVariableAbilityDropdown()
+    {
+        _variableAbilityBaseDropdown.Clear();
+        _sortedVariableBaseAbilities = SquadAbilities.VariableBaseAbilities
+            .OrderBy(ability => ability.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var baseAbility in _sortedVariableBaseAbilities)
+        {
+            _variableAbilityBaseDropdown.AddItem(baseAbility.Name);
+        }
+    }
 
     private void LoadDataIfEditing()
     {
@@ -135,7 +155,6 @@ public partial class CreateSquad : Control
             _selectedAbilities.Clear();
             _selectedAbilities.AddRange(squad.SquadAbilities ?? new List<SquadAbility>());
 
-            // Populate selected models list with duplicate copies preserved
             foreach (var model in squad.Composition ?? new List<Model>())
             {
                 _selectedModels.AddItem(model.Name);
@@ -198,7 +217,7 @@ public partial class CreateSquad : Control
     {
         _abilitiesList.UnselectAll();
 
-        var selectedNames = new HashSet<string>(_selectedAbilities.Select(a => a.Name));
+        var selectedNames = new HashSet<string>(_selectedAbilities.Where(a => !a.IsVariableGenerated).Select(a => a.Name));
         for (int i = 0; i < _sortedAbilities.Count; i++)
             if (selectedNames.Contains(_sortedAbilities[i].Name))
                 _abilitiesList.Select(i);
@@ -208,12 +227,51 @@ public partial class CreateSquad : Control
 
     private void ApplyAbilitiesSelection()
     {
+        var variableAbilities = _selectedAbilities.Where(ability => ability.IsVariableGenerated).ToList();
+
         _selectedAbilities.Clear();
 
         foreach (int index in _abilitiesList.GetSelectedItems())
             if (index >= 0 && index < _sortedAbilities.Count)
                 _selectedAbilities.Add(_sortedAbilities[index]);
 
+        _selectedAbilities.AddRange(variableAbilities);
+        UpdateAbilitiesLabel();
+    }
+
+    private void AddVariableAbility()
+    {
+        var selectedIndex = _variableAbilityBaseDropdown.Selected;
+        if (selectedIndex < 0 || selectedIndex >= _sortedVariableBaseAbilities.Count)
+        {
+            OS.Alert("Choose a base variable squad ability.", "Validation Error");
+            return;
+        }
+
+        var modifierInput = (_variableAbilityModifierInput.Text ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(modifierInput))
+        {
+            OS.Alert("Enter a modifier (example: 2 or D6).", "Validation Error");
+            return;
+        }
+
+        if (DiceHelpers.DamageParser(modifierInput) == 0 && modifierInput != "0")
+        {
+            OS.Alert("Modifier must be an integer or D3/D6 format.", "Format Error");
+            return;
+        }
+
+        var baseAbility = _sortedVariableBaseAbilities[selectedIndex];
+        var generated = SquadAbilities.CreateVariableAbility(baseAbility, modifierInput);
+
+        if (_selectedAbilities.Any(a => a.Name.Equals(generated.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            OS.Alert($"Ability '{generated.Name}' is already selected.", "Validation Error");
+            return;
+        }
+
+        _selectedAbilities.Add(generated);
+        _variableAbilityModifierInput.Text = string.Empty;
         UpdateAbilitiesLabel();
     }
 

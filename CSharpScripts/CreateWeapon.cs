@@ -18,19 +18,21 @@ public partial class CreateWeapon : Control
     private Button _abilitiesButton = null!;
     private AcceptDialog _abilitiesDialog = null!;
     private ItemList _abilitiesList = null!;
+    private OptionButton _variableAbilityBaseDropdown = null!;
+    private LineEdit _variableAbilityModifierInput = null!;
+    private Button _addVariableAbilityButton = null!;
 
     private List<WeaponAbility> _currentAbilities = new();
 
     private static IReadOnlyList<WeaponAbility> AbilityOptions => WeaponAbilities.All;
 
-  
-    private List<WeaponAbility> _sortedAbilityOptions = new();   // Local sorted list used for UI -> model mapping to avoid index mismatches
+    private List<WeaponAbility> _sortedAbilityOptions = new();
+    private List<WeaponAbility> _sortedVariableBaseOptions = new();
 
     public override void _Ready()
     {
         GameData.Instance.LoadWeaponsFromFile();
 
-        // Bind UI (Unique Names % set in editor)
         _titleLabel = GetNode<Label>("%TitleLabel");
         _nameIn = GetNode<LineEdit>("%NameInput");
         _rangeIn = GetNode<SpinBox>("%RangeInput");
@@ -43,27 +45,30 @@ public partial class CreateWeapon : Control
         _selectedAbilitiesLabel = GetNode<Label>("%SelectedAbilitiesLabel");
         _abilitiesDialog = GetNode<AcceptDialog>("%AbilitiesDialog");
         _abilitiesList = GetNode<ItemList>("%AbilitiesList");
+        _variableAbilityBaseDropdown = GetNode<OptionButton>("%VariableAbilityBase");
+        _variableAbilityModifierInput = GetNode<LineEdit>("%VariableAbilityModifier");
+        _addVariableAbilityButton = GetNode<Button>("%BtnAddVariableAbility");
 
         GetNode<Button>("%BtnSave").Pressed += OnSavePressed;
         GetNode<Button>("%BtnDiscard").Pressed += OnDiscardPressed;
         _abilitiesButton.Pressed += ShowAbilitiesDialog;
         _abilitiesDialog.Confirmed += ApplyAbilitiesSelection;
+        _addVariableAbilityButton.Pressed += AddVariableAbility;
 
         SetupAbilitiesList();
+        SetupVariableAbilityOptions();
         LoadDataIfEditing();
         UpdateAbilitiesLabel();
     }
 
     private void OnSavePressed()
     {
-        // Blank check
         if (string.IsNullOrWhiteSpace(_nameIn.Text))
         {
             OS.Alert("Weapon name cannot be empty.", "Validation Error");
             return;
         }
 
-        // Bounds check
         if (_hsIn.Value < 0 || _hsIn.Value > 9 ||
             _strIn.Value < 0 || _strIn.Value > 99 ||
             _apIn.Value < -9 || _apIn.Value > 9 ||
@@ -73,7 +78,6 @@ public partial class CreateWeapon : Control
             return;
         }
 
-        // Parser validation
         if (DiceHelpers.DamageParser(_attacksIn.Text) == 0 && _attacksIn.Text != "0")
         {
             OS.Alert("Attacks must be an integer or D3/D6 format.", "Format Error");
@@ -85,7 +89,6 @@ public partial class CreateWeapon : Control
             return;
         }
 
-        // Save
         var weapon = new Weapon(
             weaponName: _nameIn.Text,
             range: (float)_rangeIn.Value,
@@ -94,7 +97,7 @@ public partial class CreateWeapon : Control
             strength: (int)_strIn.Value,
             armorPenetration: (int)_apIn.Value,
             damage: _dmgIn.Text,
-            special: new List<WeaponAbility>(_currentAbilities) // copy
+            special: new List<WeaponAbility>(_currentAbilities)
         );
 
         var data = GameData.Instance;
@@ -147,7 +150,6 @@ public partial class CreateWeapon : Control
     {
         _abilitiesList.Clear();
 
-        // Build and cache a sorted copy so UI ordering is stable and mapping works correctly
         _sortedAbilityOptions = AbilityOptions
             .OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -158,11 +160,23 @@ public partial class CreateWeapon : Control
         }
     }
 
+    private void SetupVariableAbilityOptions()
+    {
+        _variableAbilityBaseDropdown.Clear();
+        _sortedVariableBaseOptions = WeaponAbilities.VariableBaseAbilities
+            .OrderBy(ability => ability.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var baseAbility in _sortedVariableBaseOptions)
+        {
+            _variableAbilityBaseDropdown.AddItem(baseAbility.Name);
+        }
+    }
+
     private void ShowAbilitiesDialog()
     {
         _abilitiesList.UnselectAll();
 
-        // Select items by matching names against the sorted UI list
         var selectedNames = new HashSet<string>(_currentAbilities.Select(a => a.Name), StringComparer.OrdinalIgnoreCase);
         for (int i = 0; i < _sortedAbilityOptions.Count; i++)
         {
@@ -175,15 +189,53 @@ public partial class CreateWeapon : Control
 
     private void ApplyAbilitiesSelection()
     {
+        var variableAbilities = _currentAbilities.Where(ability => ability.IsVariableGenerated).ToList();
+
         _currentAbilities.Clear();
 
-        // Map selected indices back to the sorted ability list (not the original AbilityOptions)
         foreach (int idx in _abilitiesList.GetSelectedItems())
         {
             if (idx >= 0 && idx < _sortedAbilityOptions.Count)
                 _currentAbilities.Add(_sortedAbilityOptions[idx]);
         }
 
+        _currentAbilities.AddRange(variableAbilities);
+        UpdateAbilitiesLabel();
+    }
+
+    private void AddVariableAbility()
+    {
+        var selectedIndex = _variableAbilityBaseDropdown.Selected;
+        if (selectedIndex < 0 || selectedIndex >= _sortedVariableBaseOptions.Count)
+        {
+            OS.Alert("Choose a base variable weapon ability.", "Validation Error");
+            return;
+        }
+
+        var modifierInput = (_variableAbilityModifierInput.Text ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(modifierInput))
+        {
+            OS.Alert("Enter a modifier (example: 2 or D6).", "Validation Error");
+            return;
+        }
+
+        if (DiceHelpers.DamageParser(modifierInput) == 0 && modifierInput != "0")
+        {
+            OS.Alert("Modifier must be an integer or D3/D6 format.", "Format Error");
+            return;
+        }
+
+        var baseAbility = _sortedVariableBaseOptions[selectedIndex];
+        var generated = WeaponAbilities.CreateVariableAbility(baseAbility, modifierInput);
+
+        if (_currentAbilities.Any(a => a.Name.Equals(generated.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            OS.Alert($"Ability '{generated.Name}' is already selected.", "Validation Error");
+            return;
+        }
+
+        _currentAbilities.Add(generated);
+        _variableAbilityModifierInput.Text = string.Empty;
         UpdateAbilitiesLabel();
     }
 

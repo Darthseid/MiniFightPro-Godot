@@ -88,14 +88,25 @@ public class SquadAbility
     public string Name;
     public int Modifier;
     public bool IsTemporary;
+    public bool IsVariableGenerated;
+    public string ModifierExpression;
 
 	 [JsonConstructor]
-    public SquadAbility(string innate, string name, int modifier, bool isTemporary)
+    public SquadAbility(string innate, string name, int modifier, bool isTemporary, bool isVariableGenerated = false, string modifierExpression = "")
     {
         Innate = innate;
         Name = name;
         Modifier = modifier;
         IsTemporary = isTemporary;
+        IsVariableGenerated = isVariableGenerated;
+        ModifierExpression = modifierExpression ?? string.Empty;
+    }
+
+    public int ResolveModifier()
+    {
+        return string.IsNullOrWhiteSpace(ModifierExpression)
+            ? Modifier
+            : DiceHelpers.DamageParser(ModifierExpression);
     }
 }
 
@@ -106,8 +117,6 @@ public static class SquadAbilities
     public static readonly SquadAbility MinusHitBrawl = new SquadAbility("-1 Fight", "-1 to Hit Melee", 0, false);
     public static readonly SquadAbility TempMinusHitBrawl = new SquadAbility("-1 Fight", "Temp minus Hit Brawl", 0, true);
     public static readonly SquadAbility DeathExplode1 = new SquadAbility("Explodes", "Explode on Death 1", 1, false);
-    public static readonly SquadAbility DeathExplode2 = new SquadAbility("Explodes", "Explode on Death 2", 2, false);
-    public static readonly SquadAbility DeathExplode3 = new SquadAbility("Explodes", "Explode on Death 3", 3, false);
     public static readonly SquadAbility MinusHit = new SquadAbility("-1 All", "-1 to Hit", 0, false);
     public static readonly SquadAbility DemonicGrief = new SquadAbility("Bad Juju", "Demonic Grief", 2, false);
     public static readonly SquadAbility MinusHitTemp = new SquadAbility("-1 All", "Temp minus Hit", 0, true);
@@ -142,8 +151,6 @@ public static class SquadAbilities
     public static readonly SquadAbility StampedeTemp = new SquadAbility("Crush", "Stampede", 0, true);
     public static readonly SquadAbility PlusOneToCharge = new SquadAbility("+Charge", "+1 Charge Bonus", 1, false);
     public static readonly SquadAbility PlusOneToChargeTemp = new SquadAbility("+Charge", "Temp Charge Bonus 1", 1, true);
-    public static readonly SquadAbility Plus2ToCharge = new SquadAbility("+Charge", "+2 Charge Bonus", 2, false);
-    public static readonly SquadAbility Plus3ToCharge = new SquadAbility("+Charge", "+3 Charge Bonus", 3, false);
     public static readonly SquadAbility Satanic = new SquadAbility("Satan", "Satanic", 1, false);
     public static readonly SquadAbility SatanicTemp = new SquadAbility("Temp Satan", "Temp Satanic", 1, true);
     public static readonly SquadAbility ReRollBravery = new SquadAbility("TryAgain", "Reroll Bravery", 1, false);
@@ -184,13 +191,51 @@ public static class SquadAbilities
     public static readonly SquadAbility MartialStance = new SquadAbility("martialStance", "Martial Stances", 1, false);
      public static readonly SquadAbility SubRoutine = new SquadAbility("SubRoutine", "Subroutines", 1, false);
 
+    public static readonly IReadOnlyList<SquadAbility> VariableBaseAbilities = new List<SquadAbility>
+    {
+        DeathExplode1,
+        PsiDefense,
+        PureDefense,
+        AdvBoost1,
+        PlusOneToCharge,
+    };
+
+
+    private static string GetVariableBaseDisplayName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return name;
+        }
+
+        var trimmed = name.Trim();
+        var parts = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length > 1 && int.TryParse(parts[^1], out _))
+        {
+            return string.Join(" ", parts, 0, parts.Length - 1);
+        }
+
+        return trimmed;
+    }
+
+    public static SquadAbility CreateVariableAbility(SquadAbility baseAbility, string modifierInput)
+    {
+        var parsedModifier = DiceHelpers.DamageParser(modifierInput);
+        return new SquadAbility(
+            baseAbility.Innate,
+            $"{GetVariableBaseDisplayName(baseAbility.Name)} {modifierInput}",
+            parsedModifier,
+            false,
+            true,
+            modifierInput
+        );
+    }
+
     public static readonly IReadOnlyList<SquadAbility> All = new List<SquadAbility>
     {
         MinusHitRanged,
         MinusHitBrawl,
         DeathExplode1,
-        DeathExplode2,
-        DeathExplode3,
         MinusHit,
         CloseUpToShoot,
         FirstStrike,
@@ -207,8 +252,6 @@ public static class SquadAbilities
         AdvBoost6,
         Stampede,
         PlusOneToCharge,
-        Plus2ToCharge,
-        Plus3ToCharge,
         Satanic,
         ReRollBravery,
         Infect,

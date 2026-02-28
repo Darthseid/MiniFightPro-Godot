@@ -122,6 +122,29 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "No abilities selected."
 
+
+[node name="Label_VariableAbility" type="Label" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+text = "Add Variable Ability"
+
+[node name="VariableAbilityRow" type="HBoxContainer" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+
+[node name="VariableAbilityBase" type="OptionButton" parent="ScrollContainer/MainContainer/VariableAbilityRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VariableAbilityModifier" type="LineEdit" parent="ScrollContainer/MainContainer/VariableAbilityRow"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Modifier (e.g. 2, D6)"
+
+[node name="BtnAddVariableAbility" type="Button" parent="ScrollContainer/MainContainer/VariableAbilityRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add"
+
 [node name="Spacer" type="Control" parent="ScrollContainer/MainContainer" unique_id=187180134]
 layout_mode = 2
 
