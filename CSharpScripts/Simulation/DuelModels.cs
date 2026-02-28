@@ -29,6 +29,8 @@ public sealed class DuelResult
     public long SquadBAttacks { get; set; }
     public long SquadAPenetratingInjuries { get; set; }
     public long SquadBPenetratingInjuries { get; set; }
+    public long SquadADamageDealt { get; set; }
+    public long SquadBDamageDealt { get; set; }
 }
 
 public sealed class DuelBatchResult
@@ -38,10 +40,13 @@ public sealed class DuelBatchResult
     public int SquadBWins { get; set; }
     public int Draws { get; set; }
     public double AverageRoundsToResolve { get; set; }
-    public double AverageWinnerHealthRemaining { get; set; }
+    public double AverageWinnerHealthRemainingWhenASquadWins { get; set; }
+    public double AverageWinnerHealthRemainingWhenBSquadWins { get; set; }
     public double FirstAttackerWinPercent { get; set; }
     public double SquadAPenetratingInjuryRate { get; set; }
     public double SquadBPenetratingInjuryRate { get; set; }
+    public double AverageSquadADamagePerTrial { get; set; }
+    public double AverageSquadBDamagePerTrial { get; set; }
 }
 
 public sealed class SimSquadState

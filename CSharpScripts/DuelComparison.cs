@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Array = Godot.Collections.Array;
+using Dictionary = Godot.Collections.Dictionary;
 
 public partial class DuelComparison : Control
 {
@@ -17,6 +19,7 @@ public partial class DuelComparison : Control
     private Button _backButton = null!;
     private Label _progressLabel = null!;
     private RichTextLabel _resultLabel = null!;
+    private Control _histogramSlideshow = null!;
 
     private readonly List<Squad> _squads = new();
 
@@ -40,6 +43,7 @@ public partial class DuelComparison : Control
         _backButton = GetNode<Button>("%BtnBack");
         _progressLabel = GetNode<Label>("%ProgressLabel");
         _resultLabel = GetNode<RichTextLabel>("%ResultLabel");
+        _histogramSlideshow = GetNode<Control>("%HistogramSlideshow");
 
         _firstAttackerSelect.AddItem("Squad A attacks first", (int)FirstAttackerMode.SquadA);
         _firstAttackerSelect.AddItem("Squad B attacks first", (int)FirstAttackerMode.SquadB);
@@ -110,6 +114,7 @@ public partial class DuelComparison : Control
 
         _runButton.Disabled = true;
         _resultLabel.Text = string.Empty;
+        _histogramSlideshow.Call("clear_slides");
 
         var rng = seed.HasValue ? new Random(seed.Value) : new Random();
         var simulator = new DuelSimulator();
@@ -120,19 +125,40 @@ public partial class DuelComparison : Control
         var firstAttackerWins = 0;
         long resolvedRounds = 0;
         long resolvedCount = 0;
-        long winnerHp = 0;
+        long winnerAHp = 0;
+        long winnerBHp = 0;
         long aAttacks = 0;
         long bAttacks = 0;
         long aPen = 0;
         long bPen = 0;
+        long aDamage = 0;
+        long bDamage = 0;
+
+        var roundsPerTrial = new Array();
+        var winnerHpWhenAWin = new Array();
+        var winnerHpWhenBWin = new Array();
+        var aPenRatesPerTrial = new Array();
+        var bPenRatesPerTrial = new Array();
+        var aDamagePerTrial = new Array();
+        var bDamagePerTrial = new Array();
 
         const int updateChunk = 250;
         for (var i = 0; i < trials; i++)
         {
             var result = simulator.RunSingle(config, squadA, squadB, rng);
             if (result.IsDraw) draws++;
-            else if (result.SquadAWon) aWins++;
-            else bWins++;
+            else if (result.SquadAWon)
+            {
+                aWins++;
+                winnerAHp += result.WinnerRemainingHealth;
+                winnerHpWhenAWin.Add(result.WinnerRemainingHealth);
+            }
+            else
+            {
+                bWins++;
+                winnerBHp += result.WinnerRemainingHealth;
+                winnerHpWhenBWin.Add(result.WinnerRemainingHealth);
+            }
 
             if (result.FirstAttackerWon) firstAttackerWins++;
             if (!result.HitRoundCap)
@@ -141,11 +167,18 @@ public partial class DuelComparison : Control
                 resolvedCount++;
             }
 
-            winnerHp += result.WinnerRemainingHealth;
             aAttacks += result.SquadAAttacks;
             bAttacks += result.SquadBAttacks;
             aPen += result.SquadAPenetratingInjuries;
             bPen += result.SquadBPenetratingInjuries;
+            aDamage += result.SquadADamageDealt;
+            bDamage += result.SquadBDamageDealt;
+
+            roundsPerTrial.Add(result.RoundsElapsed);
+            aPenRatesPerTrial.Add(result.SquadAAttacks > 0 ? (double)result.SquadAPenetratingInjuries / result.SquadAAttacks : 0d);
+            bPenRatesPerTrial.Add(result.SquadBAttacks > 0 ? (double)result.SquadBPenetratingInjuries / result.SquadBAttacks : 0d);
+            aDamagePerTrial.Add(result.SquadADamageDealt);
+            bDamagePerTrial.Add(result.SquadBDamageDealt);
 
             if ((i + 1) % updateChunk == 0 || i == trials - 1)
             {
@@ -155,10 +188,13 @@ public partial class DuelComparison : Control
         }
 
         var avgRounds = resolvedCount > 0 ? (double)resolvedRounds / resolvedCount : 0;
-        var avgWinnerHp = trials > 0 ? (double)winnerHp / trials : 0;
+        var avgWinnerHpA = aWins > 0 ? (double)winnerAHp / aWins : 0;
+        var avgWinnerHpB = bWins > 0 ? (double)winnerBHp / bWins : 0;
         var firstWinPct = trials > 0 ? (double)firstAttackerWins * 100d / trials : 0;
         var aPenRate = aAttacks > 0 ? (double)aPen / aAttacks : 0;
         var bPenRate = bAttacks > 0 ? (double)bPen / bAttacks : 0;
+        var avgADamage = trials > 0 ? (double)aDamage / trials : 0;
+        var avgBDamage = trials > 0 ? (double)bDamage / trials : 0;
 
         var sb = new StringBuilder();
         sb.AppendLine($"Trials: {trials}");
@@ -166,13 +202,41 @@ public partial class DuelComparison : Control
         sb.AppendLine($"Squad B wins: {bWins}");
         sb.AppendLine($"Draws: {draws}");
         sb.AppendLine($"Avg rounds (excluding cap hits): {avgRounds:0.00}");
-        sb.AppendLine($"Avg winner HP remaining: {avgWinnerHp:0.00}");
+        sb.AppendLine($"Avg winner HP remaining when Squad A wins: {avgWinnerHpA:0.00}");
+        sb.AppendLine($"Avg winner HP remaining when Squad B wins: {avgWinnerHpB:0.00}");
         sb.AppendLine($"First attacker win %: {firstWinPct:0.00}%");
         sb.AppendLine($"Squad A penetrating injury rate: {aPenRate:0.0000}");
         sb.AppendLine($"Squad B penetrating injury rate: {bPenRate:0.0000}");
+        sb.AppendLine($"Avg damage per trial (Squad A): {avgADamage:0.00}");
+        sb.AppendLine($"Avg damage per trial (Squad B): {avgBDamage:0.00}");
+
+        var slides = new Array
+        {
+            BuildSlide($"Rounds per Trial (avg {avgRounds:0.00})", "Rounds", roundsPerTrial, "Rounds", new Array(), string.Empty),
+            BuildSlide("Winner HP Remaining", "HP", winnerHpWhenAWin, "Squad A wins", winnerHpWhenBWin, "Squad B wins"),
+            BuildSlide("Penetrating Injury Rate per Trial", "Penetrating injuries / attacks", aPenRatesPerTrial, "Squad A", bPenRatesPerTrial, "Squad B"),
+            BuildSlide("Damage per Trial", "Damage", aDamagePerTrial, "Squad A", bDamagePerTrial, "Squad B")
+        };
 
         _resultLabel.Text = sb.ToString();
+        _histogramSlideshow.Call("set_slides", slides);
         _progressLabel.Text = "Done.";
         _runButton.Disabled = false;
+    }
+
+    private static Dictionary BuildSlide(string title, string xLabel, Array seriesAValues, string seriesALabel, Array seriesBValues, string seriesBLabel)
+    {
+        return new Dictionary
+        {
+            { "title", title },
+            { "x_label", xLabel },
+            { "series_a_values", seriesAValues },
+            { "series_a_label", seriesALabel },
+            { "series_a_color", Colors.SkyBlue },
+            { "series_b_values", seriesBValues },
+            { "series_b_label", seriesBLabel },
+            { "series_b_color", Colors.IndianRed },
+            { "bins", 12 }
+        };
     }
 }
