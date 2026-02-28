@@ -20,6 +20,7 @@ public partial class DuelComparison : Control
     private Label _progressLabel = null!;
     private RichTextLabel _resultLabel = null!;
     private Control _histogramSlideshow = null!;
+    private AnimatedSprite2D _loadingGif = null!;
 
     private readonly List<Squad> _squads = new();
 
@@ -44,6 +45,8 @@ public partial class DuelComparison : Control
         _progressLabel = GetNode<Label>("%ProgressLabel");
         _resultLabel = GetNode<RichTextLabel>("%ResultLabel");
         _histogramSlideshow = GetNode<Control>("%HistogramSlideshow");
+        _loadingGif = GetNode<AnimatedSprite2D>("%LoadingGif");
+        _loadingGif.Visible = false;
 
         _firstAttackerSelect.AddItem("Squad A attacks first", (int)FirstAttackerMode.SquadA);
         _firstAttackerSelect.AddItem("Squad B attacks first", (int)FirstAttackerMode.SquadB);
@@ -115,113 +118,123 @@ public partial class DuelComparison : Control
         _runButton.Disabled = true;
         _resultLabel.Text = string.Empty;
         _histogramSlideshow.Call("clear_slides");
+        _loadingGif.Visible = true;
+        _loadingGif.Play();
 
-        var rng = seed.HasValue ? new Random(seed.Value) : new Random();
-        var simulator = new DuelSimulator();
-
-        var aWins = 0;
-        var bWins = 0;
-        var draws = 0;
-        var firstAttackerWins = 0;
-        long resolvedRounds = 0;
-        long resolvedCount = 0;
-        long winnerAHp = 0;
-        long winnerBHp = 0;
-        long aAttacks = 0;
-        long bAttacks = 0;
-        long aPen = 0;
-        long bPen = 0;
-        long aDamage = 0;
-        long bDamage = 0;
-
-        var roundsPerTrial = new Array();
-        var winnerHpWhenAWin = new Array();
-        var winnerHpWhenBWin = new Array();
-        var aPenRatesPerTrial = new Array();
-        var bPenRatesPerTrial = new Array();
-        var aDamagePerTrial = new Array();
-        var bDamagePerTrial = new Array();
-
-        const int updateChunk = 250;
-        for (var i = 0; i < trials; i++)
+        try
         {
-            var result = simulator.RunSingle(config, squadA, squadB, rng);
-            if (result.IsDraw) draws++;
-            else if (result.SquadAWon)
+            var rng = seed.HasValue ? new Random(seed.Value) : new Random();
+            var simulator = new DuelSimulator();
+
+            var aWins = 0;
+            var bWins = 0;
+            var draws = 0;
+            var firstAttackerWins = 0;
+            long resolvedRounds = 0;
+            long resolvedCount = 0;
+            long winnerAHp = 0;
+            long winnerBHp = 0;
+            long aAttacks = 0;
+            long bAttacks = 0;
+            long aPen = 0;
+            long bPen = 0;
+            long aDamage = 0;
+            long bDamage = 0;
+
+            var roundsPerTrial = new Array();
+            var winnerHpWhenAWin = new Array();
+            var winnerHpWhenBWin = new Array();
+            var aPenRatesPerTrial = new Array();
+            var bPenRatesPerTrial = new Array();
+            var aDamagePerTrial = new Array();
+            var bDamagePerTrial = new Array();
+
+            const int updateChunk = 250;
+            for (var i = 0; i < trials; i++)
             {
-                aWins++;
-                winnerAHp += result.WinnerRemainingHealth;
-                winnerHpWhenAWin.Add(result.WinnerRemainingHealth);
-            }
-            else
-            {
-                bWins++;
-                winnerBHp += result.WinnerRemainingHealth;
-                winnerHpWhenBWin.Add(result.WinnerRemainingHealth);
+                var result = simulator.RunSingle(config, squadA, squadB, rng);
+                if (result.IsDraw) draws++;
+                else if (result.SquadAWon)
+                {
+                    aWins++;
+                    winnerAHp += result.WinnerRemainingHealth;
+                    winnerHpWhenAWin.Add(result.WinnerRemainingHealth);
+                }
+                else
+                {
+                    bWins++;
+                    winnerBHp += result.WinnerRemainingHealth;
+                    winnerHpWhenBWin.Add(result.WinnerRemainingHealth);
+                }
+
+                if (result.FirstAttackerWon) firstAttackerWins++;
+                if (!result.HitRoundCap)
+                {
+                    resolvedRounds += result.RoundsElapsed;
+                    resolvedCount++;
+                }
+
+                aAttacks += result.SquadAAttacks;
+                bAttacks += result.SquadBAttacks;
+                aPen += result.SquadAPenetratingInjuries;
+                bPen += result.SquadBPenetratingInjuries;
+                aDamage += result.SquadADamageDealt;
+                bDamage += result.SquadBDamageDealt;
+
+                roundsPerTrial.Add(result.RoundsElapsed);
+                aPenRatesPerTrial.Add(result.SquadAAttacks > 0 ? (double)result.SquadAPenetratingInjuries / result.SquadAAttacks : 0d);
+                bPenRatesPerTrial.Add(result.SquadBAttacks > 0 ? (double)result.SquadBPenetratingInjuries / result.SquadBAttacks : 0d);
+                aDamagePerTrial.Add(result.SquadADamageDealt);
+                bDamagePerTrial.Add(result.SquadBDamageDealt);
+
+                if ((i + 1) % updateChunk == 0 || i == trials - 1)
+                {
+                    _progressLabel.Text = $"Running: {i + 1}/{trials}";
+                    await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+                }
             }
 
-            if (result.FirstAttackerWon) firstAttackerWins++;
-            if (!result.HitRoundCap)
+            var avgRounds = resolvedCount > 0 ? (double)resolvedRounds / resolvedCount : 0;
+            var avgWinnerHpA = aWins > 0 ? (double)winnerAHp / aWins : 0;
+            var avgWinnerHpB = bWins > 0 ? (double)winnerBHp / bWins : 0;
+            var firstWinPct = trials > 0 ? (double)firstAttackerWins * 100d / trials : 0;
+            var aPenRate = aAttacks > 0 ? (double)aPen / aAttacks : 0;
+            var bPenRate = bAttacks > 0 ? (double)bPen / bAttacks : 0;
+            var avgADamage = trials > 0 ? (double)aDamage / trials : 0;
+            var avgBDamage = trials > 0 ? (double)bDamage / trials : 0;
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Trials: {trials}");
+            sb.AppendLine($"Squad A wins: {aWins}");
+            sb.AppendLine($"Squad B wins: {bWins}");
+            sb.AppendLine($"Draws: {draws}");
+            sb.AppendLine($"Avg rounds (excluding cap hits): {avgRounds:0.00}");
+            sb.AppendLine($"Avg winner HP remaining when Squad A wins: {avgWinnerHpA:0.00}");
+            sb.AppendLine($"Avg winner HP remaining when Squad B wins: {avgWinnerHpB:0.00}");
+            sb.AppendLine($"First attacker win %: {firstWinPct:0.00}%");
+            sb.AppendLine($"Squad A penetrating injury rate: {aPenRate:0.0000}");
+            sb.AppendLine($"Squad B penetrating injury rate: {bPenRate:0.0000}");
+            sb.AppendLine($"Avg damage per trial (Squad A): {avgADamage:0.00}");
+            sb.AppendLine($"Avg damage per trial (Squad B): {avgBDamage:0.00}");
+
+            var slides = new Array
             {
-                resolvedRounds += result.RoundsElapsed;
-                resolvedCount++;
-            }
+                BuildSlide($"Rounds per Trial (avg {avgRounds:0.00})", "Rounds", roundsPerTrial, "Rounds", new Array(), string.Empty),
+                BuildSlide("Winner HP Remaining", "HP", winnerHpWhenAWin, "Squad A wins", winnerHpWhenBWin, "Squad B wins"),
+                BuildSlide("Penetrating Injury Rate per Trial", "Penetrating injuries / attacks", aPenRatesPerTrial, "Squad A", bPenRatesPerTrial, "Squad B"),
+                BuildSlide("Damage per Trial", "Damage", aDamagePerTrial, "Squad A", bDamagePerTrial, "Squad B")
+            };
 
-            aAttacks += result.SquadAAttacks;
-            bAttacks += result.SquadBAttacks;
-            aPen += result.SquadAPenetratingInjuries;
-            bPen += result.SquadBPenetratingInjuries;
-            aDamage += result.SquadADamageDealt;
-            bDamage += result.SquadBDamageDealt;
-
-            roundsPerTrial.Add(result.RoundsElapsed);
-            aPenRatesPerTrial.Add(result.SquadAAttacks > 0 ? (double)result.SquadAPenetratingInjuries / result.SquadAAttacks : 0d);
-            bPenRatesPerTrial.Add(result.SquadBAttacks > 0 ? (double)result.SquadBPenetratingInjuries / result.SquadBAttacks : 0d);
-            aDamagePerTrial.Add(result.SquadADamageDealt);
-            bDamagePerTrial.Add(result.SquadBDamageDealt);
-
-            if ((i + 1) % updateChunk == 0 || i == trials - 1)
-            {
-                _progressLabel.Text = $"Running: {i + 1}/{trials}";
-                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            }
+            _resultLabel.Text = sb.ToString();
+            _histogramSlideshow.Call("set_slides", slides);
+            _progressLabel.Text = "Done.";
         }
-
-        var avgRounds = resolvedCount > 0 ? (double)resolvedRounds / resolvedCount : 0;
-        var avgWinnerHpA = aWins > 0 ? (double)winnerAHp / aWins : 0;
-        var avgWinnerHpB = bWins > 0 ? (double)winnerBHp / bWins : 0;
-        var firstWinPct = trials > 0 ? (double)firstAttackerWins * 100d / trials : 0;
-        var aPenRate = aAttacks > 0 ? (double)aPen / aAttacks : 0;
-        var bPenRate = bAttacks > 0 ? (double)bPen / bAttacks : 0;
-        var avgADamage = trials > 0 ? (double)aDamage / trials : 0;
-        var avgBDamage = trials > 0 ? (double)bDamage / trials : 0;
-
-        var sb = new StringBuilder();
-        sb.AppendLine($"Trials: {trials}");
-        sb.AppendLine($"Squad A wins: {aWins}");
-        sb.AppendLine($"Squad B wins: {bWins}");
-        sb.AppendLine($"Draws: {draws}");
-        sb.AppendLine($"Avg rounds (excluding cap hits): {avgRounds:0.00}");
-        sb.AppendLine($"Avg winner HP remaining when Squad A wins: {avgWinnerHpA:0.00}");
-        sb.AppendLine($"Avg winner HP remaining when Squad B wins: {avgWinnerHpB:0.00}");
-        sb.AppendLine($"First attacker win %: {firstWinPct:0.00}%");
-        sb.AppendLine($"Squad A penetrating injury rate: {aPenRate:0.0000}");
-        sb.AppendLine($"Squad B penetrating injury rate: {bPenRate:0.0000}");
-        sb.AppendLine($"Avg damage per trial (Squad A): {avgADamage:0.00}");
-        sb.AppendLine($"Avg damage per trial (Squad B): {avgBDamage:0.00}");
-
-        var slides = new Array
+        finally
         {
-            BuildSlide($"Rounds per Trial (avg {avgRounds:0.00})", "Rounds", roundsPerTrial, "Rounds", new Array(), string.Empty),
-            BuildSlide("Winner HP Remaining", "HP", winnerHpWhenAWin, "Squad A wins", winnerHpWhenBWin, "Squad B wins"),
-            BuildSlide("Penetrating Injury Rate per Trial", "Penetrating injuries / attacks", aPenRatesPerTrial, "Squad A", bPenRatesPerTrial, "Squad B"),
-            BuildSlide("Damage per Trial", "Damage", aDamagePerTrial, "Squad A", bDamagePerTrial, "Squad B")
-        };
-
-        _resultLabel.Text = sb.ToString();
-        _histogramSlideshow.Call("set_slides", slides);
-        _progressLabel.Text = "Done.";
-        _runButton.Disabled = false;
+            _loadingGif.Stop();
+            _loadingGif.Visible = false;
+            _runButton.Disabled = false;
+        }
     }
 
     private static Dictionary BuildSlide(string title, string xLabel, Array seriesAValues, string seriesALabel, Array seriesBValues, string seriesBLabel)
