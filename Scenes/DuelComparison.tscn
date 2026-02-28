@@ -129,6 +129,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="LoadingGif" type="AnimatedSprite2D" parent="Margin/RootVBox/MainSplit/LeftPanel" unique_id=296710679]
+unique_name_in_owner = true
 position = Vector2(162, 434)
 sprite_frames = ExtResource("2_pjvwa")
 animation = &"gif"

@@ -250,7 +250,7 @@ public partial class BattleField : Node2D
 
         // --- Base size based on squad types (ported from Kotlin) ---
         float baseMultiplier = GetBaseSizeMultiplier(theSquad.SquadType); // e.g. 4.0f, 4.3f, etc.
-        float baseSize = baseMultiplier * GameGlobals.Instance.FakeInchPx * 1.5f; //WSFree has larger base sizes due to only one squad per team.
+        float baseSize = baseMultiplier * GameGlobals.Instance.FakeInchPx;
 
         if (theSquad.SquadType != null && theSquad.SquadType.Contains("Titanic"))
             baseSize *= 2f;
