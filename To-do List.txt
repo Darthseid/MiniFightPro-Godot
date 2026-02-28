@@ -3,3 +3,7 @@ To do list for mini fight free godot:
 * Stress Test everything.
 * Make sure that all the option dialogs are fully readable on mobile devices.
 * Test on multiple devices.
+* Fix teleport being limited by 12"
+* Stop squads from hitting themselves
+* Have Advance work properly.
+* Change die size and gif and presentation.

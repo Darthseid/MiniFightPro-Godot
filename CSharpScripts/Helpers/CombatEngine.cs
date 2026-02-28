@@ -647,7 +647,7 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                weapon.Fingerprint
+                CombatEngine.GetWeaponFingerprint(weapon)
             );
             var (hits, hardHits) = await CombatRolls.HitSequenceAsync(
                 attacks,
@@ -687,7 +687,7 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                weapon.Fingerprint
+                CombatEngine.GetWeaponFingerprint(weapon)
             );
             var (injuries, devastating) = await CombatRolls.WoundSequenceAsync(
                 hits,
@@ -706,7 +706,7 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                weapon.Fingerprint
+                CombatEngine.GetWeaponFingerprint(weapon)
             );
             var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, defenderSquad.Dodge, saveContext);
             if (weapon.IsMelee && unsaved > 0)
@@ -827,7 +827,7 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                weapon.Fingerprint
+                CombatEngine.GetWeaponFingerprint(weapon)
             );
             var (hits, hardHits) = await CombatRolls.HitSequenceAsync(attacks, weapon.HitSkill, modifiers.HitMod, modifiers.HitReroll, modifiers.CritThreshold, weapon.Special, hitContext);
             hits += hardHits;
@@ -859,7 +859,7 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                weapon.Fingerprint
+                CombatEngine.GetWeaponFingerprint(weapon)
             );
             var (injuries, devastating) = await CombatRolls.WoundSequenceAsync(hits, weapon.Strength, defenderHardness, modifiers.WoundMod, modifiers.WoundReroll, weapon.Special, modifiers.AntiThreshold, woundContext);
             injuries += devastating;
@@ -869,7 +869,7 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                weapon.Fingerprint
+                CombatEngine.GetWeaponFingerprint(weapon)
             );
             var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, defenderSquad.Dodge, saveContext);
             if (weapon.IsMelee && unsaved > 0)
