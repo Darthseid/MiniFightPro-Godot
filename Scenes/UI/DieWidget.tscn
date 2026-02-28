@@ -1,0 +1,35 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://CSharpScripts/UI/DieWidget.cs" id="1_script"]
+[ext_resource type="SpriteFrames" path="res://Assets/drawable/dieRoll.gif" id="2_roll"]
+[ext_resource type="Texture2D" path="res://Assets/drawable/dice1.png" id="3_face"]
+
+[node name="DieWidget" type="Control"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 56.0
+offset_bottom = 56.0
+script = ExtResource("1_script")
+
+[node name="RollingSprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(28, 28)
+sprite_frames = ExtResource("2_roll")
+autoplay = "default"
+
+[node name="FaceTexture" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_face")
+expand_mode = 1
+stretch_mode = 5

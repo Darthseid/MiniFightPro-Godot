@@ -641,13 +641,22 @@ public static class CombatEngine
                 _currentDistance
             );
 
-            var (hits, hardHits) = CombatRolls.HitSequence(
+            var hitContext = new RollContext(
+                RollPhase.Hit,
+                $"To Hit ({weapon.WeaponName})",
+                attackerSquad?.Name,
+                defenderSquad?.Name,
+                weapon.WeaponName,
+                weapon.Fingerprint
+            );
+            var (hits, hardHits) = await CombatRolls.HitSequenceAsync(
                 attacks,
                 weapon.HitSkill,
                 modifiers.HitMod,
                 modifiers.HitReroll,
                 modifiers.CritThreshold,
-                weapon.Special
+                weapon.Special,
+                hitContext
             );
             hits += hardHits;
 
@@ -672,17 +681,34 @@ public static class CombatEngine
             var defenderHardness = defenderSquad.Hardness;
             if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)
                 defenderHardness = System.Math.Max(1, defenderHardness - 1);
-            var (injuries, devastating) = CombatRolls.WoundSequence(
+            var woundContext = new RollContext(
+                RollPhase.Wound,
+                $"To Wound ({weapon.WeaponName})",
+                attackerSquad?.Name,
+                defenderSquad?.Name,
+                weapon.WeaponName,
+                weapon.Fingerprint
+            );
+            var (injuries, devastating) = await CombatRolls.WoundSequenceAsync(
                 hits,
                 weapon.Strength,
                 defenderHardness,
                 modifiers.WoundMod,
                 modifiers.WoundReroll,
                 weapon.Special,
-                modifiers.AntiThreshold
+                modifiers.AntiThreshold,
+                woundContext
             );
             injuries += devastating;
-            var unsaved = CombatRolls.SaveSequence(injuries, defenderSquad.Defense, modifiers.DefenseMod, defenderSquad.Dodge);
+            var saveContext = new RollContext(
+                RollPhase.Save,
+                $"Saves ({defenderSquad?.Name})",
+                attackerSquad?.Name,
+                defenderSquad?.Name,
+                weapon.WeaponName,
+                weapon.Fingerprint
+            );
+            var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, defenderSquad.Dodge, saveContext);
             if (weapon.IsMelee && unsaved > 0)
             {
                 AudioManager.Instance?.Play("chomp");
@@ -795,7 +821,15 @@ public static class CombatEngine
             var aliveBeforeWeapon = CountLivingActors(defenderActors);
             var weaponSound = ResolveWeaponSound(weapon);
             var modifiers = CombatHelpers.ObtainModifiers(weapon, attackerSquad, attackerMove, defenderSquad, false, isFight, _currentDistance);
-            var (hits, hardHits) = CombatRolls.HitSequence(attacks, weapon.HitSkill, modifiers.HitMod, modifiers.HitReroll, modifiers.CritThreshold, weapon.Special);
+            var hitContext = new RollContext(
+                RollPhase.Hit,
+                $"To Hit ({weapon.WeaponName})",
+                attackerSquad?.Name,
+                defenderSquad?.Name,
+                weapon.WeaponName,
+                weapon.Fingerprint
+            );
+            var (hits, hardHits) = await CombatRolls.HitSequenceAsync(attacks, weapon.HitSkill, modifiers.HitMod, modifiers.HitReroll, modifiers.CritThreshold, weapon.Special, hitContext);
             hits += hardHits;
 
             for (int i = 0; i < hardHits; i++)
@@ -819,9 +853,25 @@ public static class CombatEngine
             var defenderHardness = defenderSquad.Hardness;
             if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)
                 defenderHardness = System.Math.Max(1, defenderHardness - 1);
-            var (injuries, devastating) = CombatRolls.WoundSequence(hits, weapon.Strength, defenderHardness, modifiers.WoundMod, modifiers.WoundReroll, weapon.Special, modifiers.AntiThreshold);
+            var woundContext = new RollContext(
+                RollPhase.Wound,
+                $"To Wound ({weapon.WeaponName})",
+                attackerSquad?.Name,
+                defenderSquad?.Name,
+                weapon.WeaponName,
+                weapon.Fingerprint
+            );
+            var (injuries, devastating) = await CombatRolls.WoundSequenceAsync(hits, weapon.Strength, defenderHardness, modifiers.WoundMod, modifiers.WoundReroll, weapon.Special, modifiers.AntiThreshold, woundContext);
             injuries += devastating;
-            var unsaved = CombatRolls.SaveSequence(injuries, defenderSquad.Defense, modifiers.DefenseMod, defenderSquad.Dodge);
+            var saveContext = new RollContext(
+                RollPhase.Save,
+                $"Saves ({defenderSquad?.Name})",
+                attackerSquad?.Name,
+                defenderSquad?.Name,
+                weapon.WeaponName,
+                weapon.Fingerprint
+            );
+            var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, defenderSquad.Dodge, saveContext);
             if (weapon.IsMelee && unsaved > 0)
             {
                 AudioManager.Instance?.Play("chomp");

@@ -52,6 +52,7 @@ public partial class Battle : Node2D
     private readonly AudioStream _gameOverMusic = GD.Load<AudioStream>("res://Assets/raw/victory.mp3");
     private CombatSequence _sequence;
     private bool _measureModeEnabled;
+    private DicePresenter _dicePresenter;
 
     public override void _Ready()
     {
@@ -126,6 +127,15 @@ public partial class Battle : Node2D
             _battleField.DragEnded -= OnDragEnded;
             _battleField.DragEnded += OnDragEnded;
         }
+
+        _dicePresenter = GetNodeOrNull<DicePresenter>("DicePresenter");
+        if (_dicePresenter == null)
+        {
+            _dicePresenter = new DicePresenter { Name = "DicePresenter" };
+            AddChild(_dicePresenter);
+        }
+
+        DiceRoller.Initialize(_dicePresenter);
     }
 
     private async Task InitializeBattleAsync()
