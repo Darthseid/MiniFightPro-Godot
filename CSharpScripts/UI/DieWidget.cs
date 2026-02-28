@@ -1,0 +1,39 @@
+using Godot;
+using System.Collections.Generic;
+
+public partial class DieWidget : Control
+{
+    private static readonly Dictionary<int, Texture2D> FaceTextures = new()
+    {
+        { 1, GD.Load<Texture2D>("res://Assets/drawable/dice1.png") },
+        { 2, GD.Load<Texture2D>("res://Assets/drawable/Dice2.png") },
+        { 3, GD.Load<Texture2D>("res://Assets/drawable/Dice3.png") },
+        { 4, GD.Load<Texture2D>("res://Assets/drawable/Dice4.png") },
+        { 5, GD.Load<Texture2D>("res://Assets/drawable/Dice5.png") },
+        { 6, GD.Load<Texture2D>("res://Assets/drawable/Dice6.png") }
+    };
+
+    private AnimatedSprite2D _rollingSprite;
+    private TextureRect _faceTexture;
+
+    public override void _Ready()
+    {
+        _rollingSprite = GetNode<AnimatedSprite2D>("RollingSprite");
+        _faceTexture = GetNode<TextureRect>("FaceTexture");
+    }
+
+    public void StartRolling()
+    {
+        _faceTexture.Visible = false;
+        _rollingSprite.Visible = true;
+        _rollingSprite.Play();
+    }
+
+    public void RevealFace(int value)
+    {
+        _rollingSprite.Stop();
+        _rollingSprite.Visible = false;
+        _faceTexture.Texture = FaceTextures.GetValueOrDefault(value, FaceTextures[1]);
+        _faceTexture.Visible = true;
+    }
+}
