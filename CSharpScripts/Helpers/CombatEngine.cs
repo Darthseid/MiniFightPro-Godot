@@ -171,6 +171,61 @@ public static class CombatEngine
         return $"{weapon.WeaponName}::{weapon.Attacks}::{weapon.Damage}::{weapon.Range}::{weapon.HitSkill}::{weapon.Strength}::{weapon.ArmorPenetration}::{weapon.IsMelee}::{specials}";
     }
 
+    private static int ResolvePerilousRecoil(
+        Squad attackerSquad,
+        List<BattleModelActor> attackerActors,
+        Weapon weapon,
+        BattleHud battleHud
+    )
+    {
+        if (attackerSquad == null || attackerActors == null || weapon?.Special == null)
+        {
+            return 0;
+        }
+
+        if (!weapon.Special.Any(ability => ability?.Innate == "Self-Inflict"))
+        {
+            return 0;
+        }
+
+        var fingerprint = BuildWeaponFingerprint(weapon);
+        var infantryBearer = attackerSquad.SquadType?.Contains("Infantry") == true;
+        var recoilHits = 0;
+
+        foreach (var attackerActor in attackerActors.Where(IsActorAlive))
+        {
+            var hasPerilousWeapon = attackerActor?.BoundModel?.Tools
+                ?.Any(tool => tool != null && BuildWeaponFingerprint(tool) == fingerprint) == true;
+            if (!hasPerilousWeapon)
+            {
+                continue;
+            }
+
+            if (DiceHelpers.SimpleRoll(6) != 1)
+            {
+                continue;
+            }
+
+            recoilHits++;
+            if (infantryBearer)
+            {
+                attackerActor.BoundModel.Health = 0;
+                battleHud?.ShowToast($"Perilous! {attackerActor.BoundModel.Name} was destroyed.", 2f);
+                AudioManager.Instance?.Play("perilous");
+            }
+            else
+            {
+                attackerActor.BoundModel.Health = System.Math.Max(0, attackerActor.BoundModel.Health - 3);
+                battleHud?.ShowToast($"Perilous! {attackerActor.BoundModel.Name} suffers 3 pure damage.", 2f);
+                AudioManager.Instance?.Play("perilous");
+            }
+
+            attackerActor.RefreshHp();
+        }
+
+        return recoilHits;
+    }
+
 
     private static void ConsumeOneShotWeapons(Squad attackerSquad, Weapon weapon)
     {
@@ -204,15 +259,28 @@ public static class CombatEngine
 
     public static List<WeaponBatch> BuildWeaponBatches(Squad attackerSquad, bool isMelee)
     {
+        return BuildWeaponBatches(attackerSquad, isMelee, null);
+    }
+
+    public static List<WeaponBatch> BuildWeaponBatches(Squad attackerSquad, bool isMelee, string requiredWeaponFingerprint)
+    {
         if (attackerSquad == null)
         {
             return new List<WeaponBatch>();
         }
 
-        return attackerSquad.Composition
+        var eligibleWeapons = attackerSquad.Composition
             .Where(model => model != null && model.Health > 0)
             .SelectMany(model => model.Tools)
-            .Where(weapon => weapon != null && weapon.IsMelee == isMelee)
+            .Where(weapon => weapon != null && weapon.IsMelee == isMelee);
+
+        if (!string.IsNullOrWhiteSpace(requiredWeaponFingerprint))
+        {
+            eligibleWeapons = eligibleWeapons
+                .Where(weapon => BuildWeaponFingerprint(weapon) == requiredWeaponFingerprint);
+        }
+
+        return eligibleWeapons
             .GroupBy(BuildWeaponFingerprint)
             .Select(group =>
             {
@@ -224,6 +292,11 @@ public static class CombatEngine
             .OrderBy(batch => batch.Weapon?.WeaponName)
             .ThenBy(batch => batch.Weapon?.Range ?? 0f)
             .ToList();
+    }
+
+    public static string GetWeaponFingerprint(Weapon weapon)
+    {
+        return BuildWeaponFingerprint(weapon);
     }
 
     private static bool HasPrecision(Weapon weapon)
@@ -518,7 +591,8 @@ public static class CombatEngine
         BattleHud battleHud,
         BattleField battleField,
         System.Action checkVictory,
-        System.Action<Squad, Squad, int> handleExplosionProcess = null
+        System.Action<Squad, Squad, int> handleExplosionProcess = null,
+        string selectedWeaponFingerprint = null
     )
     {
         if (attacker == null || defender == null)
@@ -537,7 +611,7 @@ public static class CombatEngine
         }
 
         _currentDistance = BoardGeometry.ClosestDistanceInches(teamAActors, teamBActors);
-        var weaponBatches = BuildWeaponBatches(attackerSquad, isFight);
+        var weaponBatches = BuildWeaponBatches(attackerSquad, isFight, selectedWeaponFingerprint);
         var attackerMove = CombatHelpers.GetMoveVarsForTeam(attacker.TeamId, teamAMove, teamBMove);
         var currentRecipient = defender;
 
@@ -643,8 +717,13 @@ public static class CombatEngine
                 injuries,
                 unsaved
             );
+            ConsumeOneShotWeapons(attackerSquad, weapon);
             battleHud?.ShowToast(BuildWeaponToast(summary), 2f);
             await Task.Delay(2000);
+
+            ResolvePerilousRecoil(attackerSquad, attackerActors, weapon, battleHud);
+            RemoveDeadModels(attackerActors, attackerSquad, battleField);
+            checkVictory?.Invoke();
 
             var aliveAfterWeapon = CountLivingActors(defenderActors);
             var demiseCheck = System.Math.Max(0, aliveBeforeWeapon - aliveAfterWeapon);
@@ -758,6 +837,10 @@ public static class CombatEngine
             ConsumeOneShotWeapons(attackerSquad, weapon);
             battleHud?.ShowToast(BuildWeaponToast(summary), 2f);
             await Task.Delay(2000);
+
+            ResolvePerilousRecoil(attackerSquad, attackerActors, weapon, battleHud);
+            RemoveDeadModels(attackerActors, attackerSquad, battleField);
+            checkVictory?.Invoke();
 
             var aliveAfterWeapon = CountLivingActors(defenderActors);
             var demiseCheck = System.Math.Max(0, aliveBeforeWeapon - aliveAfterWeapon);
