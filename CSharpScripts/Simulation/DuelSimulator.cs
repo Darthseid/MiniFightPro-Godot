@@ -15,6 +15,8 @@ public sealed class DuelSimulator
     private long _trialSquadBAttacks;
     private long _trialSquadAPen;
     private long _trialSquadBPen;
+    private long _trialSquadADamage;
+    private long _trialSquadBDamage;
 
     public DuelResult RunSingle(DuelConfig config, Squad a, Squad b, Random rng)
     {
@@ -83,7 +85,9 @@ public sealed class DuelSimulator
             SquadAAttacks = _trialSquadAAttacks,
             SquadBAttacks = _trialSquadBAttacks,
             SquadAPenetratingInjuries = _trialSquadAPen,
-            SquadBPenetratingInjuries = _trialSquadBPen
+            SquadBPenetratingInjuries = _trialSquadBPen,
+            SquadADamageDealt = _trialSquadADamage,
+            SquadBDamageDealt = _trialSquadBDamage
         };
 
         result.FirstAttackerWon = firstAttackerIsA ? result.SquadAWon : (!result.IsDraw && !result.SquadAWon);
@@ -101,19 +105,34 @@ public sealed class DuelSimulator
         var firstAttackerWins = 0;
         long resolvedRoundSum = 0;
         long resolvedCount = 0;
-        long winnerHpSum = 0;
+        long winnerAHpSum = 0;
+        long winnerBHpSum = 0;
+        long winnerAHpCount = 0;
+        long winnerBHpCount = 0;
         long totalAAttacks = 0;
         long totalBAttacks = 0;
         long totalAPen = 0;
         long totalBPen = 0;
+        long totalADamage = 0;
+        long totalBDamage = 0;
 
         for (var i = 0; i < safeTrials; i++)
         {
             var single = RunSingle(config, a, b, rng);
 
             if (single.IsDraw) draws++;
-            else if (single.SquadAWon) aWins++;
-            else bWins++;
+            else if (single.SquadAWon)
+            {
+                aWins++;
+                winnerAHpSum += single.WinnerRemainingHealth;
+                winnerAHpCount++;
+            }
+            else
+            {
+                bWins++;
+                winnerBHpSum += single.WinnerRemainingHealth;
+                winnerBHpCount++;
+            }
 
             if (single.FirstAttackerWon) firstAttackerWins++;
 
@@ -123,11 +142,12 @@ public sealed class DuelSimulator
                 resolvedCount++;
             }
 
-            winnerHpSum += single.WinnerRemainingHealth;
             totalAAttacks += single.SquadAAttacks;
             totalBAttacks += single.SquadBAttacks;
             totalAPen += single.SquadAPenetratingInjuries;
             totalBPen += single.SquadBPenetratingInjuries;
+            totalADamage += single.SquadADamageDealt;
+            totalBDamage += single.SquadBDamageDealt;
         }
 
         return new DuelBatchResult
@@ -137,10 +157,13 @@ public sealed class DuelSimulator
             SquadBWins = bWins,
             Draws = draws,
             AverageRoundsToResolve = resolvedCount > 0 ? (double)resolvedRoundSum / resolvedCount : 0,
-            AverageWinnerHealthRemaining = safeTrials > 0 ? (double)winnerHpSum / safeTrials : 0,
+            AverageWinnerHealthRemainingWhenASquadWins = winnerAHpCount > 0 ? (double)winnerAHpSum / winnerAHpCount : 0,
+            AverageWinnerHealthRemainingWhenBSquadWins = winnerBHpCount > 0 ? (double)winnerBHpSum / winnerBHpCount : 0,
             FirstAttackerWinPercent = safeTrials > 0 ? (double)firstAttackerWins * 100d / safeTrials : 0,
             SquadAPenetratingInjuryRate = totalAAttacks > 0 ? (double)totalAPen / totalAAttacks : 0,
-            SquadBPenetratingInjuryRate = totalBAttacks > 0 ? (double)totalBPen / totalBAttacks : 0
+            SquadBPenetratingInjuryRate = totalBAttacks > 0 ? (double)totalBPen / totalBAttacks : 0,
+            AverageSquadADamagePerTrial = safeTrials > 0 ? (double)totalADamage / safeTrials : 0,
+            AverageSquadBDamagePerTrial = safeTrials > 0 ? (double)totalBDamage / safeTrials : 0
         };
     }
 
@@ -236,7 +259,15 @@ public sealed class DuelSimulator
                 _trialSquadBPen += unsaved;
             }
 
-            ApplyUnsavedInjuries(attacker, defender, weapon, unsaved, config.RangeInches, ref roundDidDamage);
+            var damageDealt = ApplyUnsavedInjuries(attacker, defender, weapon, unsaved, config.RangeInches, ref roundDidDamage);
+            if (attackerIsA)
+            {
+                _trialSquadADamage += damageDealt;
+            }
+            else
+            {
+                _trialSquadBDamage += damageDealt;
+            }
             ConsumeOneShotWeapons(attacker.WorkingSquad, weapon);
             ResolvePerilous(attacker, weapon, ref roundDidDamage);
 
@@ -253,8 +284,9 @@ public sealed class DuelSimulator
         }
     }
 
-    private static void ApplyUnsavedInjuries(SimSquadState attacker, SimSquadState defender, Weapon weapon, int unsaved, float range, ref bool roundDidDamage)
+    private static int ApplyUnsavedInjuries(SimSquadState attacker, SimSquadState defender, Weapon weapon, int unsaved, float range, ref bool roundDidDamage)
     {
+        var damageApplied = 0;
         for (var i = 0; i < unsaved; i++)
         {
             if (defender.WorkingSquad.Composition.Count == 0)
@@ -288,6 +320,7 @@ public sealed class DuelSimulator
                 if (!negated)
                 {
                     target.Health -= 1;
+                    damageApplied++;
                     roundDidDamage = true;
                 }
             }
@@ -299,6 +332,8 @@ public sealed class DuelSimulator
         {
             HandleExplosions(defender, attacker, deadBefore, range, ref roundDidDamage);
         }
+
+        return damageApplied;
     }
 
     private static void HandleExplosions(SimSquadState exploded, SimSquadState other, int deadCount, float range, ref bool roundDidDamage)
@@ -406,5 +441,7 @@ public sealed class DuelSimulator
         _trialSquadBAttacks = 0;
         _trialSquadAPen = 0;
         _trialSquadBPen = 0;
+        _trialSquadADamage = 0;
+        _trialSquadBDamage = 0;
     }
 }

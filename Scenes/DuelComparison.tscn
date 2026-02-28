@@ -1,6 +1,7 @@
-[gd_scene format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://CSharpScripts/DuelComparison.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://Scenes/HistogramSlideshow.tscn" id="2_slideshow"]
 
 [node name="DuelComparison" type="Control"]
 layout_mode = 3
@@ -25,36 +26,48 @@ theme_override_constants/margin_bottom = 16
 
 [node name="RootVBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="Title" type="Label" parent="Margin/RootVBox"]
 layout_mode = 2
 text = "MathHammer Duel Simulator"
 
-[node name="Grid" type="GridContainer" parent="Margin/RootVBox"]
+[node name="MainSplit" type="HSplitContainer" parent="Margin/RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 420
+
+[node name="LeftPanel" type="VBoxContainer" parent="Margin/RootVBox/MainSplit"]
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Grid" type="GridContainer" parent="Margin/RootVBox/MainSplit/LeftPanel"]
 layout_mode = 2
 columns = 2
 
-[node name="SquadALabel" type="Label" parent="Margin/RootVBox/Grid"]
+[node name="SquadALabel" type="Label" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 layout_mode = 2
 text = "Squad A"
 
-[node name="SquadASelect" type="OptionButton" parent="Margin/RootVBox/Grid"]
+[node name="SquadASelect" type="OptionButton" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="SquadBLabel" type="Label" parent="Margin/RootVBox/Grid"]
+[node name="SquadBLabel" type="Label" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 layout_mode = 2
 text = "Squad B"
 
-[node name="SquadBSelect" type="OptionButton" parent="Margin/RootVBox/Grid"]
+[node name="SquadBSelect" type="OptionButton" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="RangeLabel" type="Label" parent="Margin/RootVBox/Grid"]
+[node name="RangeLabel" type="Label" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 layout_mode = 2
 text = "Range (inches)"
 
-[node name="RangeInput" type="SpinBox" parent="Margin/RootVBox/Grid"]
+[node name="RangeInput" type="SpinBox" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 0.0
@@ -62,11 +75,11 @@ max_value = 72.0
 step = 0.5
 value = 12.0
 
-[node name="TrialsLabel" type="Label" parent="Margin/RootVBox/Grid"]
+[node name="TrialsLabel" type="Label" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 layout_mode = 2
 text = "Trials (max 100000)"
 
-[node name="TrialsInput" type="SpinBox" parent="Margin/RootVBox/Grid"]
+[node name="TrialsInput" type="SpinBox" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
@@ -74,20 +87,20 @@ max_value = 100000.0
 step = 1.0
 value = 1000.0
 
-[node name="FirstLabel" type="Label" parent="Margin/RootVBox/Grid"]
+[node name="FirstLabel" type="Label" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 layout_mode = 2
 text = "First attacker"
 
-[node name="FirstAttackerSelect" type="OptionButton" parent="Margin/RootVBox/Grid"]
+[node name="FirstAttackerSelect" type="OptionButton" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="UseSeedCheck" type="CheckBox" parent="Margin/RootVBox/Grid"]
+[node name="UseSeedCheck" type="CheckBox" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Use Seed"
 
-[node name="SeedInput" type="SpinBox" parent="Margin/RootVBox/Grid"]
+[node name="SeedInput" type="SpinBox" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid"]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 0.0
@@ -95,28 +108,34 @@ max_value = 2147483647.0
 step = 1.0
 value = 42.0
 
-[node name="Buttons" type="HBoxContainer" parent="Margin/RootVBox"]
+[node name="Buttons" type="HBoxContainer" parent="Margin/RootVBox/MainSplit/LeftPanel"]
 layout_mode = 2
 
-[node name="BtnRun" type="Button" parent="Margin/RootVBox/Buttons"]
+[node name="BtnRun" type="Button" parent="Margin/RootVBox/MainSplit/LeftPanel/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Run Simulation"
 
-[node name="BtnBack" type="Button" parent="Margin/RootVBox/Buttons"]
+[node name="BtnBack" type="Button" parent="Margin/RootVBox/MainSplit/LeftPanel/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Back"
 
-[node name="ProgressLabel" type="Label" parent="Margin/RootVBox"]
+[node name="ProgressLabel" type="Label" parent="Margin/RootVBox/MainSplit/LeftPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Ready"
 
-[node name="ResultLabel" type="RichTextLabel" parent="Margin/RootVBox"]
+[node name="ResultLabel" type="RichTextLabel" parent="Margin/RootVBox/MainSplit/LeftPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = false
 fit_content = false
 text = ""
+
+[node name="HistogramSlideshow" parent="Margin/RootVBox/MainSplit" instance=ExtResource("2_slideshow")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
