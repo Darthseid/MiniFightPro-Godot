@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://emd0rwun831v"]
 
 [ext_resource type="Script" uid="uid://bmr2mixj1p88" path="res://CSharpScripts/DuelComparison.cs" id="1_script"]
+[ext_resource type="SpriteFrames" uid="uid://cwe2bwcy36in6" path="res://Unused Assets/Images/dieRoll.gif" id="2_pjvwa"]
 [ext_resource type="PackedScene" path="res://Scenes/HistogramSlideshow.tscn" id="2_slideshow"]
 
 [node name="DuelComparison" type="Control" unique_id=1708432167]
@@ -126,6 +127,11 @@ text = "Ready"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="LoadingGif" type="AnimatedSprite2D" parent="Margin/RootVBox/MainSplit/LeftPanel" unique_id=296710679]
+position = Vector2(162, 434)
+sprite_frames = ExtResource("2_pjvwa")
+animation = &"gif"
 
 [node name="HistogramSlideshow" parent="Margin/RootVBox/MainSplit" unique_id=1292453390 instance=ExtResource("2_slideshow")]
 unique_name_in_owner = true

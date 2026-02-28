@@ -12,7 +12,7 @@ config_version=5
 
 config/name="MiniatureFightPro"
 run/main_scene="uid://0r4s4qymiyok"
-config/features=PackedStringArray("4.6", "GL Compatibility")
+config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
 config/icon="uid://c24i23k2u0uk8"
 
 [audio]
