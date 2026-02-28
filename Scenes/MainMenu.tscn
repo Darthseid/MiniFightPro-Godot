@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://h2xxrd8n22wo" path="res://GDScripts/Btn_Start.gd" id="6_p4p8q"]
 [ext_resource type="AudioStream" uid="uid://brtl8cm0wf37o" path="res://Assets/raw/select.mp3" id="7_xim88"]
 [ext_resource type="Script" path="res://GDScripts/AudioOptionsPopup.gd" id="8_audioopts"]
+[ext_resource type="Script" path="res://GDScripts/Btn_Duel.gd" id="9_duel"]
 
 [node name="MainMenu" type="Control" unique_id=1717271632]
 layout_mode = 3
@@ -78,6 +79,12 @@ layout_mode = 2
 text = "Read Rules"
 script = ExtResource("3_df05h")
 
+[node name="BtnDuel" type="Button" parent="ResponsiveLayout/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MathHammer Duel"
+script = ExtResource("9_duel")
+
 [node name="BtnOptions" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=601927359]
 layout_mode = 2
 text = "Options"
@@ -136,6 +143,7 @@ text = "100%"
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnModel" to="ResponsiveLayout/VBoxContainer/BtnModel" method="_on_pressed"]
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnSquad" to="ResponsiveLayout/VBoxContainer/BtnSquad" method="_on_pressed"]
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnRules" to="ResponsiveLayout/VBoxContainer/BtnRules" method="_on_pressed"]
+[connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnDuel" to="ResponsiveLayout/VBoxContainer/BtnDuel" method="_on_pressed"]
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnOptions" to="ResponsiveLayout/VBoxContainer/OptionsPopup" method="OpenPopup"]
 
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnPlayer" to="ResponsiveLayout/VBoxContainer/BtnPlayer" method="_on_pressed"]
