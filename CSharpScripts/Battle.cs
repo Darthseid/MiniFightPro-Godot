@@ -895,7 +895,7 @@ public partial class Battle : Node2D
         PostDamageCleanupAndVictoryCheck();
     }
 
-    internal async Task ResolveShootingPhase()
+    internal async Task ResolveShootingPhase(string selectedWeaponFingerprint = null)
     {
         var attackers = GetActiveActors().ToList();
         var defenders = GetInactiveActors();
@@ -930,11 +930,12 @@ public partial class Battle : Node2D
             _battleHud,
             _battleField,
             PostDamageCleanupAndVictoryCheck,
-            HandleExplosionProcess
+            HandleExplosionProcess,
+            selectedWeaponFingerprint
         );
     }
 
-    internal async Task ResolveFightPhase()
+    internal async Task ResolveFightPhase(string selectedWeaponFingerprint = null)
     {
         var attackers = GetActiveActors().ToList();
         var defenders = GetInactiveActors();
@@ -969,7 +970,8 @@ public partial class Battle : Node2D
             _battleHud,
             _battleField,
             PostDamageCleanupAndVictoryCheck,
-            HandleExplosionProcess
+            HandleExplosionProcess,
+            selectedWeaponFingerprint
         );
     }
 

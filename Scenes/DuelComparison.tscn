@@ -1,0 +1,128 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://CSharpScripts/DuelComparison.cs" id="1_script"]
+
+[node name="DuelComparison" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="RootVBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Margin/RootVBox"]
+layout_mode = 2
+text = "MathHammer Duel Simulator"
+
+[node name="Grid" type="GridContainer" parent="Margin/RootVBox"]
+layout_mode = 2
+columns = 2
+
+[node name="SquadALabel" type="Label" parent="Margin/RootVBox/Grid"]
+layout_mode = 2
+text = "Squad A"
+
+[node name="SquadASelect" type="OptionButton" parent="Margin/RootVBox/Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="SquadBLabel" type="Label" parent="Margin/RootVBox/Grid"]
+layout_mode = 2
+text = "Squad B"
+
+[node name="SquadBSelect" type="OptionButton" parent="Margin/RootVBox/Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="RangeLabel" type="Label" parent="Margin/RootVBox/Grid"]
+layout_mode = 2
+text = "Range (inches)"
+
+[node name="RangeInput" type="SpinBox" parent="Margin/RootVBox/Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 72.0
+step = 0.5
+value = 12.0
+
+[node name="TrialsLabel" type="Label" parent="Margin/RootVBox/Grid"]
+layout_mode = 2
+text = "Trials (max 100000)"
+
+[node name="TrialsInput" type="SpinBox" parent="Margin/RootVBox/Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 100000.0
+step = 1.0
+value = 1000.0
+
+[node name="FirstLabel" type="Label" parent="Margin/RootVBox/Grid"]
+layout_mode = 2
+text = "First attacker"
+
+[node name="FirstAttackerSelect" type="OptionButton" parent="Margin/RootVBox/Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="UseSeedCheck" type="CheckBox" parent="Margin/RootVBox/Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Use Seed"
+
+[node name="SeedInput" type="SpinBox" parent="Margin/RootVBox/Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 2147483647.0
+step = 1.0
+value = 42.0
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/RootVBox"]
+layout_mode = 2
+
+[node name="BtnRun" type="Button" parent="Margin/RootVBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Run Simulation"
+
+[node name="BtnBack" type="Button" parent="Margin/RootVBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Back"
+
+[node name="BtnHistograms" type="Button" parent="Margin/RootVBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "View Histograms"
+disabled = true
+
+[node name="ProgressLabel" type="Label" parent="Margin/RootVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Ready"
+
+[node name="ResultLabel" type="RichTextLabel" parent="Margin/RootVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = false
+fit_content = false
+text = ""
