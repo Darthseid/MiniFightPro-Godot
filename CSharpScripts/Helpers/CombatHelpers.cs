@@ -31,6 +31,11 @@ public static class CombatHelpers
         return teamId == 1 ? teamAMove : teamBMove;
     }
 
+    private static bool IsBigGunsNeverTireSquad(Squad squad)
+    {
+        return squad?.SquadType?.Any(type => type == "Monster" || type == "Vehicle") == true;
+    }
+
     public static List<Weapon> AttackUnitWeapons(Squad unity)
     {
         var weaponList = unity.Composition
@@ -59,7 +64,7 @@ public static class CombatHelpers
         {
             validShooting = false;
         }
-        if (shooterSquad.SquadType.All(type => type != "Monster" && type != "Vehicle"))
+        if (!IsBigGunsNeverTireSquad(shooterSquad))
         {
             if (fightRange && shotAbilities.All(ability => ability.Innate != "Handgun"))
             {
@@ -116,7 +121,7 @@ public static class CombatHelpers
             }
         }
 
-        if (currentDistance <= 1f && attackerSquad.SquadType.Any(type => type == "Monster" || type == "Vehicle") && !firearm.IsMelee)
+        if (currentDistance <= 1f && IsBigGunsNeverTireSquad(attackerSquad) && !firearm.IsMelee)
             hitMod -= 1;
         if (currentDistance > 12f && firearm.Special.Any(ability => ability.Innate == "Convert"))
         {
