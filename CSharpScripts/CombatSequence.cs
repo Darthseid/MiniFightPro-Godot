@@ -104,7 +104,18 @@ public sealed class CombatSequence
             var wantsShoot = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Shoot this phase?");
             if (!wantsShoot) continue;
 
-            var target = await _battle.PromptForEnemySquadTargetAsync($"{squad.Name}: Click enemy squad to shoot", enemyTeamId);
+            var validShootingTargets = GetValidShootingTargets(enemyTeamId);
+            if (validShootingTargets.Count == 0)
+            {
+                _battle.Hud?.ShowToast($"{squad.Name}: No valid shooting targets (enemy engaged in fight range).");
+                continue;
+            }
+
+            var target = await _battle.PromptForEnemySquadTargetAsync(
+                $"{squad.Name}: Click enemy squad to shoot",
+                enemyTeamId,
+                validShootingTargets
+            );
             if (target == null) continue;
 
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
@@ -260,6 +271,30 @@ public sealed class CombatSequence
         return _battle.GetAliveSquadsForTeam(enemyTeamId)
             .Where(enemySquad => BoardGeometry.ClosestDistanceInches(attackerActors, _battle.GetActorsForSquad(enemySquad)) <= 1f)
             .ToList();
+    }
+
+    private List<Squad> GetValidShootingTargets(int enemyTeamId)
+    {
+        var enemySquads = _battle.GetAliveSquadsForTeam(enemyTeamId);
+        var friendlySquads = _battle.GetAliveSquadsForTeam(_battle.ActiveTeamId);
+
+        return enemySquads
+            .Where(enemySquad =>
+                friendlySquads.All(friendlySquad =>
+                    !IsInFightRange(enemySquad, friendlySquad)))
+            .ToList();
+    }
+
+    private bool IsInFightRange(Squad firstSquad, Squad secondSquad)
+    {
+        if (ReferenceEquals(firstSquad, secondSquad))
+        {
+            return false;
+        }
+
+        var firstActors = _battle.GetActorsForSquad(firstSquad);
+        var secondActors = _battle.GetActorsForSquad(secondSquad);
+        return BoardGeometry.ClosestDistanceInches(firstActors, secondActors) <= 1f;
     }
 
     private async Task<Squad?> PickFightTargetAsync(Squad actingSquad, int enemyTeamId, System.Collections.Generic.IReadOnlyCollection<Squad> validTargets)
