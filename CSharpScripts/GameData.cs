@@ -386,6 +386,48 @@ public partial class GameData : Node
         _presetDataLoaded = true;
     }
 
+
+    private static string ResolvePresetWeaponHitSfxKey(Weapon weapon)
+    {
+        if (weapon == null)
+        {
+            return string.Empty;
+        }
+
+        var name = weapon.WeaponName ?? string.Empty;
+        if (name.Contains("flame", StringComparison.OrdinalIgnoreCase)) return "Flamethrower.mp3";
+        if (name.Contains("plasma", StringComparison.OrdinalIgnoreCase)) return "Plasma Rifle.mp3";
+        if (name.Contains("fusion", StringComparison.OrdinalIgnoreCase)) return "energy.mp3";
+        if (name.Contains("gauss", StringComparison.OrdinalIgnoreCase)) return "lightning.mp3";
+        if (name.Contains("laser", StringComparison.OrdinalIgnoreCase)) return "rifleshot.mp3";
+        if (name.Contains("frag", StringComparison.OrdinalIgnoreCase) || name.Contains("grenade", StringComparison.OrdinalIgnoreCase)) return "grenade.mp3";
+        if (name.Contains("cannon", StringComparison.OrdinalIgnoreCase) || name.Contains("kannon", StringComparison.OrdinalIgnoreCase)) return "cannon.mp3";
+        if (name.Contains("blaster", StringComparison.OrdinalIgnoreCase)) return "Machine Gun.mp3";
+        if (name.Contains("shooter", StringComparison.OrdinalIgnoreCase)) return "SMG.mp3";
+        if (name.Contains("pistol", StringComparison.OrdinalIgnoreCase)) return "PistolShot.mp3";
+        if (name.Contains("maul", StringComparison.OrdinalIgnoreCase) || name.Contains("smash", StringComparison.OrdinalIgnoreCase)) return "Shotgun.mp3";
+
+        return weapon.IsMelee ? "punch.mp3" : "rifleshot.mp3";
+    }
+
+    private static void ApplyPresetWeaponHitSfx(List<Weapon> weapons)
+    {
+        if (weapons == null)
+        {
+            return;
+        }
+
+        foreach (var weapon in weapons)
+        {
+            if (weapon == null)
+            {
+                continue;
+            }
+
+            weapon.HitSfxKey = ResolvePresetWeaponHitSfxKey(weapon);
+        }
+    }
+
     public void PopulatePresetData()
     {
         var presetWeapons = new List<Weapon>
@@ -491,6 +533,19 @@ public partial class GameData : Node
             new Weapon("Multi-Blaster", 100f, "30", 3, 9, -2, "3", new List<WeaponAbility> { WeaponAbilities.BonusHits1 }),
             new Weapon("Mecha Feet", 1f, "6", 4, 12, -2, "4", new List<WeaponAbility>())
         };
+
+        ApplyPresetWeaponHitSfx(presetWeapons);
+        ApplyPresetWeaponHitSfx(planeWeapons);
+        ApplyPresetWeaponHitSfx(guardWeapons);
+        ApplyPresetWeaponHitSfx(marineWeapons);
+        ApplyPresetWeaponHitSfx(jetBikeWeapons);
+        ApplyPresetWeaponHitSfx(flameMarineWeapons);
+        ApplyPresetWeaponHitSfx(guardSargeWeapons);
+        ApplyPresetWeaponHitSfx(sergeantWeapons);
+        ApplyPresetWeaponHitSfx(tankWeapons);
+        ApplyPresetWeaponHitSfx(clairvoyantWeapons);
+        ApplyPresetWeaponHitSfx(pylonWeapon);
+        ApplyPresetWeaponHitSfx(hugeMechaWeapons);
 
         var presetModels = new List<Model>
         {

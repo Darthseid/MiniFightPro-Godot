@@ -21,6 +21,9 @@ public partial class CreateWeapon : Control
     private OptionButton _variableAbilityBaseDropdown = null!;
     private LineEdit _variableAbilityModifierInput = null!;
     private Button _addVariableAbilityButton = null!;
+    private OptionButton _hitSoundDropdown = null!;
+
+    private readonly List<string> _hitSoundKeys = new();
 
     private List<WeaponAbility> _currentAbilities = new();
 
@@ -48,6 +51,7 @@ public partial class CreateWeapon : Control
         _variableAbilityBaseDropdown = GetNode<OptionButton>("%VariableAbilityBase");
         _variableAbilityModifierInput = GetNode<LineEdit>("%VariableAbilityModifier");
         _addVariableAbilityButton = GetNode<Button>("%BtnAddVariableAbility");
+        _hitSoundDropdown = GetNode<OptionButton>("%HitSoundDropdown");
 
         GetNode<Button>("%BtnSave").Pressed += OnSavePressed;
         GetNode<Button>("%BtnDiscard").Pressed += OnDiscardPressed;
@@ -57,6 +61,7 @@ public partial class CreateWeapon : Control
 
         SetupAbilitiesList();
         SetupVariableAbilityOptions();
+        SetupHitSoundDropdown();
         LoadDataIfEditing();
         UpdateAbilitiesLabel();
     }
@@ -89,6 +94,8 @@ public partial class CreateWeapon : Control
             return;
         }
 
+        var selectedSoundKey = GetSelectedHitSoundKey();
+
         var weapon = new Weapon(
             weaponName: _nameIn.Text,
             range: (float)_rangeIn.Value,
@@ -97,7 +104,8 @@ public partial class CreateWeapon : Control
             strength: (int)_strIn.Value,
             armorPenetration: (int)_apIn.Value,
             damage: _dmgIn.Text,
-            special: new List<WeaponAbility>(_currentAbilities)
+            special: new List<WeaponAbility>(_currentAbilities),
+            hitSfxKey: selectedSoundKey
         );
 
         var data = GameData.Instance;
@@ -138,11 +146,13 @@ public partial class CreateWeapon : Control
             _currentAbilities = w.Special == null
                 ? new List<WeaponAbility>()
                 : new List<WeaponAbility>(w.Special);
+            SelectHitSoundByKey(w.HitSfxKey);
         }
         else
         {
             _titleLabel.Text = "Create New Weapon";
             _currentAbilities = new List<WeaponAbility>();
+            SelectHitSoundByKey(string.Empty);
         }
     }
 
@@ -171,6 +181,90 @@ public partial class CreateWeapon : Control
         {
             _variableAbilityBaseDropdown.AddItem(baseAbility.Name);
         }
+    }
+
+
+    private void SetupHitSoundDropdown()
+    {
+        _hitSoundDropdown.Clear();
+        _hitSoundKeys.Clear();
+
+        _hitSoundDropdown.AddItem("(Default)");
+        _hitSoundDropdown.SetItemMetadata(0, string.Empty);
+        _hitSoundKeys.Add(string.Empty);
+
+        const string weaponSoundPath = "res://Assets/WeaponSounds";
+        if (!DirAccess.DirExistsAbsolute(weaponSoundPath))
+        {
+            return;
+        }
+
+        var discovered = new List<string>();
+        using var dir = DirAccess.Open(weaponSoundPath);
+        if (dir == null)
+        {
+            return;
+        }
+
+        dir.ListDirBegin();
+        while (true)
+        {
+            var fileName = dir.GetNext();
+            if (string.IsNullOrEmpty(fileName))
+            {
+                break;
+            }
+
+            if (dir.CurrentIsDir() || !fileName.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            discovered.Add(fileName);
+        }
+        dir.ListDirEnd();
+
+        foreach (var soundKey in discovered.OrderBy(value => value, StringComparer.OrdinalIgnoreCase))
+        {
+            var display = System.IO.Path.GetFileNameWithoutExtension(soundKey);
+            _hitSoundDropdown.AddItem(display);
+            var index = _hitSoundDropdown.ItemCount - 1;
+            _hitSoundDropdown.SetItemMetadata(index, soundKey);
+            _hitSoundKeys.Add(soundKey);
+        }
+    }
+
+    private string GetSelectedHitSoundKey()
+    {
+        if (_hitSoundDropdown.Selected < 0 || _hitSoundDropdown.Selected >= _hitSoundDropdown.ItemCount)
+        {
+            return string.Empty;
+        }
+
+        var metadata = _hitSoundDropdown.GetItemMetadata(_hitSoundDropdown.Selected);
+        return metadata.VariantType == Variant.Type.Nil ? string.Empty : metadata.AsString();
+    }
+
+    private void SelectHitSoundByKey(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            _hitSoundDropdown.Select(0);
+            return;
+        }
+
+        for (int i = 0; i < _hitSoundDropdown.ItemCount; i++)
+        {
+            var metadata = _hitSoundDropdown.GetItemMetadata(i);
+            var optionKey = metadata.VariantType == Variant.Type.Nil ? string.Empty : metadata.AsString();
+            if (string.Equals(optionKey, key, StringComparison.OrdinalIgnoreCase))
+            {
+                _hitSoundDropdown.Select(i);
+                return;
+            }
+        }
+
+        _hitSoundDropdown.Select(0);
     }
 
     private void ShowAbilitiesDialog()
