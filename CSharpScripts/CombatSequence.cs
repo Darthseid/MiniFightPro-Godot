@@ -31,78 +31,140 @@ public sealed class CombatSequence
         await _battle.DelaySecondsAsync(1f);
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Command);
 
+        var activeTeamIsAI = _battle.IsTeamAI(_battle.ActiveTeamId);
         var activePlayer = _battle.ActiveTeamId == 1 ? _battle.TeamAPlayer : _battle.TeamBPlayer;
         var inactivePlayer = _battle.ActiveTeamId == 1 ? _battle.TeamBPlayer : _battle.TeamAPlayer;
 
-        await StepChecks.RoundStartChecks(activePlayer, inactivePlayer, _battle.Hud);
-        await StepChecks.CommandPhaseChecks(activePlayer, inactivePlayer, null, null, _battle.Hud);
+        await StepChecks.RoundStartChecks(activePlayer, inactivePlayer, _battle.Hud, allowPlayerChoices: !activeTeamIsAI);
+        await StepChecks.CommandPhaseChecks(activePlayer, inactivePlayer, null, null, _battle.Hud, allowPlayerChoices: !activeTeamIsAI);
         _battle.PostDamageCleanupAndVictoryCheck();
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
-        _battle.Hud?.ShowToast("Press ➡️ for Movement");
-        await _battle.WaitForPhaseAdvanceAsync();
 
-        await HandleMovementAsync();
+        await WaitForHumanPhaseOrAutopilotAsync(activeTeamIsAI, "Movement");
+        await HandleMovementAsync(activeTeamIsAI);
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
-        _battle.Hud?.ShowToast("Press ➡️ for Shooting");
-        await _battle.WaitForPhaseAdvanceAsync();
-        await HandleShootingAsync();
+        await WaitForHumanPhaseOrAutopilotAsync(activeTeamIsAI, "Shooting");
+        await HandleShootingAsync(activeTeamIsAI);
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
-        _battle.Hud?.ShowToast("Press ➡️ for Charge");
-        await _battle.WaitForPhaseAdvanceAsync();
-        await HandleChargeAsync();
+        await WaitForHumanPhaseOrAutopilotAsync(activeTeamIsAI, "Charge");
+        await HandleChargeAsync(activeTeamIsAI);
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
-        _battle.Hud?.ShowToast("Press ➡️ for Fight");
-        await _battle.WaitForPhaseAdvanceAsync();
-        await HandleFightAsync();
+        await WaitForHumanPhaseOrAutopilotAsync(activeTeamIsAI, "Fight");
+        await HandleFightAsync(activeTeamIsAI);
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
         EndTurn();
     }
 
-    private async Task HandleMovementAsync()
+    private async Task WaitForHumanPhaseOrAutopilotAsync(bool activeTeamIsAI, string nextPhaseLabel)
+    {
+        if (activeTeamIsAI)
+        {
+            await _battle.DelaySecondsAsync(0.2f);
+            return;
+        }
+
+        _battle.Hud?.ShowToast($"Press ➡️ for {nextPhaseLabel}");
+        await _battle.WaitForPhaseAdvanceAsync();
+    }
+
+    private async Task HandleMovementAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Movement);
-        var activeSquads = _battle.GetAliveSquadsForTeam(_battle.ActiveTeamId);
-        var inactiveSquads = _battle.GetAliveSquadsForTeam(_battle.ActiveTeamId == 1 ? 2 : 1);
-        if (inactiveSquads.Count == 0) return;
+        var activeTeamId = _battle.ActiveTeamId;
+        var enemyTeamId = activeTeamId == 1 ? 2 : 1;
+        var activeSquads = _battle.GetAliveSquadsForTeam(activeTeamId);
+        var inactiveSquads = _battle.GetAliveSquadsForTeam(enemyTeamId);
+        if (inactiveSquads.Count == 0)
+        {
+            return;
+        }
 
+        if (!activeTeamIsAI)
+        {
+            foreach (var squad in activeSquads)
+            {
+                _battle.SetActiveSquadForTeam(activeTeamId, squad);
+                var enemy = inactiveSquads.FirstOrDefault();
+                _battle.SetActiveSquadForTeam(enemyTeamId, enemy);
+
+                var wantsMove = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Move/Advance this phase?");
+                if (!wantsMove) continue;
+
+                var moveVars = await _battle.MovingStuff(squad.Movement, false, 1.05f, true, true, true, string.Empty, true);
+                if (moveVars.Retreat && squad.ShellShock && !squad.SquadType.Contains("Titanic"))
+                {
+                    _battle.ApplyRout(squad);
+                }
+                _battle.CheckVictory();
+                if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
+            }
+
+            return;
+        }
+
+        var aiThreat = SimpleAIController.ComputeTeamMeleeThreatScore(activeSquads);
+        var enemyThreat = SimpleAIController.ComputeTeamMeleeThreatScore(inactiveSquads);
+        var aggressive = SimpleAIController.IsAggressive(aiThreat, enemyThreat);
         foreach (var squad in activeSquads)
         {
-            _battle.SetActiveSquadForTeam(_battle.ActiveTeamId, squad);
-            var enemy = inactiveSquads.FirstOrDefault();
-            if (_battle.ActiveTeamId == 1) _battle.SetActiveSquadForTeam(2, enemy);
-            else _battle.SetActiveSquadForTeam(1, enemy);
-
-            var wantsMove = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Move/Advance this phase?");
-            if (!wantsMove) continue;
-
-            var moveVars = await _battle.MovingStuff(squad.Movement, false, 1.05f, true, true, true, string.Empty, true);
-            if (moveVars.Retreat && squad.ShellShock && !squad.SquadType.Contains("Titanic"))
+            _battle.SetActiveSquadForTeam(activeTeamId, squad);
+            var closestEnemy = SimpleAIController.PickClosestEnemySquad(_battle, squad, enemyTeamId, inactiveSquads);
+            if (closestEnemy == null)
             {
-                _battle.ApplyRout(squad);
+                continue;
             }
+
+            _battle.SetActiveSquadForTeam(enemyTeamId, closestEnemy);
+            var movers = _battle.GetActorsForSquad(squad);
+            var targetActors = _battle.GetActorsForSquad(closestEnemy);
+
+            bool moved;
+            if (aggressive)
+            {
+                moved = await BoardGeometry.TryMoveSquadTowardTarget(movers, targetActors, _battle.Field, squad.Movement);
+                SetMoveVarsForActiveTeam(moved, retreat: false);
+            }
+            else
+            {
+                var shouldRetreat = !aggressive && _battle.GetAliveSquadsForTeam(activeTeamId).Count > 1;
+                moved = await BoardGeometry.TryMoveSquadAwayFromTarget(movers, targetActors, _battle.Field, squad.Movement);
+                SetMoveVarsForActiveTeam(moved, retreat: shouldRetreat);
+                if (shouldRetreat && squad.ShellShock && !squad.SquadType.Contains("Titanic"))
+                {
+                    _battle.ApplyRout(squad);
+                }
+            }
+
             _battle.CheckVictory();
-            if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
+            if (_battle.CurrentPhase == BattlePhase.BattleOver)
+            {
+                return;
+            }
         }
     }
 
-    private async Task HandleShootingAsync()
+    private async Task HandleShootingAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Shooting);
-        var activeSquads = _battle.GetAliveSquadsForTeam(_battle.ActiveTeamId);
-        var enemyTeamId = _battle.ActiveTeamId == 1 ? 2 : 1;
+        var activeTeamId = _battle.ActiveTeamId;
+        var activeSquads = _battle.GetAliveSquadsForTeam(activeTeamId);
+        var enemyTeamId = activeTeamId == 1 ? 2 : 1;
 
         foreach (var squad in activeSquads)
         {
-            _battle.SetActiveSquadForTeam(_battle.ActiveTeamId, squad);
+            _battle.SetActiveSquadForTeam(activeTeamId, squad);
             var enemyOptions = _battle.GetAliveSquadsForTeam(enemyTeamId);
             if (enemyOptions.Count == 0) return;
 
-            var wantsShoot = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Shoot this phase?");
-            if (!wantsShoot) continue;
+            if (!activeTeamIsAI)
+            {
+                var wantsShoot = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Shoot this phase?");
+                if (!wantsShoot) continue;
+            }
 
             var validShootingTargets = GetValidShootingTargets(enemyTeamId);
             if (validShootingTargets.Count == 0)
@@ -111,43 +173,73 @@ public sealed class CombatSequence
                 continue;
             }
 
-            var target = await _battle.PromptForEnemySquadTargetAsync(
-                $"{squad.Name}: Click enemy squad to shoot",
-                enemyTeamId,
-                validShootingTargets
-            );
+            Squad? target = activeTeamIsAI
+                ? SimpleAIController.PickClosestEnemySquad(_battle, squad, enemyTeamId, validShootingTargets)
+                : await _battle.PromptForEnemySquadTargetAsync(
+                    $"{squad.Name}: Click enemy squad to shoot",
+                    enemyTeamId,
+                    validShootingTargets
+                );
+
             if (target == null) continue;
 
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
 
-            var selectedRangedProfile = await ChooseMultiProfileWeaponFingerprintAsync(squad, isMelee: false, "shoot");
+            var selectedRangedProfile = await ChooseMultiProfileWeaponFingerprintAsync(squad, isMelee: false, "shoot", activeTeamIsAI);
             if (selectedRangedProfile == string.Empty)
             {
                 continue;
             }
 
+            var prevActiveTeamId = _battle.ActiveTeamId;
+            _battle.ActiveTeamId = activeTeamId;
             await _battle.ResolveShootingPhase(selectedRangedProfile);
+            _battle.ActiveTeamId = prevActiveTeamId;
             _battle.CheckVictory();
             if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
         }
     }
 
-    private async Task HandleChargeAsync()
+    private async Task HandleChargeAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Charge);
-        var activeSquads = _battle.GetAliveSquadsForTeam(_battle.ActiveTeamId);
-        var enemyTeamId = _battle.ActiveTeamId == 1 ? 2 : 1;
+        var activeTeamId = _battle.ActiveTeamId;
+        var enemyTeamId = activeTeamId == 1 ? 2 : 1;
+        var activeSquads = _battle.GetAliveSquadsForTeam(activeTeamId);
+        var enemySquads = _battle.GetAliveSquadsForTeam(enemyTeamId);
+        if (enemySquads.Count == 0)
+        {
+            return;
+        }
+
+        var aiAggressive = true;
+        if (activeTeamIsAI)
+        {
+            var aiThreat = SimpleAIController.ComputeTeamMeleeThreatScore(activeSquads);
+            var enemyThreat = SimpleAIController.ComputeTeamMeleeThreatScore(enemySquads);
+            aiAggressive = SimpleAIController.IsAggressive(aiThreat, enemyThreat);
+        }
 
         foreach (var squad in activeSquads)
         {
-            _battle.SetActiveSquadForTeam(_battle.ActiveTeamId, squad);
+            _battle.SetActiveSquadForTeam(activeTeamId, squad);
             var enemyOptions = _battle.GetAliveSquadsForTeam(enemyTeamId);
             if (enemyOptions.Count == 0) return;
 
-            var wantsCharge = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Charge this phase?");
-            if (!wantsCharge) continue;
+            if (activeTeamIsAI && !aiAggressive)
+            {
+                continue;
+            }
 
-            var target = await _battle.PromptForEnemySquadTargetAsync($"{squad.Name}: Click enemy squad to charge", enemyTeamId);
+            if (!activeTeamIsAI)
+            {
+                var wantsCharge = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Charge this phase?");
+                if (!wantsCharge) continue;
+            }
+
+            Squad? target = activeTeamIsAI
+                ? SimpleAIController.PickClosestEnemySquad(_battle, squad, enemyTeamId, enemyOptions)
+                : await _battle.PromptForEnemySquadTargetAsync($"{squad.Name}: Click enemy squad to charge", enemyTeamId);
             if (target == null) continue;
 
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
@@ -155,11 +247,15 @@ public sealed class CombatSequence
             var activeActors = _battle.GetActiveActors();
             var inactiveActors = _battle.GetInactiveActors();
             var distanceInches = BoardGeometry.ClosestDistanceInches(activeActors, inactiveActors);
-            var moveVars = CombatHelpers.GetMoveVarsForTeam(_battle.ActiveTeamId, _battle.TeamAMove, _battle.TeamBMove);
+            var moveVars = CombatHelpers.GetMoveVarsForTeam(activeTeamId, _battle.TeamAMove, _battle.TeamBMove);
             if (!ShapeHelpers.CanCharge(squad, moveVars, distanceInches))
             {
-                _battle.Hud?.ShowToast("Charge not allowed (must be within 12\" and follow rules).");
-                AudioManager.Instance?.Play("failedcharge");
+                if (!activeTeamIsAI)
+                {
+                    _battle.Hud?.ShowToast("Charge not allowed (must be within 12\" and follow rules).");
+                    AudioManager.Instance?.Play("failedcharge");
+                }
+
                 GD.Print($"[Rules] Charge blocked. Distance: {distanceInches:0.0}\" Squad: {squad.Name}.");
                 continue;
             }
@@ -173,7 +269,7 @@ public sealed class CombatSequence
         }
     }
 
-    private async Task HandleFightAsync()
+    private async Task HandleFightAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Fight);
         var activeTeamId = _battle.ActiveTeamId;
@@ -191,13 +287,13 @@ public sealed class CombatSequence
         var inactiveFirstStrike = inactiveRucks.Where(_battle.SquadHasFirstStrike).ToList();
         var inactiveNormal = inactiveRucks.Where(s => !_battle.SquadHasFirstStrike(s)).ToList();
 
-        await ResolveFightTierAlternating(inactiveTeamId, activeTeamId, inactiveFirstStrike, activeFirstStrike);
+        await ResolveFightTierAlternating(inactiveTeamId, activeTeamId, inactiveFirstStrike, activeFirstStrike, activeTeamIsAI);
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
-        await ResolveFightTierAlternating(inactiveTeamId, activeTeamId, inactiveNormal, activeNormal);
+        await ResolveFightTierAlternating(inactiveTeamId, activeTeamId, inactiveNormal, activeNormal, activeTeamIsAI);
     }
 
-    private async Task ResolveFightTierAlternating(int firstTeamId, int secondTeamId, System.Collections.Generic.List<Squad> firstTier, System.Collections.Generic.List<Squad> secondTier)
+    private async Task ResolveFightTierAlternating(int firstTeamId, int secondTeamId, System.Collections.Generic.List<Squad> firstTier, System.Collections.Generic.List<Squad> secondTier, bool activeTeamIsAI)
     {
         int rounds = System.Math.Max(firstTier.Count, secondTier.Count);
         for (int i = 0; i < rounds; i++)
@@ -213,14 +309,14 @@ public sealed class CombatSequence
                     continue;
                 }
 
-                var targetSquad = await PickFightTargetAsync(actingSquad, secondTeamId, validTargets);
+                var targetSquad = await PickFightTargetAsync(actingSquad, secondTeamId, validTargets, _battle.IsTeamAI(firstTeamId));
                 if (targetSquad == null)
                 {
                     continue;
                 }
 
                 _battle.SetActiveSquadForTeam(secondTeamId, targetSquad);
-                var selectedMeleeProfile = await ChooseMultiProfileWeaponFingerprintAsync(actingSquad, isMelee: true, "fight");
+                var selectedMeleeProfile = await ChooseMultiProfileWeaponFingerprintAsync(actingSquad, isMelee: true, "fight", _battle.IsTeamAI(firstTeamId));
                 if (selectedMeleeProfile == string.Empty)
                 {
                     continue;
@@ -245,20 +341,23 @@ public sealed class CombatSequence
                     continue;
                 }
 
-                var targetSquad = await PickFightTargetAsync(actingSquad, firstTeamId, validTargets);
+                var targetSquad = await PickFightTargetAsync(actingSquad, firstTeamId, validTargets, _battle.IsTeamAI(secondTeamId));
                 if (targetSquad == null)
                 {
                     continue;
                 }
 
                 _battle.SetActiveSquadForTeam(firstTeamId, targetSquad);
-                var selectedMeleeProfile = await ChooseMultiProfileWeaponFingerprintAsync(actingSquad, isMelee: true, "fight");
+                var selectedMeleeProfile = await ChooseMultiProfileWeaponFingerprintAsync(actingSquad, isMelee: true, "fight", _battle.IsTeamAI(secondTeamId));
                 if (selectedMeleeProfile == string.Empty)
                 {
                     continue;
                 }
 
+                var prev = _battle.ActiveTeamId;
+                _battle.ActiveTeamId = secondTeamId;
                 await _battle.ResolveFightPhase(selectedMeleeProfile);
+                _battle.ActiveTeamId = prev;
                 _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
@@ -297,8 +396,13 @@ public sealed class CombatSequence
         return BoardGeometry.ClosestDistanceInches(firstActors, secondActors) <= 1f;
     }
 
-    private async Task<Squad?> PickFightTargetAsync(Squad actingSquad, int enemyTeamId, System.Collections.Generic.IReadOnlyCollection<Squad> validTargets)
+    private async Task<Squad?> PickFightTargetAsync(Squad actingSquad, int enemyTeamId, System.Collections.Generic.IReadOnlyCollection<Squad> validTargets, bool actingTeamIsAI)
     {
+        if (actingTeamIsAI)
+        {
+            return SimpleAIController.PickClosestEnemySquad(_battle, actingSquad, enemyTeamId, validTargets);
+        }
+
         if (validTargets.Count == 1)
         {
             return validTargets.First();
@@ -311,7 +415,7 @@ public sealed class CombatSequence
         );
     }
 
-    private async Task<string?> ChooseMultiProfileWeaponFingerprintAsync(Squad squad, bool isMelee, string actionLabel)
+    private async Task<string?> ChooseMultiProfileWeaponFingerprintAsync(Squad squad, bool isMelee, string actionLabel, bool actingTeamIsAI)
     {
         var allPhaseWeapons = squad?.Composition
             ?.Where(model => model != null && model.Health > 0)
@@ -340,6 +444,11 @@ public sealed class CombatSequence
             .ThenBy(weapon => weapon.Range)
             .ToList();
 
+        if (actingTeamIsAI)
+        {
+            return CombatEngine.GetWeaponFingerprint(options.First());
+        }
+
         var optionLabels = options
             .Select(weapon => $"{weapon.WeaponName} (R:{weapon.Range:0.#} A:{weapon.Attacks} HS:{weapon.HitSkill}+ S:{weapon.Strength} AP:{weapon.ArmorPenetration} D:{weapon.Damage})")
             .ToList();
@@ -355,6 +464,19 @@ public sealed class CombatSequence
         }
 
         return CombatEngine.GetWeaponFingerprint(options[selectedIndex]);
+    }
+
+    private void SetMoveVarsForActiveTeam(bool moved, bool retreat)
+    {
+        var moveVars = new MoveVars(moved, false, retreat);
+        if (_battle.ActiveTeamId == 1)
+        {
+            _battle.TeamAMove = moveVars;
+        }
+        else
+        {
+            _battle.TeamBMove = moveVars;
+        }
     }
 
     private void EndTurn()

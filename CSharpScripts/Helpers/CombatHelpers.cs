@@ -202,6 +202,17 @@ public static class CombatHelpers
     new(@"^\s*(\d*)\s*[dD]\s*(\d+)\s*([+-]\s*\d+)?\s*$",
         System.Text.RegularExpressions.RegexOptions.Compiled);
 
+    public static bool IsDamageExpressionValid(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return false;
+        }
+
+        var trimmed = input.Trim();
+        return int.TryParse(trimmed, out _) || DamageRegex.IsMatch(trimmed);
+    }
+
     public static int DamageParser(string input)
     {
         if (string.IsNullOrWhiteSpace(input))

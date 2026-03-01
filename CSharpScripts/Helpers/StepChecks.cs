@@ -16,7 +16,7 @@ public static class StepChecks
 
     public static Action<Squad> SquadRegenerationHandler { get; set; }
 
-    public static async Task RoundStartChecks(Player activePlayer, Player inactivePlayer, BattleHud hud)
+    public static async Task RoundStartChecks(Player activePlayer, Player inactivePlayer, BattleHud hud, bool allowPlayerChoices = true)
     {
         if (activePlayer == null || inactivePlayer == null)
         {
@@ -30,11 +30,11 @@ public static class StepChecks
         var inactiveLead = inactivePlayer.TheirSquads?.FirstOrDefault();
         if (activeLead != null && inactiveLead != null)
         {
-            await RoundStartChecks(activeLead, inactiveLead, hud);
+            await RoundStartChecks(activeLead, inactiveLead, hud, allowPlayerChoices);
         }
     }
 
-    public static async Task CommandPhaseChecks(Player activePlayer, Player inactivePlayer, Squad activeSquad, Squad inactiveSquad, BattleHud hud)
+    public static async Task CommandPhaseChecks(Player activePlayer, Player inactivePlayer, Squad activeSquad, Squad inactiveSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
         if (activePlayer == null || inactivePlayer == null)
         {
@@ -60,7 +60,7 @@ public static class StepChecks
         {
             if (squad != null)
             {
-                await CommandPhaseChecks(squad, enemyReference, hud);
+                await CommandPhaseChecks(squad, enemyReference, hud, allowPlayerChoices);
             }
         }
     }
@@ -115,27 +115,27 @@ public static class StepChecks
         return cleanedSquadAbilities;
     }
 
-    public static async Task CommandPhaseChecks(Squad activeSquad, Squad inactiveSquad, BattleHud hud)
+    public static async Task CommandPhaseChecks(Squad activeSquad, Squad inactiveSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
         if (activeSquad == null || inactiveSquad == null)
         {
             return;
         }
 
-        if (inactiveSquad.SquadAbilities.Any(ability => ability.Innate == "Hive") && hud != null)
+        if (allowPlayerChoices && inactiveSquad.SquadAbilities.Any(ability => ability.Innate == "Hive") && hud != null)
         {
-            await ActivateAlienTerror(activeSquad, inactiveSquad, hud);
+            await ActivateAlienTerror(activeSquad, inactiveSquad, hud, allowPlayerChoices);
         }
 
         if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "Zombie"))
         {
             TriggerSquadRegeneration(activeSquad);
         }
-        if (inactiveSquad.SquadAbilities.Any(ability => ability.Innate == "Hive") && hud != null)
+        if (allowPlayerChoices && inactiveSquad.SquadAbilities.Any(ability => ability.Innate == "Hive") && hud != null)
         {
-            await ActivateAlienTerror(activeSquad, inactiveSquad, hud);
+            await ActivateAlienTerror(activeSquad, inactiveSquad, hud, allowPlayerChoices);
         }
-        if (activeSquad.SquadAbilities.Any(ability => ability.Name == "Officer Order") &&
+        if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Name == "Officer Order") &&
             activeSquad.SquadAbilities.All(ability => ability.Innate != UsedOfficerOrder.Innate))
         {
             if (hud == null)
@@ -208,7 +208,7 @@ public static class StepChecks
     }
 
 
-    public static async Task RoundStartChecks(Squad teamASquad, Squad teamBSquad, BattleHud hud)
+    public static async Task RoundStartChecks(Squad teamASquad, Squad teamBSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
         if (hud == null)
         {
@@ -223,21 +223,21 @@ public static class StepChecks
                 continue;
             }
 
-            if (squad.SquadAbilities.Any(ability => ability.Innate == "Rampage"))
+            if (allowPlayerChoices && squad.SquadAbilities.Any(ability => ability.Innate == "Rampage"))
             {
                 await Berserking(squad, hud);
             }
 
-            if (squad.SquadAbilities.Any(ability => ability.Innate == "Angry God"))
+            if (allowPlayerChoices && squad.SquadAbilities.Any(ability => ability.Innate == "Angry God"))
             {
                 await GenerateBlessings(squad, hud);
             }
         }
     }
 
-    public static async Task ActivateAlienTerror(Squad activeSquad, Squad inactiveSquad, BattleHud hud)
+    public static async Task ActivateAlienTerror(Squad activeSquad, Squad inactiveSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
-        if (activeSquad == null || inactiveSquad == null || hud == null)
+        if (!allowPlayerChoices || activeSquad == null || inactiveSquad == null || hud == null)
         {
             return;
         }
@@ -685,7 +685,7 @@ public static class StepChecks
     }
 
 
-    public static async Task<bool> ShootingPhaseChecks(Squad activeSquad, Squad inactiveSquad, BattleHud hud)
+    public static async Task<bool> ShootingPhaseChecks(Squad activeSquad, Squad inactiveSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
         await ShootingPhaseChecksBase(activeSquad, inactiveSquad);
         var didSelfDamage = false;
@@ -695,12 +695,12 @@ public static class StepChecks
             return false;
         }
 
-        if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "Satan") && hud != null)
+        if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Innate == "Satan") && hud != null)
         {
             didSelfDamage |= await HandleSatanicPrayer(activeSquad, hud);
         }
 
-        if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "SubRoutine") && hud != null)
+        if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Innate == "SubRoutine") && hud != null)
         {
             AudioManager.Instance?.Play("subroutine");
             var options = new[] { "Skirmish Ability", "Hefty Ability" };
@@ -764,7 +764,7 @@ public static class StepChecks
         return selfHarm;
     }
 
-    public static async Task<bool> FightPhaseChecks(Squad activeSquad, BattleHud hud)
+    public static async Task<bool> FightPhaseChecks(Squad activeSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
         if (activeSquad == null)
         {
@@ -772,7 +772,7 @@ public static class StepChecks
         }
 
         var didSelfDamage = false;
-        if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "martialStance") && hud != null)
+        if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Innate == "martialStance") && hud != null)
         {
             AudioManager.Instance?.Play("stance");
             var options = new[] { "-1 to Hit", "Bonus Hits 1", "Hard Hits" };
@@ -799,7 +799,7 @@ public static class StepChecks
             }
         }
 
-        if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "Satan") && hud != null)
+        if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Innate == "Satan") && hud != null)
         {
             didSelfDamage |= await HandleSatanicPrayer(activeSquad, hud);
         }

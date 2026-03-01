@@ -8,6 +8,8 @@ public partial class Battle : Node2D
 {
     [Export] public PackedScene BattleFieldScene = GD.Load<PackedScene>("res://Scenes/BattleField.tscn");
     [Export] public PackedScene BattleHudScene = GD.Load<PackedScene>("res://Scenes/BattleHud.tscn");
+    [Export] public bool TeamAIsAI;
+    [Export] public bool TeamBIsAI;
 
     private BattleField _battleField;
     private BattleHud _battleHud;
@@ -77,8 +79,15 @@ public partial class Battle : Node2D
 
     public void SetupPlayers(Player playerOne, Player playerTwo)
     {
+        SetupPlayers(playerOne, playerTwo, TeamAIsAI, TeamBIsAI);
+    }
+
+    public void SetupPlayers(Player playerOne, Player playerTwo, bool teamAIsAI, bool teamBIsAI)
+    {
         _pendingPlayerOne = playerOne;
         _pendingPlayerTwo = playerTwo;
+        TeamAIsAI = teamAIsAI;
+        TeamBIsAI = teamBIsAI;
 
         if (IsInsideTree())
         {
@@ -150,6 +159,8 @@ public partial class Battle : Node2D
         {
             _teamAPlayer = _pendingPlayerOne.DeepCopy();
             _teamBPlayer = _pendingPlayerTwo.DeepCopy();
+            TeamAIsAI = _teamAPlayer.IsAI;
+            TeamBIsAI = _teamBPlayer.IsAI;
         }
         else
         {
@@ -370,6 +381,13 @@ public partial class Battle : Node2D
         var playerName = GetSquadName(teamId);
         if (squads.Count == 0)
         {
+            return;
+        }
+
+        if (IsTeamAI(teamId))
+        {
+            SetActiveSquadForTeam(teamId, squads.FirstOrDefault());
+            _battleHud?.ShowToast($"{playerName}: AI skips deployment movement.", 2f);
             return;
         }
 
@@ -747,8 +765,10 @@ public partial class Battle : Node2D
 
         if (_movementAllowsTeleport && didMove)
         {
-            const float teleportMaxInches = 12f;
-            if (movedInches > teleportMaxInches)
+            var enemyActors = GetInactiveActors();
+            var closestEnemyDistanceInches = BoardGeometry.ClosestDistanceInches(activeActors, enemyActors);
+            const float minTeleportEnemyDistanceInches = 9f;
+            if (enemyActors.Count > 0 && closestEnemyDistanceInches <= minTeleportEnemyDistanceInches)
             {
                 foreach (var actor in activeActors)
                 {
@@ -759,8 +779,8 @@ public partial class Battle : Node2D
                 }
 
                 didMove = false;
-                _battleHud?.ShowToast($"Teleport move is limited to {teleportMaxInches:0.#}\".");
-                GD.Print($"[Rules] Blocked teleport move > {teleportMaxInches}\" (attempted {movedInches:0.0}\").");
+                _battleHud?.ShowToast($"Teleport must end more than {minTeleportEnemyDistanceInches:0.#}\" away from enemies.");
+                GD.Print($"[Rules] Blocked teleport move within {minTeleportEnemyDistanceInches}\" of enemies (closest: {closestEnemyDistanceInches:0.0}\").");
             }
         }
 
@@ -1040,6 +1060,11 @@ public partial class Battle : Node2D
         {
             _teamBSquad = squad;
         }
+    }
+
+    internal bool IsTeamAI(int teamId)
+    {
+        return teamId == 1 ? TeamAIsAI : TeamBIsAI;
     }
 
     internal BattleHud Hud => _battleHud;
