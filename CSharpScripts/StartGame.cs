@@ -12,6 +12,8 @@ public partial class StartGame : Control
     private TextureRect _proBanner;
     private readonly string _proBannerUrl = "https://play.google.com/store/apps/details?id=org.mozilla.firefox&hl=en_US&pli=1";
     private readonly List<Player> _selectablePlayers = new List<Player>();
+    private bool _teamAIsAI; // TODO: wire to duel setup toggles when UI is available.
+    private bool _teamBIsAI; // TODO: wire to duel setup toggles when UI is available.
 
     public override void _Ready()
     {
@@ -29,6 +31,8 @@ public partial class StartGame : Control
         _statusLabel = GetNode<Label>("%StatusLabel");
         _proBanner = GetNode<TextureRect>("%ProBanner");
 
+        _teamAIsAI = false;
+        _teamBIsAI = false;
         PopulatePlayers();
         _beginBattleButton.Pressed += OnBeginBattlePressed;
         _proBanner.GuiInput += OnProBannerInput;
@@ -108,7 +112,7 @@ public partial class StartGame : Control
             return;
         }
 
-        battleRoot.SetupPlayers(player1, player2);
+        battleRoot.SetupPlayers(player1, player2, _teamAIsAI, _teamBIsAI);
         GetTree().Root.AddChild(battleRoot);
         QueueFree();
     }
