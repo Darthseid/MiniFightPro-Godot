@@ -399,7 +399,7 @@ public partial class GameData : Node
         if (name.Contains("plasma", StringComparison.OrdinalIgnoreCase)) return "Plasma Rifle.mp3";
         if (name.Contains("fusion", StringComparison.OrdinalIgnoreCase)) return "energy.mp3";
         if (name.Contains("gauss", StringComparison.OrdinalIgnoreCase)) return "lightning.mp3";
-        if (name.Contains("laser", StringComparison.OrdinalIgnoreCase)) return "rifleshot.mp3";
+        if (name.Contains("laser", StringComparison.OrdinalIgnoreCase)) return "laser.mp3";
         if (name.Contains("frag", StringComparison.OrdinalIgnoreCase) || name.Contains("grenade", StringComparison.OrdinalIgnoreCase)) return "grenade.mp3";
         if (name.Contains("cannon", StringComparison.OrdinalIgnoreCase) || name.Contains("kannon", StringComparison.OrdinalIgnoreCase)) return "cannon.mp3";
         if (name.Contains("blaster", StringComparison.OrdinalIgnoreCase)) return "Machine Gun.mp3";
@@ -511,6 +511,14 @@ public partial class GameData : Node
             new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1", new List<WeaponAbility>())
         };
 
+        var tauroxWeapons = new List<Weapon>
+        {
+            new Weapon("Taurox Battle Cannon", 48f, "D6+1", 4, 10, -1, "3", new List<WeaponAbility> { WeaponAbilities.Blast }),
+            new Weapon("Twin Autocannon", 48f, "2", 4, 9, -1, "3", new List<WeaponAbility>()),
+            new Weapon("Twin Hot-shot Volley Gun", 24f, "6", 4, 5, -1, "1", new List<WeaponAbility>()),
+            new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1", new List<WeaponAbility>())
+        };
+
         var clairvoyantWeapons = new List<Weapon>
         {
             new Weapon("Disc Pistol", 12f, "1", 2, 4, -1, "1", new List<WeaponAbility> { WeaponAbilities.Skirmish, WeaponAbilities.Pistol }),
@@ -543,9 +551,12 @@ public partial class GameData : Node
         ApplyPresetWeaponHitSfx(guardSargeWeapons);
         ApplyPresetWeaponHitSfx(sergeantWeapons);
         ApplyPresetWeaponHitSfx(tankWeapons);
+        ApplyPresetWeaponHitSfx(tauroxWeapons);
         ApplyPresetWeaponHitSfx(clairvoyantWeapons);
         ApplyPresetWeaponHitSfx(pylonWeapon);
         ApplyPresetWeaponHitSfx(hugeMechaWeapons);
+
+        presetWeapons.AddRange(tauroxWeapons.Select(weapon => weapon.DeepCopy()));
 
         var presetModels = new List<Model>
         {
@@ -559,7 +570,8 @@ public partial class GameData : Node
             new Model("Clairvoyant", 3, 0, clairvoyantWeapons),
             new Model("Zapper Pylon", 10, 0, pylonWeapon),
             new Model("Huge Mecha", 100, 33, hugeMechaWeapons),
-            new Model("Floating Biker", 5, 0, jetBikeWeapons)
+            new Model("Floating Biker", 5, 0, jetBikeWeapons),
+            new Model("Taurox", 14, 5, tauroxWeapons)
         };
 
         var mechaSquad = new List<Model> { new Model("Huge Mecha", 100, 33, hugeMechaWeapons) };
@@ -600,10 +612,14 @@ public partial class GameData : Node
             tankSquad.Add(presetModels[5].DeepCopy());
         }
 
+        var tauroxSquad = new List<Model> { presetModels[11].DeepCopy() };
+
         var ast = new Squad("Guard Squad", 6f, 3, 5, 7, 7, 7, new List<string> { "Infantry" }, false, guardSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility> { SquadAbilities.SubRoutine });
         var ade = new Squad("Marine Squad", 6f, 4, 3, 7, 7, 6, new List<string> { "Infantry" }, false, marineSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility> { SquadAbilities.Satanic });
         var tnk = new Squad("Battle Tanks", 10f, 11, 2, 13, 7, 7, new List<string> { "Vehicle" }, false, tankSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "2") });
         var vert = new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.MartialStance });
+        var tau = new Squad("Taurox", 12f, 10, 3, 5, 7, 7, new List<string> { "Vehicle", "Transport" }, false, tauroxSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility>());
+        var hmk = new Squad("Huge Mecha", 10f, 16, 2, 5, 7, 6, new List<string> { "Titanic", "Vehicle" }, false, mechaSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "3") });
         var dak = new Squad("Homemade Biplane", 99.9f, 9, 3, 4, 7, 7, new List<string> { "Aircraft", "Fly", "Vehicle" }, false, planeSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.MinusHitRanged });
         var pyl = new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "2"), SquadAbilities.Reanimator, SquadAbilities.Teleport });
         var seer = new Squad("Clairvoyant", 7f, 3, 6, 4, 7, 6, new List<string> { "Character", "Infantry", "Psychic" }, true, clairvoyantModels.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.PsiDefense });
@@ -617,16 +633,17 @@ public partial class GameData : Node
             new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "2"), SquadAbilities.Reanimator, SquadAbilities.Teleport }),
             new Squad("Clairvoyant", 7f, 3, 6, 4, 7, 6, new List<string> { "Character", "Infantry", "Psychic" }, true, clairvoyantModels.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.PsiDefense }),
             new Squad("Huge Mecha", 10f, 16, 2, 5, 7, 6, new List<string> { "Titanic", "Vehicle" }, false, mechaSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "3") }),
-            new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.MartialStance })
+            new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.MartialStance }),
+            new Squad("Taurox", 12f, 10, 3, 5, 7, 7, new List<string> { "Vehicle", "Transport" }, false, tauroxSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility>())
         };
 
-        var infForces = new List<Squad> { ast, ade };
-        var vehForces = new List<Squad> { tnk, vert };
+        var infForces = new List<Squad> { ast, ade, tau };
+        var vehForces = new List<Squad> { tnk, vert, hmk };
         var xeno = new List<Squad> { seer, dak, pyl };
 
         var presetPlayers = new List<Player>
         {
-            new Player(infForces, 5, new List<Order>(), false, "Human Dominion", new List<string>()),
+            new Player(infForces, 5, new List<Order>(), false, "Human Dominion", new List<string> { PlayerAbilities.OfficerOrder }),
             new Player(vehForces, 5, new List<Order>(), false, "Cyborg Alliance", new List<string> { PlayerAbilities.Subroutines }),
             new Player(xeno, 6, new List<Order>(), false, "Saint Xelia's Armies", new List<string> { PlayerAbilities.AlienTerror })
         };

@@ -76,6 +76,7 @@ public sealed class CombatSequence
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Movement);
         var activeTeamId = _battle.ActiveTeamId;
         var enemyTeamId = activeTeamId == 1 ? 2 : 1;
+        await _battle.HandleTransportEmbarkDisembarkStepAsync(activeTeamId, activeTeamIsAI);
         var activeSquads = _battle.GetAliveSquadsForTeam(activeTeamId);
         var inactiveSquads = _battle.GetAliveSquadsForTeam(enemyTeamId);
         if (inactiveSquads.Count == 0)
@@ -417,11 +418,9 @@ public sealed class CombatSequence
 
     private async Task<string?> ChooseMultiProfileWeaponFingerprintAsync(Squad squad, bool isMelee, string actionLabel, bool actingTeamIsAI)
     {
-        var allPhaseWeapons = squad?.Composition
-            ?.Where(model => model != null && model.Health > 0)
-            .SelectMany(model => model.Tools)
+        var allPhaseWeapons = CombatEngine.GetEffectiveWeaponsForPhase(squad, isMelee)
             .Where(weapon => weapon != null && weapon.IsMelee == isMelee)
-            .ToList() ?? new List<Weapon>();
+            .ToList();
 
         if (allPhaseWeapons.Count == 0)
         {

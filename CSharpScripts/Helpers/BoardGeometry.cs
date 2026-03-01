@@ -314,6 +314,168 @@ public static class BoardGeometry
         return result;
     }
 
+    public static Dictionary<BattleModelActor, Vector2> FindValidDisembarkPositionsWithinRadius(
+        IReadOnlyList<BattleModelActor> transportActors,
+        IReadOnlyList<BattleModelActor> passengerActors,
+        float radiusInches,
+        bool mustAvoidFightRange,
+        IReadOnlyList<BattleModelActor> enemyActors)
+    {
+        var placements = new Dictionary<BattleModelActor, Vector2>();
+        if (transportActors == null || passengerActors == null || transportActors.Count == 0 || passengerActors.Count == 0)
+        {
+            return placements;
+        }
+
+        var transportCenter = GetActorsCenter(transportActors.Where(a => a != null).ToList());
+        var viewport = transportActors[0].GetViewportRect().Size;
+        var maxRadiusPx = Mathf.Max(0f, radiusInches) * GameGlobals.Instance.FakeInchPx;
+        var enemyList = enemyActors?.Where(a => a != null && a.BoundModel != null && a.BoundModel.Health > 0).ToList() ?? new List<BattleModelActor>();
+        var candidateRings = new[] { 0.35f, 0.55f, 0.75f, 1f };
+
+        foreach (var passenger in passengerActors.Where(a => a != null))
+        {
+            var placed = false;
+            foreach (var ringFactor in candidateRings)
+            {
+                var ringRadius = maxRadiusPx * ringFactor;
+                for (var i = 0; i < 32; i++)
+                {
+                    var angle = Mathf.Tau * (i / 32f);
+                    var candidate = transportCenter + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * ringRadius;
+                    var radius = passenger.BaseSizePx * 0.5f;
+                    candidate.X = Mathf.Clamp(candidate.X, radius, viewport.X - radius);
+                    candidate.Y = Mathf.Clamp(candidate.Y, radius, viewport.Y - radius);
+
+                    var overlapsPassenger = placements.Any(existing => existing.Value.DistanceTo(candidate) < (existing.Key.BaseSizePx + passenger.BaseSizePx) * 0.5f);
+                    if (overlapsPassenger)
+                    {
+                        continue;
+                    }
+
+                    var inFightRange = enemyList.Any(enemy => candidate.DistanceTo(enemy.GlobalPosition) < (((passenger.BaseSizePx + enemy.BaseSizePx) * 0.25f) + GameGlobals.Instance.FakeInchPx));
+                    if (mustAvoidFightRange && inFightRange)
+                    {
+                        continue;
+                    }
+
+                    placements[passenger] = candidate;
+                    placed = true;
+                    break;
+                }
+
+                if (placed)
+                {
+                    break;
+                }
+            }
+
+            if (!placed)
+            {
+                placements.Clear();
+                return placements;
+            }
+        }
+
+        return placements;
+    }
+
+    public static bool PlacePassengerSquadAroundTransport(
+        IReadOnlyList<BattleModelActor> transportActors,
+        IReadOnlyList<BattleModelActor> passengerActors,
+        float radiusInches,
+        IReadOnlyList<BattleModelActor> enemyActors,
+        bool avoidFightRange)
+    {
+        var placements = FindValidDisembarkPositionsWithinRadius(
+            transportActors,
+            passengerActors,
+            radiusInches,
+            avoidFightRange,
+            enemyActors);
+
+        if (placements.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var pair in placements)
+        {
+            pair.Key.GlobalPosition = pair.Value;
+        }
+
+        return true;
+    }
+
+    public static bool PlacePassengerSquadAroundPoint(
+        Vector2 centerPoint,
+        IReadOnlyList<BattleModelActor> passengerActors,
+        float radiusInches,
+        IReadOnlyList<BattleModelActor> enemyActors,
+        bool avoidFightRange)
+    {
+        if (passengerActors == null || passengerActors.Count == 0)
+        {
+            return false;
+        }
+
+        var viewport = passengerActors[0].GetViewportRect().Size;
+        var maxRadiusPx = Mathf.Max(0f, radiusInches) * GameGlobals.Instance.FakeInchPx;
+        var enemyList = enemyActors?.Where(a => a != null && a.BoundModel != null && a.BoundModel.Health > 0).ToList() ?? new List<BattleModelActor>();
+        var placements = new Dictionary<BattleModelActor, Vector2>();
+        var candidateRings = new[] { 0.35f, 0.55f, 0.75f, 1f };
+
+        foreach (var passenger in passengerActors.Where(a => a != null))
+        {
+            var placed = false;
+            foreach (var ringFactor in candidateRings)
+            {
+                var ringRadius = maxRadiusPx * ringFactor;
+                for (var i = 0; i < 32; i++)
+                {
+                    var angle = Mathf.Tau * (i / 32f);
+                    var candidate = centerPoint + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * ringRadius;
+                    var radius = passenger.BaseSizePx * 0.5f;
+                    candidate.X = Mathf.Clamp(candidate.X, radius, viewport.X - radius);
+                    candidate.Y = Mathf.Clamp(candidate.Y, radius, viewport.Y - radius);
+
+                    var overlapsPassenger = placements.Any(existing => existing.Value.DistanceTo(candidate) < (existing.Key.BaseSizePx + passenger.BaseSizePx) * 0.5f);
+                    if (overlapsPassenger)
+                    {
+                        continue;
+                    }
+
+                    var inFightRange = enemyList.Any(enemy => candidate.DistanceTo(enemy.GlobalPosition) < (((passenger.BaseSizePx + enemy.BaseSizePx) * 0.25f) + GameGlobals.Instance.FakeInchPx));
+                    if (avoidFightRange && inFightRange)
+                    {
+                        continue;
+                    }
+
+                    placements[passenger] = candidate;
+                    placed = true;
+                    break;
+                }
+
+                if (placed)
+                {
+                    break;
+                }
+            }
+
+            if (!placed)
+            {
+                return false;
+            }
+        }
+
+        foreach (var pair in placements)
+        {
+            pair.Key.GlobalPosition = pair.Value;
+        }
+
+        return true;
+    }
+
     public static Vector2 GetActorsCenter(List<BattleModelActor> actors)
     {
         var sum = Vector2.Zero;
