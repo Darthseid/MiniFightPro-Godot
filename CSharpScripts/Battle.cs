@@ -159,6 +159,8 @@ public partial class Battle : Node2D
         {
             _teamAPlayer = _pendingPlayerOne.DeepCopy();
             _teamBPlayer = _pendingPlayerTwo.DeepCopy();
+            TeamAIsAI = _teamAPlayer.IsAI;
+            TeamBIsAI = _teamBPlayer.IsAI;
         }
         else
         {
@@ -379,6 +381,13 @@ public partial class Battle : Node2D
         var playerName = GetSquadName(teamId);
         if (squads.Count == 0)
         {
+            return;
+        }
+
+        if (IsTeamAI(teamId))
+        {
+            SetActiveSquadForTeam(teamId, squads.FirstOrDefault());
+            _battleHud?.ShowToast($"{playerName}: AI skips deployment movement.", 2f);
             return;
         }
 
