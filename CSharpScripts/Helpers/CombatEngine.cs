@@ -257,6 +257,38 @@ public static class CombatEngine
         }
     }
 
+    public static List<Weapon> GetEffectiveWeaponsForPhase(Squad attackerSquad, bool isMelee)
+    {
+        if (attackerSquad == null)
+        {
+            return new List<Weapon>();
+        }
+
+        var effectiveWeapons = attackerSquad.Composition
+            .Where(model => model != null && model.Health > 0)
+            .SelectMany(model => model.Tools)
+            .Where(weapon => weapon != null && weapon.IsMelee == isMelee)
+            .ToList();
+
+        var hasFiringDeck = !isMelee
+            && attackerSquad.SquadType?.Contains("Transport") == true
+            && attackerSquad.EmbarkedSquad != null
+            && attackerSquad.SquadAbilities?.Any(ability => ability?.Innate == "Firing Deck") == true;
+
+        if (hasFiringDeck)
+        {
+            var passengerWeapons = attackerSquad.EmbarkedSquad.Composition
+                .Where(model => model != null && model.Health > 0)
+                .SelectMany(model => model.Tools)
+                .Where(weapon => weapon != null && !weapon.IsMelee)
+                .Select(weapon => weapon.DeepCopy());
+
+            effectiveWeapons.AddRange(passengerWeapons);
+        }
+
+        return effectiveWeapons;
+    }
+
     public static List<WeaponBatch> BuildWeaponBatches(Squad attackerSquad, bool isMelee)
     {
         return BuildWeaponBatches(attackerSquad, isMelee, null);
@@ -269,9 +301,7 @@ public static class CombatEngine
             return new List<WeaponBatch>();
         }
 
-        var eligibleWeapons = attackerSquad.Composition
-            .Where(model => model != null && model.Health > 0)
-            .SelectMany(model => model.Tools)
+        var eligibleWeapons = GetEffectiveWeaponsForPhase(attackerSquad, isMelee)
             .Where(weapon => weapon != null && weapon.IsMelee == isMelee);
 
         if (!string.IsNullOrWhiteSpace(requiredWeaponFingerprint))

@@ -16,7 +16,8 @@ public class Squad
         "Vehicle",
         "Infantry",
         "Fly",
-        "Psychic"
+        "Psychic",
+        "Transport"
     };
 
     public string Name;
@@ -31,6 +32,8 @@ public class Squad
     public List<Model> Composition;
     public int StartingModelSize;
     public List<SquadAbility> SquadAbilities;
+    public Squad EmbarkedSquad;
+    public Squad TransportedBy;
 	
 	public Squad() { }
 
@@ -61,11 +64,13 @@ public class Squad
         Composition = composition ?? new List<Model>();
         StartingModelSize = startingModelSize;
         SquadAbilities = squadAbilities ?? new List<SquadAbility>();
+        EmbarkedSquad = null;
+        TransportedBy = null;
     }
 
     public Squad DeepCopy()
     {
-        return new Squad(
+        var copy = new Squad(
             Name,
             Movement,
             Hardness,
@@ -79,6 +84,14 @@ public class Squad
             Composition.Count,
             SquadAbilities.ToList()
         );
+
+        copy.EmbarkedSquad = EmbarkedSquad?.DeepCopy();
+        if (copy.EmbarkedSquad != null)
+        {
+            copy.EmbarkedSquad.TransportedBy = copy;
+        }
+
+        return copy;
     }
 }
 
@@ -190,6 +203,7 @@ public static class SquadAbilities
     public static readonly SquadAbility NoModifiersTemp = new SquadAbility("Pow-1", "Temp Ignore negative Modifiers", 0, true);
     public static readonly SquadAbility MartialStance = new SquadAbility("martialStance", "Martial Stances", 1, false);
      public static readonly SquadAbility SubRoutine = new SquadAbility("SubRoutine", "Subroutines", 1, false);
+    public static readonly SquadAbility FiringDeck = new SquadAbility("Firing Deck", "Firing Deck", 0, false);
 
     public static readonly IReadOnlyList<SquadAbility> VariableBaseAbilities = new List<SquadAbility>
     {
@@ -269,5 +283,6 @@ public static class SquadAbilities
         SquadrerollInjuries,
         StopRerolls,
         NoModifiers,
+        FiringDeck,
     };
 }
