@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://0r4s4qymiyok"]
 
-[ext_resource type="Texture2D" uid="uid://b4n2t2n421ngr" path="res://Assets/drawable/stormweaver.jpg" id="1_50j67"]
+[ext_resource type="Texture2D" uid="uid://b4n2t2n421ngr" path="res://Assets/ModelIcons/stormweaver.jpg" id="1_50j67"]
 [ext_resource type="AudioStream" uid="uid://bus46wkvi24ox" path="res://Assets/WeaponSounds/lightning.mp3" id="2_13jq6"]
 [ext_resource type="Script" uid="uid://btq3x1onwbut8" path="res://GDScripts/Splash1.gd" id="4_qvm2y"]
 

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bflwvm4oq5cav"]
 
-[ext_resource type="Texture2D" uid="uid://c1ix76rwymrvi" path="res://Assets/drawable/Minifightlogo2.png" id="1_8saeu"]
+[ext_resource type="Texture2D" uid="uid://c1ix76rwymrvi" path="res://Assets/ModelIcons/Minifightlogo2.png" id="1_8saeu"]
 [ext_resource type="Script" uid="uid://dqk6m7tewq0m7" path="res://GDScripts/Btn_Weapon.gd" id="2_ghw46"]
 [ext_resource type="Script" uid="uid://t412mk7delcf" path="res://GDScripts/Btn_Rules.gd" id="3_df05h"]
 [ext_resource type="Script" uid="uid://dyj8d353ycrn7" path="res://GDScripts/Btn_Model.gd" id="4_b11t0"]
