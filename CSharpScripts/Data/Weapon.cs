@@ -11,6 +11,7 @@ public class Weapon
     public int Strength;
     public int ArmorPenetration;
     public string Damage;
+    public string HitSfxKey = string.Empty;
     public List<WeaponAbility> Special;
     public bool IsMelee => Range <= 1f;
 
@@ -22,7 +23,8 @@ public class Weapon
         int strength,
         int armorPenetration,
         string damage,
-        List<WeaponAbility> special
+        List<WeaponAbility> special,
+        string hitSfxKey = ""
     )
     {
         WeaponName = weaponName;
@@ -32,6 +34,7 @@ public class Weapon
         Strength = strength;
         ArmorPenetration = armorPenetration;
         Damage = damage;
+        HitSfxKey = hitSfxKey ?? string.Empty;
         Special = special ?? new List<WeaponAbility>();
     }
 
@@ -45,7 +48,8 @@ public class Weapon
             Strength,
             ArmorPenetration,
             Damage,
-            new List<WeaponAbility>(Special)
+            new List<WeaponAbility>(Special),
+            HitSfxKey
         );
     }
 }

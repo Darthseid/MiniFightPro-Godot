@@ -138,21 +138,21 @@ public static class CombatEngine
         return totalApplied;
     }
 
-    private static string ResolveWeaponSound(Weapon weapon)
+    private static string ResolveWeaponHitSoundKey(Weapon weapon)
     {
         if (weapon == null)
         {
-            return "meleemiss";
+            return "rifleshot.mp3";
         }
-        if (weapon.IsMelee)
+
+        var manager = AudioManager.Instance;
+        if (manager == null)
         {
-            return "meleehit";
+            return string.IsNullOrWhiteSpace(weapon.HitSfxKey) ? "rifleshot.mp3" : weapon.HitSfxKey;
         }
-        if (weapon.Special.Any(ability => ability.Innate == "Blast" || ability.Innate == "Boom"))
-        {
-            return "rocketlauncher";
-        }
-        return "rifleshot";
+
+        var normalized = manager.NormalizeWeaponHitKey(weapon.HitSfxKey);
+        return string.IsNullOrEmpty(normalized) ? "rifleshot.mp3" : normalized;
     }
 
     private static string BuildWeaponToast(WeaponResolutionSummary summary)
@@ -394,7 +394,7 @@ public static class CombatEngine
             {
                 continue;
             }
-            var weaponSound = ResolveWeaponSound(weapon);
+            var weaponHitSoundKey = ResolveWeaponHitSoundKey(weapon);
             var modifiers = CombatHelpers.ObtainModifiers(
                 weapon,
                 attackerSquad,
@@ -421,7 +421,7 @@ public static class CombatEngine
 
             if (hits > 0)
             {
-                AudioManager.Instance?.PlayStaggeredJitter(weaponSound, attacks, 0.02f);
+                AudioManager.Instance?.PlayStaggeredJitter(weaponHitSoundKey, attacks, 0.02f);
             }
             else if (weapon.IsMelee)
             {
@@ -630,7 +630,7 @@ public static class CombatEngine
             {
                 continue;
             }
-            var weaponSound = ResolveWeaponSound(weapon);
+            var weaponHitSoundKey = ResolveWeaponHitSoundKey(weapon);
             var modifiers = CombatHelpers.ObtainModifiers(
                 weapon,
                 attackerSquad,
@@ -667,7 +667,7 @@ public static class CombatEngine
 
             if (hits > 0)
             {
-                AudioManager.Instance?.PlayStaggeredJitter(weaponSound, attacks, 0.02f);
+                AudioManager.Instance?.PlayStaggeredJitter(weaponHitSoundKey, attacks, 0.02f);
             }
             else if (weapon.IsMelee)
             {
@@ -819,7 +819,7 @@ public static class CombatEngine
                 continue;
             }
             var aliveBeforeWeapon = CountLivingActors(defenderActors);
-            var weaponSound = ResolveWeaponSound(weapon);
+            var weaponHitSoundKey = ResolveWeaponHitSoundKey(weapon);
             var modifiers = CombatHelpers.ObtainModifiers(weapon, attackerSquad, attackerMove, defenderSquad, false, isFight, _currentDistance);
             var hitContext = new RollContext(
                 RollPhase.Hit,
@@ -839,7 +839,7 @@ public static class CombatEngine
 
             if (hits > 0)
             {
-                AudioManager.Instance?.PlayStaggeredJitter(weaponSound, attacks, 0.02f);
+                AudioManager.Instance?.PlayStaggeredJitter(weaponHitSoundKey, attacks, 0.02f);
             }
             else if (weapon.IsMelee)
             {
