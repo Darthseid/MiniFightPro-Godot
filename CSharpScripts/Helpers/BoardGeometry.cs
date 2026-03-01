@@ -183,6 +183,101 @@ public static class BoardGeometry
         return true;
     }
 
+    public static async Task<bool> TryMoveSquadTowardTarget(
+        List<BattleModelActor> movers,
+        List<BattleModelActor> targetActors,
+        BattleField field,
+        float inches)
+    {
+        return await TryMoveSquadRelativeToTarget(movers, targetActors, field, inches, moveAway: false);
+    }
+
+    public static async Task<bool> TryMoveSquadAwayFromTarget(
+        List<BattleModelActor> movers,
+        List<BattleModelActor> threatActors,
+        BattleField field,
+        float inches)
+    {
+        return await TryMoveSquadRelativeToTarget(movers, threatActors, field, inches, moveAway: true);
+    }
+
+    private static async Task<bool> TryMoveSquadRelativeToTarget(
+        IReadOnlyList<BattleModelActor> movers,
+        IReadOnlyList<BattleModelActor> targetActors,
+        BattleField field,
+        float inches,
+        bool moveAway)
+    {
+        if (field == null || movers == null || movers.Count == 0 || targetActors == null || targetActors.Count == 0)
+        {
+            return false;
+        }
+
+        var liveMovers = movers.Where(m => m != null && m.BoundModel != null && m.BoundModel.Health > 0).ToList();
+        var liveTargets = targetActors.Where(m => m != null && m.BoundModel != null && m.BoundModel.Health > 0).ToList();
+        if (liveMovers.Count == 0 || liveTargets.Count == 0 || inches <= 0f)
+        {
+            return false;
+        }
+
+        var moverCenter = GetActorsCenter(liveMovers);
+        var targetCenter = GetActorsCenter(liveTargets);
+        var direction = (targetCenter - moverCenter).Normalized();
+        if (moveAway)
+        {
+            direction = -direction;
+        }
+
+        if (direction.LengthSquared() < 0.0001f)
+        {
+            direction = Vector2.Right;
+        }
+
+        var delta = direction * inches * GameGlobals.Instance.FakeInchPx;
+        var viewport = field.GetViewportRect().Size;
+        const float enemyBufferInches = 1.05f;
+
+        var proposed = new Dictionary<BattleModelActor, Vector2>(liveMovers.Count);
+        foreach (var mover in liveMovers)
+        {
+            var candidate = mover.GlobalPosition + delta;
+            var r = mover.BaseSizePx * 0.5f;
+            candidate.X = Mathf.Clamp(candidate.X, r, viewport.X - r);
+            candidate.Y = Mathf.Clamp(candidate.Y, r, viewport.Y - r);
+            proposed[mover] = candidate;
+        }
+
+        foreach (var pair in proposed)
+        {
+            var mover = pair.Key;
+            var targetPosition = pair.Value;
+            foreach (var threat in liveTargets)
+            {
+                var minCenterDistance = ((mover.BaseSizePx + threat.BaseSizePx) * 0.25f) + (enemyBufferInches * GameGlobals.Instance.FakeInchPx);
+                if (targetPosition.DistanceTo(threat.GlobalPosition) < minCenterDistance)
+                {
+                    return false;
+                }
+            }
+        }
+
+        const float moveDuration = 0.25f;
+        foreach (var pair in proposed)
+        {
+            var mover = pair.Key;
+            var targetPosition = pair.Value;
+            var stepDelta = targetPosition - mover.GlobalPosition;
+            var tween = mover.CreateTween();
+            tween.SetTrans(Tween.TransitionType.Sine);
+            tween.SetEase(Tween.EaseType.InOut);
+            tween.TweenProperty(mover, "global_position", targetPosition, moveDuration);
+            FaceDelta(mover, stepDelta);
+        }
+
+        await field.ToSignal(field.GetTree().CreateTimer(moveDuration), Timer.SignalName.Timeout);
+        return true;
+    }
+
     public static List<TSquad> GetSquadsWithinRadius<TSquad>(
         TSquad targetSquad,
         IReadOnlyList<BattleModelActor> targetActors,

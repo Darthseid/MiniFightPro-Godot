@@ -78,12 +78,12 @@ public partial class CreateWeapon : Control
             return;
         }
 
-        if (DiceHelpers.DamageParser(_attacksIn.Text) == 0 && _attacksIn.Text != "0")
+        if (!CombatHelpers.IsDamageExpressionValid(_attacksIn.Text))
         {
             OS.Alert("Attacks must be an integer or D3/D6 format.", "Format Error");
             return;
         }
-        if (DiceHelpers.DamageParser(_dmgIn.Text) == 0 && _dmgIn.Text != "0")
+        if (!CombatHelpers.IsDamageExpressionValid(_dmgIn.Text))
         {
             OS.Alert("Damage must be an integer or D3/D6 format.", "Format Error");
             return;
@@ -219,7 +219,7 @@ public partial class CreateWeapon : Control
             return;
         }
 
-        if (DiceHelpers.DamageParser(modifierInput) == 0 && modifierInput != "0")
+        if (!CombatHelpers.IsDamageExpressionValid(modifierInput))
         {
             OS.Alert("Modifier must be an integer or D3/D6 format.", "Format Error");
             return;

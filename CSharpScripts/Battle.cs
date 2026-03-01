@@ -8,6 +8,8 @@ public partial class Battle : Node2D
 {
     [Export] public PackedScene BattleFieldScene = GD.Load<PackedScene>("res://Scenes/BattleField.tscn");
     [Export] public PackedScene BattleHudScene = GD.Load<PackedScene>("res://Scenes/BattleHud.tscn");
+    [Export] public bool TeamAIsAI;
+    [Export] public bool TeamBIsAI;
 
     private BattleField _battleField;
     private BattleHud _battleHud;
@@ -77,8 +79,15 @@ public partial class Battle : Node2D
 
     public void SetupPlayers(Player playerOne, Player playerTwo)
     {
+        SetupPlayers(playerOne, playerTwo, TeamAIsAI, TeamBIsAI);
+    }
+
+    public void SetupPlayers(Player playerOne, Player playerTwo, bool teamAIsAI, bool teamBIsAI)
+    {
         _pendingPlayerOne = playerOne;
         _pendingPlayerTwo = playerTwo;
+        TeamAIsAI = teamAIsAI;
+        TeamBIsAI = teamBIsAI;
 
         if (IsInsideTree())
         {
@@ -150,6 +159,8 @@ public partial class Battle : Node2D
         {
             _teamAPlayer = _pendingPlayerOne.DeepCopy();
             _teamBPlayer = _pendingPlayerTwo.DeepCopy();
+            TeamAIsAI = _teamAPlayer.IsAI;
+            TeamBIsAI = _teamBPlayer.IsAI;
         }
         else
         {
@@ -370,6 +381,13 @@ public partial class Battle : Node2D
         var playerName = GetSquadName(teamId);
         if (squads.Count == 0)
         {
+            return;
+        }
+
+        if (IsTeamAI(teamId))
+        {
+            SetActiveSquadForTeam(teamId, squads.FirstOrDefault());
+            _battleHud?.ShowToast($"{playerName}: AI skips deployment movement.", 2f);
             return;
         }
 
@@ -1040,6 +1058,11 @@ public partial class Battle : Node2D
         {
             _teamBSquad = squad;
         }
+    }
+
+    internal bool IsTeamAI(int teamId)
+    {
+        return teamId == 1 ? TeamAIsAI : TeamBIsAI;
     }
 
     internal BattleHud Hud => _battleHud;

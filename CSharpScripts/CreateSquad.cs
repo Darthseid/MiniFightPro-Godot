@@ -255,7 +255,7 @@ public partial class CreateSquad : Control
             return;
         }
 
-        if (DiceHelpers.DamageParser(modifierInput) == 0 && modifierInput != "0")
+        if (!CombatHelpers.IsDamageExpressionValid(modifierInput))
         {
             OS.Alert("Modifier must be an integer or D3/D6 format.", "Format Error");
             return;
