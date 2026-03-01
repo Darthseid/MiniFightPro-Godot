@@ -55,6 +55,7 @@ public partial class Battle : Node2D
     private CombatSequence _sequence;
     private bool _measureModeEnabled;
     private DicePresenter _dicePresenter;
+    private readonly Dictionary<Squad, Vector2> _lastKnownTransportCenters = new();
 
     public override void _Ready()
     {
@@ -709,9 +710,16 @@ public partial class Battle : Node2D
         }
 
         var models = squad.Composition;
-        return _teamAActors.Concat(_teamBActors)
+        var actors = _teamAActors.Concat(_teamBActors)
             .Where(actor => actor?.BoundModel != null && actor.Visible && models.Contains(actor.BoundModel))
             .ToList();
+
+        if (IsTransportSquad(squad) && squad.EmbarkedSquad != null && actors.Count > 0)
+        {
+            _lastKnownTransportCenters[squad] = BoardGeometry.GetActorsCenter(actors);
+        }
+
+        return actors;
     }
 
     internal List<BattleModelActor> GetOpposingActorsForSquad(Squad squad)
@@ -1167,33 +1175,69 @@ public partial class Battle : Node2D
             .ToList();
         var enemyActors = GetAliveSquadsForTeam(enemyTeamId).SelectMany(GetActorsForSquad).ToList();
 
-        if (transportActors.Count == 0 || passengerActors.Count == 0)
+        if (passengerActors.Count == 0)
         {
             return false;
         }
 
         SetSquadActorsEmbarkedVisualState(passenger, false);
-        var placed = BoardGeometry.PlacePassengerSquadAroundTransport(
-            transportActors,
-            passengerActors,
-            emergency ? 6f : 3f,
-            enemyActors,
-            avoidFightRange: true
-        );
 
-        if (!placed)
+        bool placed;
+        if (transportActors.Count > 0)
         {
-            BoardGeometry.PlacePassengerSquadAroundTransport(
+            placed = BoardGeometry.PlacePassengerSquadAroundTransport(
                 transportActors,
                 passengerActors,
                 emergency ? 6f : 3f,
                 enemyActors,
-                avoidFightRange: false
+                avoidFightRange: true
             );
+
+            if (!placed)
+            {
+                placed = BoardGeometry.PlacePassengerSquadAroundTransport(
+                    transportActors,
+                    passengerActors,
+                    emergency ? 6f : 3f,
+                    enemyActors,
+                    avoidFightRange: false
+                );
+            }
+
+            if (placed)
+            {
+                _lastKnownTransportCenters[transport] = BoardGeometry.GetActorsCenter(transportActors);
+            }
+        }
+        else if (emergency && _lastKnownTransportCenters.TryGetValue(transport, out var lastCenter))
+        {
+            placed = BoardGeometry.PlacePassengerSquadAroundPoint(
+                lastCenter,
+                passengerActors,
+                6f,
+                enemyActors,
+                avoidFightRange: true
+            );
+
+            if (!placed)
+            {
+                placed = BoardGeometry.PlacePassengerSquadAroundPoint(
+                    lastCenter,
+                    passengerActors,
+                    6f,
+                    enemyActors,
+                    avoidFightRange: false
+                );
+            }
+        }
+        else
+        {
+            return false;
         }
 
         transport.EmbarkedSquad = null;
         passenger.TransportedBy = null;
+        _lastKnownTransportCenters.Remove(transport);
 
         if (emergency)
         {
