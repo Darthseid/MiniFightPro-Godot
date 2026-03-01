@@ -191,7 +191,10 @@ public sealed class CombatSequence
                 continue;
             }
 
+            var prevActiveTeamId = _battle.ActiveTeamId;
+            _battle.ActiveTeamId = activeTeamId;
             await _battle.ResolveShootingPhase(selectedRangedProfile);
+            _battle.ActiveTeamId = prevActiveTeamId;
             _battle.CheckVictory();
             if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
         }
@@ -351,7 +354,10 @@ public sealed class CombatSequence
                     continue;
                 }
 
+                var prev = _battle.ActiveTeamId;
+                _battle.ActiveTeamId = secondTeamId;
                 await _battle.ResolveFightPhase(selectedMeleeProfile);
+                _battle.ActiveTeamId = prev;
                 _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }

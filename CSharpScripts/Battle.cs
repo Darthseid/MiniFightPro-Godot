@@ -765,8 +765,10 @@ public partial class Battle : Node2D
 
         if (_movementAllowsTeleport && didMove)
         {
-            const float teleportMaxInches = 12f;
-            if (movedInches > teleportMaxInches)
+            var enemyActors = GetInactiveActors();
+            var closestEnemyDistanceInches = BoardGeometry.ClosestDistanceInches(activeActors, enemyActors);
+            const float minTeleportEnemyDistanceInches = 9f;
+            if (enemyActors.Count > 0 && closestEnemyDistanceInches <= minTeleportEnemyDistanceInches)
             {
                 foreach (var actor in activeActors)
                 {
@@ -777,8 +779,8 @@ public partial class Battle : Node2D
                 }
 
                 didMove = false;
-                _battleHud?.ShowToast($"Teleport move is limited to {teleportMaxInches:0.#}\".");
-                GD.Print($"[Rules] Blocked teleport move > {teleportMaxInches}\" (attempted {movedInches:0.0}\").");
+                _battleHud?.ShowToast($"Teleport must end more than {minTeleportEnemyDistanceInches:0.#}\" away from enemies.");
+                GD.Print($"[Rules] Blocked teleport move within {minTeleportEnemyDistanceInches}\" of enemies (closest: {closestEnemyDistanceInches:0.0}\").");
             }
         }
 
