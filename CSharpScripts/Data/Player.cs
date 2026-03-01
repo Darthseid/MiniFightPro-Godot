@@ -42,7 +42,7 @@ public class Player
         return new Player(
             (TheirSquads ?? new List<Squad>()).Select(s => s.DeepCopy()).ToList(),
             OrderPoints,
-            (Orders ?? new List<Order>()).Select(o => new Order(o.OrderCost, o.OrderName, o.AvailablePhase, o.TargetsEnemy, o.Description)).ToList(),
+            (Orders ?? new List<Order>()).Select(o => new Order(o.OrderId, o.OrderCost, o.OrderName, o.AvailablePhase, o.TargetsEnemy, o.Description, o.WindowType, o.TargetSide, o.TargetType, o.RequiresTarget)).ToList(),
             IsAI,
             PlayerName,
             (PlayerAbilities ?? new List<string>()).ToList());

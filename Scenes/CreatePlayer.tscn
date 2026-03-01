@@ -88,6 +88,39 @@ custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 select_mode = 2
 
+
+[node name="Label_AvailableOrders" type="Label" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+text = "Available Orders"
+
+[node name="AvailableOrdersList" type="ItemList" parent="ScrollContainer/MainContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+select_mode = 2
+
+[node name="OrderButtons" type="HBoxContainer" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+
+[node name="BtnAddOrders" type="Button" parent="ScrollContainer/MainContainer/OrderButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add Selected Orders"
+
+[node name="BtnRemoveOrders" type="Button" parent="ScrollContainer/MainContainer/OrderButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Remove Selected Orders"
+
+[node name="Label_SelectedOrders" type="Label" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+text = "Selected Orders"
+
+[node name="SelectedOrdersList" type="ItemList" parent="ScrollContainer/MainContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+select_mode = 2
 [node name="BtnAbilities" type="Button" parent="ScrollContainer/MainContainer"]
 unique_name_in_owner = true
 layout_mode = 2

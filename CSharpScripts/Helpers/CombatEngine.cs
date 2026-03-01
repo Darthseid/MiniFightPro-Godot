@@ -562,7 +562,8 @@ public static class CombatEngine
         BattleHud battleHud,
         BattleField battleField,
         System.Action checkVictory,
-        System.Action<Squad, Squad, int> handleExplosionProcess = null
+        System.Action<Squad, Squad, int> handleExplosionProcess = null,
+        bool onlySixesHit = false
     )
     {
         if (attacker == null || defender == null)
@@ -622,7 +623,8 @@ public static class CombatEngine
         BattleField battleField,
         System.Action checkVictory,
         System.Action<Squad, Squad, int> handleExplosionProcess = null,
-        string selectedWeaponFingerprint = null
+        string selectedWeaponFingerprint = null,
+        bool onlySixesHit = false
     )
     {
         if (attacker == null || defender == null)
@@ -677,7 +679,8 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                CombatEngine.GetWeaponFingerprint(weapon)
+                CombatEngine.GetWeaponFingerprint(weapon),
+                onlySixesHit
             );
             var (hits, hardHits) = await CombatRolls.HitSequenceAsync(
                 attacks,
@@ -717,7 +720,8 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                CombatEngine.GetWeaponFingerprint(weapon)
+                CombatEngine.GetWeaponFingerprint(weapon),
+                onlySixesHit
             );
             var (injuries, devastating) = await CombatRolls.WoundSequenceAsync(
                 hits,
@@ -857,7 +861,8 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                CombatEngine.GetWeaponFingerprint(weapon)
+                CombatEngine.GetWeaponFingerprint(weapon),
+                onlySixesHit
             );
             var (hits, hardHits) = await CombatRolls.HitSequenceAsync(attacks, weapon.HitSkill, modifiers.HitMod, modifiers.HitReroll, modifiers.CritThreshold, weapon.Special, hitContext);
             hits += hardHits;

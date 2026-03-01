@@ -3,7 +3,6 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-
 public partial class BattleHud : Control
 {
     private Label? _toastLabel;
@@ -15,6 +14,11 @@ public partial class BattleHud : Control
     private Control? _gameOverOverlay;
     private Label? _gameOverLabel;
     private Button? _measureButton;
+    private Label? _player1OrdersPoints;
+    private Label? _player2OrdersPoints;
+    private VBoxContainer? _player1OrdersList;
+    private VBoxContainer? _player2OrdersList;
+
     [Signal] public delegate void NextPhasePressedEventHandler();
     [Signal] public delegate void MeasureRequestedEventHandler();
 
@@ -28,6 +32,10 @@ public partial class BattleHud : Control
         _optionList = GetNodeOrNull<ItemList>("%OptionList");
         _gameOverOverlay = GetNodeOrNull<Control>("%GameOverOverlay");
         _gameOverLabel = GetNodeOrNull<Label>("%GameOverLabel");
+        _player1OrdersPoints = GetNodeOrNull<Label>("%Player1OrderPoints");
+        _player2OrdersPoints = GetNodeOrNull<Label>("%Player2OrderPoints");
+        _player1OrdersList = GetNodeOrNull<VBoxContainer>("%Player1OrdersList");
+        _player2OrdersList = GetNodeOrNull<VBoxContainer>("%Player2OrdersList");
 
         var nextButton = GetNodeOrNull<Button>("%BtnNextPhase");
         if (nextButton != null)
@@ -41,10 +49,85 @@ public partial class BattleHud : Control
             _measureButton.Pressed += () => EmitSignal(SignalName.MeasureRequested);
         }
 
+        var player1Toggle = GetNodeOrNull<Button>("%Player1OrdersToggle");
+        if (player1Toggle != null)
+        {
+            player1Toggle.Pressed += () => ToggleOrderPanel("%Player1OrdersBody");
+        }
+
+        var player2Toggle = GetNodeOrNull<Button>("%Player2OrdersToggle");
+        if (player2Toggle != null)
+        {
+            player2Toggle.Pressed += () => ToggleOrderPanel("%Player2OrdersBody");
+        }
+
         SetMeasureButtonEnabledVisual(false);
 
         if (_toastTimer != null)
             _toastTimer.Timeout += OnToastTimeout;
+    }
+
+    private void ToggleOrderPanel(string path)
+    {
+        var panel = GetNodeOrNull<Control>(path);
+        if (panel != null)
+        {
+            panel.Visible = !panel.Visible;
+        }
+    }
+
+    public void ConfigureOrders(Player player1, Player player2, OrderManager manager, Action<int, string> onOrderPressed)
+    {
+        if (player1 == null || player2 == null || manager == null || onOrderPressed == null)
+        {
+            return;
+        }
+
+        if (_player1OrdersPoints != null)
+        {
+            _player1OrdersPoints.Text = $"Order Points: {player1.OrderPoints}";
+        }
+
+        if (_player2OrdersPoints != null)
+        {
+            _player2OrdersPoints.Text = $"Order Points: {player2.OrderPoints}";
+        }
+
+        RenderOrderButtons(_player1OrdersList, player1, 1, manager, onOrderPressed);
+        RenderOrderButtons(_player2OrdersList, player2, 2, manager, onOrderPressed);
+    }
+
+    private static void RenderOrderButtons(VBoxContainer? container, Player player, int playerId, OrderManager manager, Action<int, string> onOrderPressed)
+    {
+        if (container == null)
+        {
+            return;
+        }
+
+        foreach (var child in container.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        foreach (var order in player.Orders ?? new List<Order>())
+        {
+            var button = new Button();
+            if (manager.IsOrderUsable(playerId, order, out var reason))
+            {
+                button.Disabled = false;
+                button.TooltipText = "Ready";
+            }
+            else
+            {
+                button.Disabled = true;
+                button.TooltipText = string.IsNullOrWhiteSpace(reason) ? "Unavailable" : reason;
+            }
+
+            button.Text = $"{order.OrderName} (Cost {order.OrderCost})";
+            var orderId = order.OrderId;
+            button.Pressed += () => onOrderPressed(playerId, orderId);
+            container.AddChild(button);
+        }
     }
 
     public void ShowToast(string text, float seconds = 4f)
@@ -67,7 +150,6 @@ public partial class BattleHud : Control
         _gameOverOverlay.Visible = true;
     }
 
-    // New: hide and clear the game-over banner
     public void HideGameOverBanner()
     {
         if (_gameOverOverlay == null)
@@ -93,7 +175,6 @@ public partial class BattleHud : Control
         if (_actionDialog == null)
             return false;
 
-        // Ensure previous click/touch release doesn't hit the next dialog
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 
         var tcs = new TaskCompletionSource<bool>();
@@ -116,7 +197,7 @@ public partial class BattleHud : Control
             tcs.TrySetResult(false);
         }
 
-        _actionDialog.Hide(); // extra safety
+        _actionDialog.Hide();
         _actionDialog.DialogText = message;
         _actionDialog.GetOkButton().Text = yesText;
         _actionDialog.GetCancelButton().Text = noText;
@@ -129,7 +210,6 @@ public partial class BattleHud : Control
 
         return await tcs.Task;
     }
-
 
     public Task<int> ChooseOptionAsync(string title, IReadOnlyList<string> options)
     {

@@ -173,41 +173,54 @@ public static class CombatRolls
         var initialBatch = await DiceRoller.PresentAndRollAsync(6, attackRolls, rollContext);
         var finalRolls = initialBatch.Results.ToArray();
 
-        var rerollIndices = new List<int>();
-        for (var i = 0; i < finalRolls.Length; i++)
+        if (!rollContext.OnlySixesHit)
         {
-            if (oneReroll && i == 0)
+            var rerollIndices = new List<int>();
+            for (var i = 0; i < finalRolls.Length; i++)
             {
-                continue;
+                if (oneReroll && i == 0)
+                {
+                    continue;
+                }
+
+                if (reRollCheck == 1 && finalRolls[i] == 1)
+                {
+                    rerollIndices.Add(i);
+                }
+                else if (reRollCheck == 2 && finalRolls[i] < hitSkill)
+                {
+                    rerollIndices.Add(i);
+                }
             }
 
-            if (reRollCheck == 1 && finalRolls[i] == 1)
+            if (oneReroll && finalRolls.Length > 0 && finalRolls[0] < hitSkill)
             {
-                rerollIndices.Add(i);
+                rerollIndices.Add(0);
             }
-            else if (reRollCheck == 2 && finalRolls[i] < hitSkill)
-            {
-                rerollIndices.Add(i);
-            }
-        }
 
-        if (oneReroll && finalRolls.Length > 0 && finalRolls[0] < hitSkill)
-        {
-            rerollIndices.Add(0);
-        }
-
-        if (rerollIndices.Count > 0)
-        {
-            var rerollContext = rollContext with { Label = "Reroll (To Hit)" };
-            var rerollBatch = await DiceRoller.PresentAndRollAsync(6, rerollIndices.Count, rerollContext, true);
-            for (var i = 0; i < rerollIndices.Count; i++)
+            if (rerollIndices.Count > 0)
             {
-                finalRolls[rerollIndices[i]] = rerollBatch.Results[i];
+                var rerollContext = rollContext with { Label = "Reroll (To Hit)" };
+                var rerollBatch = await DiceRoller.PresentAndRollAsync(6, rerollIndices.Count, rerollContext, true);
+                for (var i = 0; i < rerollIndices.Count; i++)
+                {
+                    finalRolls[rerollIndices[i]] = rerollBatch.Results[i];
+                }
             }
         }
 
         foreach (var diceRoll in finalRolls)
         {
+            if (rollContext.OnlySixesHit)
+            {
+                if (diceRoll == 6)
+                {
+                    hits++;
+                }
+
+                continue;
+            }
+
             var criticalHit = diceRoll == critThreshold;
             if (diceRoll == 1)
             {

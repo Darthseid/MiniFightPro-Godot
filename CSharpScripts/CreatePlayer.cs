@@ -10,8 +10,12 @@ public partial class CreatePlayer : Control
     private CheckBox _isAICheckBox = null!;
     private ItemList _availableSquads = null!;
     private ItemList _selectedSquads = null!;
+    private ItemList _availableOrders = null!;
+    private ItemList _selectedOrders = null!;
     private Button _addSquadsButton = null!;
     private Button _removeSquadsButton = null!;
+    private Button _addOrdersButton = null!;
+    private Button _removeOrdersButton = null!;
     private Button _abilitiesButton = null!;
     private Label _abilitiesLabel = null!;
     private AcceptDialog _abilitiesDialog = null!;
@@ -31,8 +35,12 @@ public partial class CreatePlayer : Control
         _isAICheckBox = GetNode<CheckBox>("%IsAICheckBox");
         _availableSquads = GetNode<ItemList>("%AvailableSquadsList");
         _selectedSquads = GetNode<ItemList>("%SelectedSquadsList");
+        _availableOrders = GetNode<ItemList>("%AvailableOrdersList");
+        _selectedOrders = GetNode<ItemList>("%SelectedOrdersList");
         _addSquadsButton = GetNode<Button>("%BtnAddSquads");
         _removeSquadsButton = GetNode<Button>("%BtnRemoveSquads");
+        _addOrdersButton = GetNode<Button>("%BtnAddOrders");
+        _removeOrdersButton = GetNode<Button>("%BtnRemoveOrders");
         _abilitiesButton = GetNode<Button>("%BtnAbilities");
         _abilitiesLabel = GetNode<Label>("%AbilitiesLabel");
         _abilitiesDialog = GetNode<AcceptDialog>("%AbilitiesDialog");
@@ -42,10 +50,13 @@ public partial class CreatePlayer : Control
         GetNode<Button>("%BtnDiscard").Pressed += OnDiscardPressed;
         _addSquadsButton.Pressed += OnAddSquads;
         _removeSquadsButton.Pressed += OnRemoveSquads;
+        _addOrdersButton.Pressed += OnAddOrders;
+        _removeOrdersButton.Pressed += OnRemoveOrders;
         _abilitiesButton.Pressed += ShowAbilitiesDialog;
         _abilitiesDialog.Confirmed += ApplyAbilitiesSelection;
 
         PopulateSquadLists();
+        PopulateOrdersLists();
         PopulateDialogs();
         LoadDataIfEditing();
         UpdateAbilitiesLabel();
@@ -60,6 +71,16 @@ public partial class CreatePlayer : Control
                      .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase))
         {
             _availableSquads.AddItem(squad.Name);
+        }
+    }
+
+    private void PopulateOrdersLists()
+    {
+        _availableOrders.Clear();
+        _selectedOrders.Clear();
+        foreach (var order in Order.BuildDefaultOrders())
+        {
+            _availableOrders.AddItem(order.OrderName);
         }
     }
 
@@ -93,6 +114,11 @@ public partial class CreatePlayer : Control
             {
                 _selectedSquads.AddItem(squad.Name);
             }
+
+            foreach (var order in player.Orders ?? new List<Order>())
+            {
+                _selectedOrders.AddItem(order.OrderName);
+            }
         }
         else
         {
@@ -116,6 +142,24 @@ public partial class CreatePlayer : Control
 
         for (int i = selectedIndices.Length - 1; i >= 0; i--)
             _selectedSquads.RemoveItem(selectedIndices[i]);
+    }
+
+    private void OnAddOrders()
+    {
+        foreach (int index in _availableOrders.GetSelectedItems())
+        {
+            var name = _availableOrders.GetItemText(index);
+            _selectedOrders.AddItem(name);
+        }
+    }
+
+    private void OnRemoveOrders()
+    {
+        var selectedIndices = _selectedOrders.GetSelectedItems();
+        Array.Sort(selectedIndices);
+
+        for (int i = selectedIndices.Length - 1; i >= 0; i--)
+            _selectedOrders.RemoveItem(selectedIndices[i]);
     }
 
     private void ShowAbilitiesDialog()
@@ -177,11 +221,22 @@ public partial class CreatePlayer : Control
             }
         }
 
-        var orderPoints = 3 + squads.Count;
+        var orderTemplates = Order.BuildDefaultOrders();
+        var orderLookupByName = orderTemplates.ToDictionary(o => o.OrderName, o => o, StringComparer.OrdinalIgnoreCase);
+        var selectedOrders = new List<Order>();
+        for (int i = 0; i < _selectedOrders.ItemCount; i++)
+        {
+            var selectedName = _selectedOrders.GetItemText(i);
+            if (orderLookupByName.TryGetValue(selectedName, out var template))
+            {
+                selectedOrders.Add(new Order(template.OrderId, template.OrderCost, template.OrderName, template.AvailablePhase, template.TargetsEnemy, template.Description, template.WindowType, template.TargetSide, template.TargetType, template.RequiresTarget));
+            }
+        }
+
         var player = new Player(
             theirSquads: squads,
-            orderPoints: orderPoints,
-            orders: new List<Order>(),
+            orderPoints: 0,
+            orders: selectedOrders,
             isAI: _isAICheckBox.ButtonPressed,
             playerName: playerName,
             playerAbilities: new List<string>(_selectedAbilities)

@@ -56,6 +56,9 @@ public partial class Battle : Node2D
     private bool _measureModeEnabled;
     private DicePresenter _dicePresenter;
     private readonly Dictionary<Squad, Vector2> _lastKnownTransportCenters = new();
+    private OrderManager? _orderManager;
+    private int _player1OrderPoints;
+    private int _player2OrderPoints;
 
     public override void _Ready()
     {
@@ -169,6 +172,9 @@ public partial class Battle : Node2D
             _teamBPlayer = new Player(new List<Squad> { _pendingUnitTwo.DeepCopy() }, 0, new List<Order>(), false, "Player 2", new List<string>());
         }
 
+        _teamAPlayer.OrderPoints = 0;
+        _teamBPlayer.OrderPoints = 0;
+
         _teamASquad = _teamAPlayer.TheirSquads.FirstOrDefault();
         _teamBSquad = _teamBPlayer.TheirSquads.FirstOrDefault();
 
@@ -227,6 +233,9 @@ public partial class Battle : Node2D
             GameGlobals.Instance.CurrentTurn = _currentTurn;
             GameGlobals.Instance.CurrentPhase = BattlePhase.Command.ToString();
         }
+        _orderManager = new OrderManager(this);
+        _orderManager.InitializeBattlePoints();
+
         _sequence = new CombatSequence(this);
         _sequence.BeginTurn();
     }
@@ -669,6 +678,60 @@ public partial class Battle : Node2D
     internal Task<Squad?> PromptForEnemySquadTargetAsync(string prompt, int enemyTeamId, IReadOnlyCollection<Squad>? allowedSquads = null)
     {
         return PromptForSquadTargetAsync(prompt, enemyTeamId, allowedSquads);
+    }
+
+
+    internal OrderManager? OrderManager => _orderManager;
+
+    internal Player GetPlayerByTeam(int teamId)
+    {
+        return teamId == 1 ? _teamAPlayer : _teamBPlayer;
+    }
+
+    internal bool SquadHasRangedWeaponThatCanShoot(Squad shooter, int enemyTeamId)
+    {
+        if (shooter == null)
+        {
+            return false;
+        }
+
+        var moveVars = CombatHelpers.GetMoveVarsForTeam(GetTeamIdForSquad(shooter), _teamAMove, _teamBMove);
+        var enemySquads = GetAliveSquadsForTeam(enemyTeamId);
+        foreach (var enemy in enemySquads)
+        {
+            var distance = BoardGeometry.ClosestDistanceInches(GetActorsForSquad(shooter), GetActorsForSquad(enemy));
+            var weapons = (shooter.Composition ?? new List<Model>()).SelectMany(model => model.Tools ?? new List<Weapon>()).Where(w => !w.IsMelee);
+            if (weapons.Any(weapon => CombatHelpers.CheckValidShooting(shooter, moveVars, weapon, enemy, distance)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    internal async Task ResolveOverwatchAsync(int defenderTeamId, Squad defenderSquad, Squad chargingSquad)
+    {
+        var prevActiveTeam = _activeTeamId;
+        var attackerActors = defenderTeamId == 1 ? _teamAActors : _teamBActors;
+        var defenderActors = defenderTeamId == 1 ? _teamBActors : _teamAActors;
+        if (attackerActors.Count == 0 || defenderActors.Count == 0)
+        {
+            return;
+        }
+
+        SetActiveSquadForTeam(defenderTeamId, defenderSquad);
+        SetActiveSquadForTeam(defenderTeamId == 1 ? 2 : 1, chargingSquad);
+        _activeTeamId = defenderTeamId;
+
+        var attacker = GetActorsForSquad(defenderSquad).FirstOrDefault(actor => actor?.BoundModel != null && actor.BoundModel.Health > 0);
+        var target = GetActorsForSquad(chargingSquad).FirstOrDefault(actor => actor?.BoundModel != null && actor.BoundModel.Health > 0);
+        if (attacker != null && target != null)
+        {
+            await CombatEngine.ResolveBatchedAttack(attacker, target, false, _teamASquad, _teamBSquad, _teamAActors, _teamBActors, _teamAMove, _teamBMove, _battleHud, _battleField, PostDamageCleanupAndVictoryCheck, HandleExplosionProcess, null, true);
+        }
+
+        _activeTeamId = prevActiveTeam;
     }
 
     private Squad? FindSquadByActor(BattleModelActor actor, int teamId)
@@ -1380,6 +1443,8 @@ public partial class Battle : Node2D
     internal Squad TeamBSquad => _teamBSquad;
     internal Player TeamAPlayer => _teamAPlayer;
     internal Player TeamBPlayer => _teamBPlayer;
+    internal int Player1OrderPoints { get => _player1OrderPoints; set { _player1OrderPoints = value; if (_teamAPlayer != null) _teamAPlayer.OrderPoints = value; } }
+    internal int Player2OrderPoints { get => _player2OrderPoints; set { _player2OrderPoints = value; if (_teamBPlayer != null) _teamBPlayer.OrderPoints = value; } }
     internal MoveVars TeamAMove { get => _teamAMove; set => _teamAMove = value; }
     internal MoveVars TeamBMove { get => _teamBMove; set => _teamBMove = value; }
     internal bool ActiveSquadChargedThisTurn { get => _activeSquadChargedThisTurn; set => _activeSquadChargedThisTurn = value; }

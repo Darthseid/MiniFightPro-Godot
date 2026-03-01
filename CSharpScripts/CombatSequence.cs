@@ -21,6 +21,7 @@ public sealed class CombatSequence
         _battle.ResetMoveVarsForActiveTeam();
         _battle.ActiveSquadChargedThisTurn = false;
         _battle.ActiveSquadMovedAfterShootingThisTurn = false;
+        _battle.OrderManager?.BeginTurn();
         _battle.SyncGlobalTurnRound();
         _battle.AnnounceTurnStart();
         _ = RunTurnAsync();
@@ -204,6 +205,9 @@ public sealed class CombatSequence
     private async Task HandleChargeAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Charge);
+        _battle.OrderManager?.ResetPhaseUsage();
+        _battle.OrderManager?.OpenWindow(OrderWindowType.ChargePhase, _battle.ActiveTeamId);
+        _battle.OrderManager?.OpenWindow(OrderWindowType.OpponentChargePhaseStart, _battle.ActiveTeamId);
         var activeTeamId = _battle.ActiveTeamId;
         var enemyTeamId = activeTeamId == 1 ? 2 : 1;
         var activeSquads = _battle.GetAliveSquadsForTeam(activeTeamId);
@@ -261,6 +265,10 @@ public sealed class CombatSequence
                 continue;
             }
 
+            if (_battle.OrderManager != null)
+            {
+                await _battle.OrderManager.TryResolveOverwatchOnChargeDeclaredAsync(activeTeamId, squad, target);
+            }
             var moved = await BoardGeometry.TryMoveIntoEngagement(activeActors, inactiveActors, _battle.Field);
             if (moved)
             {
@@ -268,11 +276,16 @@ public sealed class CombatSequence
                 _battle.GrantTemporaryFirstStrike(squad);
             }
         }
+
+        _battle.OrderManager?.CloseWindow(OrderWindowType.ChargePhase);
+        _battle.OrderManager?.CloseWindow(OrderWindowType.OpponentChargePhaseStart);
     }
 
     private async Task HandleFightAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Fight);
+        _battle.OrderManager?.ResetPhaseUsage();
+        _battle.OrderManager?.OpenWindow(OrderWindowType.StartOfFightPhase, _battle.ActiveTeamId);
         var activeTeamId = _battle.ActiveTeamId;
         var inactiveTeamId = activeTeamId == 1 ? 2 : 1;
 
@@ -292,6 +305,8 @@ public sealed class CombatSequence
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
         await ResolveFightTierAlternating(inactiveTeamId, activeTeamId, inactiveNormal, activeNormal, activeTeamIsAI);
+        _battle.OrderManager?.CloseWindow(OrderWindowType.StartOfFightPhase);
+        _battle.OrderManager?.EndFightPhaseCleanup();
     }
 
     private async Task ResolveFightTierAlternating(int firstTeamId, int secondTeamId, System.Collections.Generic.List<Squad> firstTier, System.Collections.Generic.List<Squad> secondTier, bool activeTeamIsAI)
