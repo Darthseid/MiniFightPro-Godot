@@ -106,7 +106,7 @@ public class SquadAbility
     {
         return string.IsNullOrWhiteSpace(ModifierExpression)
             ? Modifier
-            : DiceHelpers.DamageParser(ModifierExpression);
+            : CombatHelpers.DamageParser(ModifierExpression);
     }
 }
 
@@ -220,7 +220,7 @@ public static class SquadAbilities
 
     public static SquadAbility CreateVariableAbility(SquadAbility baseAbility, string modifierInput)
     {
-        var parsedModifier = DiceHelpers.DamageParser(modifierInput);
+        var parsedModifier = CombatHelpers.DamageParser(modifierInput);
         return new SquadAbility(
             baseAbility.Innate,
             $"{GetVariableBaseDisplayName(baseAbility.Name)} {modifierInput}",
