@@ -207,16 +207,15 @@ public partial class Battle : Node2D
 
         AudioManager.Instance?.Play("startbattle");
 
-        var firstSquadName = DetermineFirstSquad(_teamAPlayer, _teamBPlayer);
-        _startingTeamId = firstSquadName == _teamAPlayer.PlayerName ? 1 : 2;
+        _startingTeamId = DetermineStartingTeamId();
         _activeTeamId = _startingTeamId;
         _currentTurn = 1;
 
         await RunPreGameDeploymentAsync(_activeTeamId);
 
-        _battleHud.ShowToast($"{GetSquadName(_activeTeamId)} acts first", 2f);
+        _battleHud.ShowToast($"{GetSquadName(_startingTeamId)} acts first", 2f);
         await DelaySecondsAsync(2f);
-        _battleHud.ShowToast($"{GetSquadName(_activeTeamId == 1 ? 2 : 1)} acts second", 2f);
+        _battleHud.ShowToast($"{GetSquadName(_startingTeamId == 1 ? 2 : 1)} acts second", 2f);
         await DelaySecondsAsync(2f);
 
         AudioManager.Instance?.Play("roundbell");
@@ -365,11 +364,14 @@ public partial class Battle : Node2D
             return;
         }
 
+        var originalActiveTeamId = _activeTeamId;
         var secondDeploymentTeamId = firstDeploymentTeamId == 1 ? 2 : 1;
         _battleHud.ShowToast("Pre-game Deployment", 4f);
         await RunDeploymentForTeamAsync(firstDeploymentTeamId);
         _battleHud.ShowToast("Pre-game Deployment", 4f);
         await RunDeploymentForTeamAsync(secondDeploymentTeamId);
+
+        _activeTeamId = originalActiveTeamId;
     }
 
     private async Task RunDeploymentForTeamAsync(int teamId)
@@ -449,9 +451,9 @@ public partial class Battle : Node2D
         return player?.PlayerName ?? $"Team {teamId}";
     }
 
-    private string DetermineFirstSquad(Player teamA, Player teamB)
+    private int DetermineStartingTeamId()
     {
-        return _rng.RandiRange(0, 1) == 0 ? teamA.PlayerName : teamB.PlayerName;
+        return _rng.RandiRange(0, 1) == 0 ? 1 : 2;
     }
 
     internal void CheckVictory()
