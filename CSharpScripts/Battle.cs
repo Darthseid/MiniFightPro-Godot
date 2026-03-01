@@ -207,16 +207,15 @@ public partial class Battle : Node2D
 
         AudioManager.Instance?.Play("startbattle");
 
-        var firstSquadName = DetermineFirstSquad(_teamAPlayer, _teamBPlayer);
-        _startingTeamId = firstSquadName == _teamAPlayer.PlayerName ? 1 : 2;
+        _startingTeamId = DetermineStartingTeamId();
         _activeTeamId = _startingTeamId;
         _currentTurn = 1;
 
         await RunPreGameDeploymentAsync(_activeTeamId);
 
-        _battleHud.ShowToast($"{GetSquadName(_activeTeamId)} acts first", 2f);
+        _battleHud.ShowToast($"{GetSquadName(_startingTeamId)} acts first", 2f);
         await DelaySecondsAsync(2f);
-        _battleHud.ShowToast($"{GetSquadName(_activeTeamId == 1 ? 2 : 1)} acts second", 2f);
+        _battleHud.ShowToast($"{GetSquadName(_startingTeamId == 1 ? 2 : 1)} acts second", 2f);
         await DelaySecondsAsync(2f);
 
         AudioManager.Instance?.Play("roundbell");
@@ -365,11 +364,14 @@ public partial class Battle : Node2D
             return;
         }
 
+        var originalActiveTeamId = _activeTeamId;
         var secondDeploymentTeamId = firstDeploymentTeamId == 1 ? 2 : 1;
         _battleHud.ShowToast("Pre-game Deployment", 4f);
         await RunDeploymentForTeamAsync(firstDeploymentTeamId);
         _battleHud.ShowToast("Pre-game Deployment", 4f);
         await RunDeploymentForTeamAsync(secondDeploymentTeamId);
+
+        _activeTeamId = originalActiveTeamId;
     }
 
     private async Task RunDeploymentForTeamAsync(int teamId)
@@ -449,9 +451,9 @@ public partial class Battle : Node2D
         return player?.PlayerName ?? $"Team {teamId}";
     }
 
-    private string DetermineFirstSquad(Player teamA, Player teamB)
+    private int DetermineStartingTeamId()
     {
-        return _rng.RandiRange(0, 1) == 0 ? teamA.PlayerName : teamB.PlayerName;
+        return _rng.RandiRange(0, 1) == 0 ? 1 : 2;
     }
 
     internal void CheckVictory()
@@ -514,6 +516,12 @@ public partial class Battle : Node2D
 
         foreach (var squad in allSquads)
         {
+            var livingModels = squad.Composition?.Count(model => model != null && model.Health > 0) ?? 0;
+            if (livingModels <= 0 && IsTransportSquad(squad) && squad.EmbarkedSquad != null)
+            {
+                TryDisembarkSquad(squad, emergency: true);
+            }
+
             CombatEngine.RemoveDeadModels(GetActorsForSquad(squad), squad, _battleField);
         }
 
@@ -629,17 +637,25 @@ public partial class Battle : Node2D
         }
     }
 
-    internal async Task<Squad?> PromptForEnemySquadTargetAsync(string prompt, int enemyTeamId, IReadOnlyCollection<Squad>? allowedSquads = null)
+    private List<BattleModelActor> GetVisibleActorsForTeam(int teamId)
+    {
+        return GetAliveSquadsForTeam(teamId)
+            .SelectMany(GetActorsForSquad)
+            .ToList();
+    }
+
+    internal async Task<Squad?> PromptForSquadTargetAsync(string prompt, int teamId, IReadOnlyCollection<Squad>? allowedSquads = null)
     {
         _battleHud?.ShowToast(prompt, 2.5f);
-        _enemyTargetTeamId = enemyTeamId;
+        _enemyTargetTeamId = teamId;
         _enemyTargetAllowedSquads = allowedSquads == null ? null : new HashSet<Squad>(allowedSquads.Where(s => s != null));
         _awaitingEnemyTargetSelection = true;
         _enemyTargetSelectionTcs = new TaskCompletionSource<Squad?>();
 
-        ShapeHelpers.SetSelectableVisuals(GetInactiveActors(), true);
+        var selectableActors = GetVisibleActorsForTeam(teamId);
+        ShapeHelpers.SetSelectableVisuals(selectableActors, true);
         var selectedSquad = await _enemyTargetSelectionTcs.Task;
-        ShapeHelpers.SetSelectableVisuals(GetInactiveActors(), false);
+        ShapeHelpers.SetSelectableVisuals(selectableActors, false);
 
         _enemyTargetSelectionTcs = null;
         _enemyTargetTeamId = -1;
@@ -647,6 +663,11 @@ public partial class Battle : Node2D
         _awaitingEnemyTargetSelection = false;
 
         return selectedSquad;
+    }
+
+    internal Task<Squad?> PromptForEnemySquadTargetAsync(string prompt, int enemyTeamId, IReadOnlyCollection<Squad>? allowedSquads = null)
+    {
+        return PromptForSquadTargetAsync(prompt, enemyTeamId, allowedSquads);
     }
 
     private Squad? FindSquadByActor(BattleModelActor actor, int teamId)
@@ -682,14 +703,14 @@ public partial class Battle : Node2D
     internal List<BattleModelActor> GetActorsForSquad(Squad squad)
     {
         PruneDisposedActors("GetActorsForSquad");
-        if (squad?.Composition == null)
+        if (squad?.Composition == null || IsSquadEmbarked(squad))
         {
             return new List<BattleModelActor>();
         }
 
         var models = squad.Composition;
         return _teamAActors.Concat(_teamBActors)
-            .Where(actor => actor?.BoundModel != null && models.Contains(actor.BoundModel))
+            .Where(actor => actor?.BoundModel != null && actor.Visible && models.Contains(actor.BoundModel))
             .ToList();
     }
 
@@ -1032,6 +1053,241 @@ public partial class Battle : Node2D
         return BoardGeometry.GetSquadsWithinRadius(targetSquad, targetActors, all, GetActorsForSquad, radiusInches);
     }
 
+    internal bool IsSquadEmbarked(Squad? squad)
+    {
+        return squad?.TransportedBy != null;
+    }
+
+    internal bool IsTransportSquad(Squad? squad)
+    {
+        return squad?.SquadType?.Contains("Transport") == true;
+    }
+
+    internal bool SquadInFightRangeOfEnemy(Squad squad, int enemyTeamId)
+    {
+        var squadActors = GetActorsForSquad(squad);
+        if (squadActors.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var enemy in GetAliveSquadsForTeam(enemyTeamId))
+        {
+            var enemyActors = GetActorsForSquad(enemy);
+            if (enemyActors.Count == 0)
+            {
+                continue;
+            }
+
+            if (BoardGeometry.ClosestDistanceInches(squadActors, enemyActors) <= 1f)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsEmbarkEligiblePassenger(Squad? squad)
+    {
+        if (squad == null || squad.TransportedBy != null)
+        {
+            return false;
+        }
+
+        return squad.SquadType?.Contains("Infantry") == true || squad.SquadType?.Contains("Character") == true;
+    }
+
+    private void SetSquadActorsEmbarkedVisualState(Squad squad, bool embarked)
+    {
+        foreach (var actor in _teamAActors.Concat(_teamBActors).Where(a => a?.BoundModel != null && squad.Composition.Contains(a.BoundModel)))
+        {
+            actor.Visible = !embarked;
+            var clickArea = actor.GetNodeOrNull<Area2D>("ClickArea");
+            if (clickArea != null)
+            {
+                clickArea.InputPickable = !embarked;
+            }
+
+            var collision = actor.GetNodeOrNull<CollisionShape2D>("ClickArea/CollisionShape2D");
+            if (collision != null)
+            {
+                collision.Disabled = embarked;
+            }
+        }
+    }
+
+    private bool TryEmbarkSquad(Squad transport, Squad passenger)
+    {
+        if (!IsTransportSquad(transport) || transport.EmbarkedSquad != null || !IsEmbarkEligiblePassenger(passenger))
+        {
+            return false;
+        }
+
+        var transportTeamId = GetTeamIdForSquad(transport);
+        var enemyTeamId = transportTeamId == 1 ? 2 : 1;
+        if (SquadInFightRangeOfEnemy(transport, enemyTeamId) || SquadInFightRangeOfEnemy(passenger, enemyTeamId))
+        {
+            return false;
+        }
+
+        var transportActors = GetActorsForSquad(transport);
+        var passengerActors = GetActorsForSquad(passenger);
+        if (transportActors.Count == 0 || passengerActors.Count == 0)
+        {
+            return false;
+        }
+
+        if (BoardGeometry.ClosestDistanceInches(transportActors, passengerActors) > 3f)
+        {
+            return false;
+        }
+
+        transport.EmbarkedSquad = passenger;
+        passenger.TransportedBy = transport;
+        SetSquadActorsEmbarkedVisualState(passenger, true);
+        return true;
+    }
+
+    private bool TryDisembarkSquad(Squad transport, bool emergency)
+    {
+        var passenger = transport?.EmbarkedSquad;
+        if (transport == null || passenger == null)
+        {
+            return false;
+        }
+
+        var transportTeamId = GetTeamIdForSquad(transport);
+        var enemyTeamId = transportTeamId == 1 ? 2 : 1;
+        var transportActors = _teamAActors.Concat(_teamBActors)
+            .Where(actor => actor?.BoundModel != null && transport.Composition.Contains(actor.BoundModel))
+            .ToList();
+        var passengerActors = _teamAActors.Concat(_teamBActors)
+            .Where(actor => actor?.BoundModel != null && passenger.Composition.Contains(actor.BoundModel))
+            .ToList();
+        var enemyActors = GetAliveSquadsForTeam(enemyTeamId).SelectMany(GetActorsForSquad).ToList();
+
+        if (transportActors.Count == 0 || passengerActors.Count == 0)
+        {
+            return false;
+        }
+
+        SetSquadActorsEmbarkedVisualState(passenger, false);
+        var placed = BoardGeometry.PlacePassengerSquadAroundTransport(
+            transportActors,
+            passengerActors,
+            emergency ? 6f : 3f,
+            enemyActors,
+            avoidFightRange: true
+        );
+
+        if (!placed)
+        {
+            BoardGeometry.PlacePassengerSquadAroundTransport(
+                transportActors,
+                passengerActors,
+                emergency ? 6f : 3f,
+                enemyActors,
+                avoidFightRange: false
+            );
+        }
+
+        transport.EmbarkedSquad = null;
+        passenger.TransportedBy = null;
+
+        if (emergency)
+        {
+            passenger.ShellShock = true;
+            ApplyRout(passenger, runCleanup: false);
+        }
+
+        return true;
+    }
+
+    internal async Task HandleTransportEmbarkDisembarkStepAsync(int activeTeamId, bool activeTeamIsAI)
+    {
+        if (activeTeamIsAI)
+        {
+            return;
+        }
+
+        var enemyTeamId = activeTeamId == 1 ? 2 : 1;
+        var activeSquads = GetAliveSquadsForTeam(activeTeamId);
+        var transports = activeSquads.Where(IsTransportSquad).ToList();
+
+        foreach (var transport in transports)
+        {
+            if (transport.EmbarkedSquad == null)
+            {
+                continue;
+            }
+
+            var wantsDisembark = await _battleHud.ConfirmActionAsync($"{transport.Name}: Disembark {transport.EmbarkedSquad.Name}?");
+            if (!wantsDisembark)
+            {
+                continue;
+            }
+
+            if (!TryDisembarkSquad(transport, emergency: false))
+            {
+                _battleHud?.ShowToast($"{transport.Name}: could not disembark now.");
+            }
+        }
+
+        foreach (var transport in transports)
+        {
+            if (transport.EmbarkedSquad != null)
+            {
+                continue;
+            }
+
+            var candidates = activeSquads
+                .Where(s => !ReferenceEquals(s, transport) && IsEmbarkEligiblePassenger(s))
+                .Where(s => BoardGeometry.ClosestDistanceInches(GetActorsForSquad(transport), GetActorsForSquad(s)) <= 3f)
+                .ToList();
+
+            if (candidates.Count == 0)
+            {
+                continue;
+            }
+
+            var wantsEmbark = await _battleHud.ConfirmActionAsync($"{transport.Name}: Embark a nearby squad?");
+            if (!wantsEmbark)
+            {
+                continue;
+            }
+
+            if (SquadInFightRangeOfEnemy(transport, enemyTeamId))
+            {
+                _battleHud?.ShowToast($"{transport.Name} cannot embark while in fight range.");
+                continue;
+            }
+
+            var passenger = await PromptForSquadTargetAsync(
+                $"{transport.Name}: Click friendly squad to embark",
+                activeTeamId,
+                candidates
+            );
+            if (passenger == null)
+            {
+                continue;
+            }
+            if (SquadInFightRangeOfEnemy(passenger, enemyTeamId))
+            {
+                _battleHud?.ShowToast($"{passenger.Name} cannot embark while in fight range.");
+                continue;
+            }
+
+            if (!TryEmbarkSquad(transport, passenger))
+            {
+                _battleHud?.ShowToast($"{passenger.Name} could not embark {transport.Name}.");
+                continue;
+            }
+
+            _battleHud?.ShowToast($"{passenger.Name} embarked {transport.Name}.");
+        }
+    }
+
     private void OnNextPhasePressed()
     {
         _phaseAdvanceTcs?.TrySetResult(true);
@@ -1047,7 +1303,9 @@ public partial class Battle : Node2D
     internal List<Squad> GetAliveSquadsForTeam(int teamId)
     {
         var player = teamId == 1 ? _teamAPlayer : _teamBPlayer;
-        return player?.TheirSquads?.Where(s => s != null && s.Composition != null && s.Composition.Count > 0).ToList() ?? new List<Squad>();
+        return player?.TheirSquads?
+            .Where(s => s != null && s.Composition != null && s.Composition.Count > 0 && !IsSquadEmbarked(s))
+            .ToList() ?? new List<Squad>();
     }
 
     internal void SetActiveSquadForTeam(int teamId, Squad? squad)
@@ -1098,7 +1356,7 @@ public partial class Battle : Node2D
         }
     }
 
-    internal void ApplyRout(Squad squad)
+    internal void ApplyRout(Squad squad, bool runCleanup = true)
     {
         var actors = GetActorsForSquad(squad);
         var toRemove = actors
@@ -1114,7 +1372,10 @@ public partial class Battle : Node2D
             AudioManager.Instance?.Play("punch");
         }
 
-        PostDamageCleanupAndVictoryCheck();
+        if (runCleanup)
+        {
+            PostDamageCleanupAndVictoryCheck();
+        }
     }
 
     internal int GetTeamIdForSquad(Squad squad)
