@@ -3,7 +3,10 @@ To do list for mini fight free godot:
 * Stress Test everything.
 * Make sure that all the option dialogs are fully readable on mobile devices.
 * Test on multiple devices.
-* Fix teleport being limited by 12"
-* Stop squads from hitting themselves
+* Stop squads from hitting themselves sometimes.
 * Have Advance work properly.
 * Change die size and gif and presentation.
+* Have squads able to retreat.
+* Remove 40k terminology.
+* Translate into other languages.
+* Remove Bespoke functions.
