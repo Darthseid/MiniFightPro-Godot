@@ -2,14 +2,14 @@
 
 [ext_resource type="Texture2D" uid="uid://c1ix76rwymrvi" path="res://Assets/drawable/Minifightlogo2.png" id="1_8saeu"]
 [ext_resource type="Script" uid="uid://dqk6m7tewq0m7" path="res://GDScripts/Btn_Weapon.gd" id="2_ghw46"]
-[ext_resource type="Script" path="res://GDScripts/Btn_Rules.gd" id="3_df05h"]
+[ext_resource type="Script" uid="uid://t412mk7delcf" path="res://GDScripts/Btn_Rules.gd" id="3_df05h"]
 [ext_resource type="Script" uid="uid://dyj8d353ycrn7" path="res://GDScripts/Btn_Model.gd" id="4_b11t0"]
 [ext_resource type="Script" uid="uid://c2u6v01m240wv" path="res://GDScripts/Btn_Squad.gd" id="5_i5ak1"]
-[ext_resource type="Script" path="res://GDScripts/Btn_Player.gd" id="5_player"]
+[ext_resource type="Script" uid="uid://cjy6dug8hrogv" path="res://GDScripts/Btn_Player.gd" id="5_player"]
 [ext_resource type="Script" uid="uid://h2xxrd8n22wo" path="res://GDScripts/Btn_Start.gd" id="6_p4p8q"]
-[ext_resource type="AudioStream" uid="uid://brtl8cm0wf37o" path="res://Assets/raw/select.mp3" id="7_xim88"]
-[ext_resource type="Script" path="res://GDScripts/AudioOptionsPopup.gd" id="8_audioopts"]
-[ext_resource type="Script" path="res://GDScripts/Btn_Duel.gd" id="9_duel"]
+[ext_resource type="AudioStream" uid="uid://brtl8cm0wf37o" path="res://Assets/GameSounds/select.mp3" id="7_xim88"]
+[ext_resource type="Script" uid="uid://rk5y65hwidcc" path="res://GDScripts/AudioOptionsPopup.gd" id="8_audioopts"]
+[ext_resource type="Script" uid="uid://ckm13shckvbn4" path="res://GDScripts/Btn_Duel.gd" id="9_duel"]
 
 [node name="MainMenu" type="Control" unique_id=1717271632]
 layout_mode = 3
@@ -67,7 +67,7 @@ layout_mode = 2
 text = "Create Squad"
 script = ExtResource("5_i5ak1")
 
-[node name="BtnPlayer" type="Button" parent="ResponsiveLayout/VBoxContainer"]
+[node name="BtnPlayer" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=2065333039]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Create Player"
@@ -79,7 +79,7 @@ layout_mode = 2
 text = "Read Rules"
 script = ExtResource("3_df05h")
 
-[node name="BtnDuel" type="Button" parent="ResponsiveLayout/VBoxContainer"]
+[node name="BtnDuel" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=571886102]
 unique_name_in_owner = true
 layout_mode = 2
 text = "MathHammer Duel"
@@ -142,8 +142,7 @@ text = "100%"
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnWeapon" to="ResponsiveLayout/VBoxContainer/BtnWeapon" method="_on_pressed"]
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnModel" to="ResponsiveLayout/VBoxContainer/BtnModel" method="_on_pressed"]
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnSquad" to="ResponsiveLayout/VBoxContainer/BtnSquad" method="_on_pressed"]
+[connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnPlayer" to="ResponsiveLayout/VBoxContainer/BtnPlayer" method="_on_pressed"]
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnRules" to="ResponsiveLayout/VBoxContainer/BtnRules" method="_on_pressed"]
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnDuel" to="ResponsiveLayout/VBoxContainer/BtnDuel" method="_on_pressed"]
 [connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnOptions" to="ResponsiveLayout/VBoxContainer/OptionsPopup" method="OpenPopup"]
-
-[connection signal="pressed" from="ResponsiveLayout/VBoxContainer/BtnPlayer" to="ResponsiveLayout/VBoxContainer/BtnPlayer" method="_on_pressed"]

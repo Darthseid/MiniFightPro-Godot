@@ -2,53 +2,53 @@
 
 [ext_resource type="Script" uid="uid://btqqf7cqgnhfl" path="res://CSharpScripts/BattleField.cs" id="1_6m6d7"]
 [ext_resource type="Script" uid="uid://drsfnyord8sq4" path="res://CSharpScripts/AudioManager.cs" id="2_audio"]
-[ext_resource type="AudioStream" uid="uid://cqx7br5elqfik" path="res://Assets/raw/battle_cry.mp3" id="3_10"]
-[ext_resource type="AudioStream" uid="uid://cxnvmcgmb2jt5" path="res://Assets/raw/bugle.mp3" id="3_11"]
-[ext_resource type="AudioStream" uid="uid://uf1ekry1wepk" path="res://Assets/raw/cannon.mp3" id="3_12"]
-[ext_resource type="AudioStream" uid="uid://bdnwkeqmtxiuk" path="res://Assets/raw/charge.mp3" id="3_13"]
-[ext_resource type="AudioStream" uid="uid://cl4fjx2dlhlsl" path="res://Assets/raw/chomp.mp3" id="3_14"]
-[ext_resource type="AudioStream" uid="uid://c6poua1femivl" path="res://Assets/raw/critical.mp3" id="3_15"]
-[ext_resource type="AudioStream" uid="uid://b6vqcfop5paad" path="res://Assets/raw/defensepassed.mp3" id="3_16"]
-[ext_resource type="AudioStream" uid="uid://bg6g6cx1qyib2" path="res://Assets/raw/demonlaugh.mp3" id="3_17"]
-[ext_resource type="AudioStream" uid="uid://b444xvw532irb" path="res://Assets/raw/driving.mp3" id="3_18"]
-[ext_resource type="AudioStream" uid="uid://bn65m78j2c35m" path="res://Assets/raw/energy.mp3" id="3_19"]
-[ext_resource type="AudioStream" uid="uid://d23ocbsrhb0ex" path="res://Assets/raw/explodes.mp3" id="3_20"]
-[ext_resource type="AudioStream" uid="uid://u02eu62ia4r2" path="res://Assets/raw/failedbravery.mp3" id="3_21"]
-[ext_resource type="AudioStream" uid="uid://lfqobxnvkoum" path="res://Assets/raw/failedcharge.mp3" id="3_22"]
-[ext_resource type="AudioStream" uid="uid://c44xjvrd4wp2h" path="res://Assets/raw/goodcharge.mp3" id="3_23"]
-[ext_resource type="AudioStream" uid="uid://cg23t5qcmsgvi" path="res://Assets/raw/grenade.mp3" id="3_24"]
-[ext_resource type="AudioStream" uid="uid://c45btiy81by71" path="res://Assets/raw/helicopter.mp3" id="3_25"]
-[ext_resource type="AudioStream" uid="uid://dhf7i02qcw0rk" path="res://Assets/raw/jetfly.mp3" id="3_26"]
-[ext_resource type="AudioStream" uid="uid://bmxlcct13duqu" path="res://Assets/raw/meleehit.mp3" id="3_27"]
-[ext_resource type="AudioStream" uid="uid://dhpym6bvsnpff" path="res://Assets/raw/meleemiss.mp3" id="3_28"]
-[ext_resource type="AudioStream" uid="uid://ouygxbbflh0k" path="res://Assets/raw/minigun.mp3" id="3_29"]
-[ext_resource type="AudioStream" uid="uid://cxvlbghjv13kv" path="res://Assets/raw/mortar.mp3" id="3_30"]
-[ext_resource type="AudioStream" uid="uid://chfkbv2wi6obr" path="res://Assets/raw/motorcycle.mp3" id="3_31"]
-[ext_resource type="AudioStream" uid="uid://ci1fr33054fc5" path="res://Assets/raw/moved.mp3" id="3_32"]
-[ext_resource type="AudioStream" uid="uid://drn8nsvmcty7d" path="res://Assets/raw/perilous.mp3" id="3_33"]
-[ext_resource type="AudioStream" uid="uid://uqi6ov5llvpr" path="res://Assets/raw/plasmablade.mp3" id="3_34"]
-[ext_resource type="AudioStream" uid="uid://13phw6814h4l" path="res://Assets/raw/punch.mp3" id="3_35"]
-[ext_resource type="AudioStream" uid="uid://djtl1ub6bwfkt" path="res://Assets/raw/rangedmiss.mp3" id="3_36"]
-[ext_resource type="AudioStream" uid="uid://s5j81p3l8rby" path="res://Assets/raw/resurrection.mp3" id="3_37"]
-[ext_resource type="AudioStream" uid="uid://bjixvp5wrwtx1" path="res://Assets/raw/rifleshot.mp3" id="3_38"]
-[ext_resource type="AudioStream" uid="uid://dwr2mfgv4h47" path="res://Assets/raw/rocketlauncher.mp3" id="3_39"]
-[ext_resource type="AudioStream" uid="uid://du8nhbxtb0bvb" path="res://Assets/raw/roundbell.mp3" id="3_40"]
-[ext_resource type="AudioStream" uid="uid://cxp0wlyhe5fs2" path="res://Assets/raw/running.mp3" id="3_41"]
-[ext_resource type="AudioStream" uid="uid://dxlbudf53a062" path="res://Assets/raw/screech.mp3" id="3_42"]
-[ext_resource type="AudioStream" uid="uid://brtl8cm0wf37o" path="res://Assets/raw/select.mp3" id="3_43"]
-[ext_resource type="AudioStream" uid="uid://bskd707puomkq" path="res://Assets/raw/stance.mp3" id="3_44"]
-[ext_resource type="AudioStream" uid="uid://ceenuvucj7gkr" path="res://Assets/raw/startbattle.mp3" id="3_45"]
-[ext_resource type="AudioStream" uid="uid://bp1340dmb1puo" path="res://Assets/raw/startfight.mp3" id="3_46"]
-[ext_resource type="AudioStream" uid="uid://cwneyuf0ns8aw" path="res://Assets/raw/startmovement.mp3" id="3_47"]
-[ext_resource type="AudioStream" uid="uid://bvlcd4tmby4bm" path="res://Assets/raw/startpsychic.mp3" id="3_48"]
-[ext_resource type="AudioStream" uid="uid://ejd35x0eggfd" path="res://Assets/raw/startshooting.mp3" id="3_49"]
-[ext_resource type="AudioStream" uid="uid://bcaqfsqonnb13" path="res://Assets/raw/stratagem.mp3" id="3_50"]
-[ext_resource type="AudioStream" uid="uid://c8ar84a5glqvi" path="res://Assets/raw/subroutine.mp3" id="3_51"]
-[ext_resource type="AudioStream" uid="uid://i1dra1s31etc" path="res://Assets/raw/swordinjury.mp3" id="3_52"]
-[ext_resource type="AudioStream" uid="uid://cnlnuxyrg2hwy" path="res://Assets/raw/tankmovement.mp3" id="3_53"]
-[ext_resource type="AudioStream" uid="uid://cn3k42q71p5gf" path="res://Assets/raw/turnover.mp3" id="3_54"]
-[ext_resource type="AudioStream" uid="uid://dy887svgqxb60" path="res://Assets/raw/victory.mp3" id="3_55"]
-[ext_resource type="AudioStream" uid="uid://c4qs8m6hagw45" path="res://Assets/raw/wilhelm_scream.ogg" id="3_56"]
+[ext_resource type="AudioStream" uid="uid://cqx7br5elqfik" path="res://Assets/GameSounds/battle_cry.mp3" id="3_10"]
+[ext_resource type="AudioStream" uid="uid://cxnvmcgmb2jt5" path="res://Assets/GameSounds/bugle.mp3" id="3_11"]
+[ext_resource type="AudioStream" uid="uid://uf1ekry1wepk" path="res://Assets/WeaponSounds/cannon.mp3" id="3_12"]
+[ext_resource type="AudioStream" uid="uid://bdnwkeqmtxiuk" path="res://Assets/GameSounds/charge.mp3" id="3_13"]
+[ext_resource type="AudioStream" uid="uid://cl4fjx2dlhlsl" path="res://Assets/WeaponSounds/chomp.mp3" id="3_14"]
+[ext_resource type="AudioStream" uid="uid://c6poua1femivl" path="res://Assets/WeaponSounds/critical.mp3" id="3_15"]
+[ext_resource type="AudioStream" uid="uid://b6vqcfop5paad" path="res://Assets/GameSounds/defensepassed.mp3" id="3_16"]
+[ext_resource type="AudioStream" uid="uid://bg6g6cx1qyib2" path="res://Assets/GameSounds/demonlaugh.mp3" id="3_17"]
+[ext_resource type="AudioStream" uid="uid://b444xvw532irb" path="res://Assets/GameSounds/driving.mp3" id="3_18"]
+[ext_resource type="AudioStream" uid="uid://bn65m78j2c35m" path="res://Assets/WeaponSounds/energy.mp3" id="3_19"]
+[ext_resource type="AudioStream" uid="uid://d23ocbsrhb0ex" path="res://Assets/WeaponSounds/explodes.mp3" id="3_20"]
+[ext_resource type="AudioStream" uid="uid://u02eu62ia4r2" path="res://Assets/WeaponSounds/failedbravery.mp3" id="3_21"]
+[ext_resource type="AudioStream" uid="uid://lfqobxnvkoum" path="res://Assets/GameSounds/failedcharge.mp3" id="3_22"]
+[ext_resource type="AudioStream" uid="uid://c44xjvrd4wp2h" path="res://Assets/GameSounds/goodcharge.mp3" id="3_23"]
+[ext_resource type="AudioStream" uid="uid://cg23t5qcmsgvi" path="res://Assets/WeaponSounds/grenade.mp3" id="3_24"]
+[ext_resource type="AudioStream" uid="uid://c45btiy81by71" path="res://Assets/GameSounds/helicopter.mp3" id="3_25"]
+[ext_resource type="AudioStream" uid="uid://dhf7i02qcw0rk" path="res://Assets/GameSounds/jetfly.mp3" id="3_26"]
+[ext_resource type="AudioStream" uid="uid://bmxlcct13duqu" path="res://Assets/WeaponSounds/meleehit.mp3" id="3_27"]
+[ext_resource type="AudioStream" uid="uid://dhpym6bvsnpff" path="res://Assets/WeaponSounds/meleemiss.mp3" id="3_28"]
+[ext_resource type="AudioStream" uid="uid://ouygxbbflh0k" path="res://Assets/WeaponSounds/minigun.mp3" id="3_29"]
+[ext_resource type="AudioStream" uid="uid://cxvlbghjv13kv" path="res://Assets/WeaponSounds/mortar.mp3" id="3_30"]
+[ext_resource type="AudioStream" uid="uid://chfkbv2wi6obr" path="res://Assets/GameSounds/motorcycle.mp3" id="3_31"]
+[ext_resource type="AudioStream" uid="uid://ci1fr33054fc5" path="res://Assets/GameSounds/moved.mp3" id="3_32"]
+[ext_resource type="AudioStream" uid="uid://drn8nsvmcty7d" path="res://Assets/WeaponSounds/perilous.mp3" id="3_33"]
+[ext_resource type="AudioStream" uid="uid://uqi6ov5llvpr" path="res://Assets/WeaponSounds/plasmablade.mp3" id="3_34"]
+[ext_resource type="AudioStream" uid="uid://13phw6814h4l" path="res://Assets/WeaponSounds/punch.mp3" id="3_35"]
+[ext_resource type="AudioStream" uid="uid://djtl1ub6bwfkt" path="res://Assets/WeaponSounds/rangedmiss.mp3" id="3_36"]
+[ext_resource type="AudioStream" uid="uid://s5j81p3l8rby" path="res://Assets/WeaponSounds/resurrection.mp3" id="3_37"]
+[ext_resource type="AudioStream" uid="uid://bjixvp5wrwtx1" path="res://Assets/WeaponSounds/rifleshot.mp3" id="3_38"]
+[ext_resource type="AudioStream" uid="uid://dwr2mfgv4h47" path="res://Assets/WeaponSounds/rocketlauncher.mp3" id="3_39"]
+[ext_resource type="AudioStream" uid="uid://du8nhbxtb0bvb" path="res://Assets/GameSounds/roundbell.mp3" id="3_40"]
+[ext_resource type="AudioStream" uid="uid://cxp0wlyhe5fs2" path="res://Assets/GameSounds/running.mp3" id="3_41"]
+[ext_resource type="AudioStream" uid="uid://dxlbudf53a062" path="res://Assets/WeaponSounds/screech.mp3" id="3_42"]
+[ext_resource type="AudioStream" uid="uid://brtl8cm0wf37o" path="res://Assets/GameSounds/select.mp3" id="3_43"]
+[ext_resource type="AudioStream" uid="uid://bskd707puomkq" path="res://Assets/GameSounds/stance.mp3" id="3_44"]
+[ext_resource type="AudioStream" uid="uid://ceenuvucj7gkr" path="res://Assets/GameSounds/startbattle.mp3" id="3_45"]
+[ext_resource type="AudioStream" uid="uid://bp1340dmb1puo" path="res://Assets/GameSounds/startfight.mp3" id="3_46"]
+[ext_resource type="AudioStream" uid="uid://cwneyuf0ns8aw" path="res://Assets/GameSounds/startmovement.mp3" id="3_47"]
+[ext_resource type="AudioStream" uid="uid://bvlcd4tmby4bm" path="res://Assets/GameSounds/startpsychic.mp3" id="3_48"]
+[ext_resource type="AudioStream" uid="uid://ejd35x0eggfd" path="res://Assets/GameSounds/startshooting.mp3" id="3_49"]
+[ext_resource type="AudioStream" uid="uid://bcaqfsqonnb13" path="res://Assets/GameSounds/stratagem.mp3" id="3_50"]
+[ext_resource type="AudioStream" uid="uid://c8ar84a5glqvi" path="res://Assets/GameSounds/subroutine.mp3" id="3_51"]
+[ext_resource type="AudioStream" uid="uid://i1dra1s31etc" path="res://Assets/WeaponSounds/swordinjury.mp3" id="3_52"]
+[ext_resource type="AudioStream" uid="uid://cnlnuxyrg2hwy" path="res://Assets/GameSounds/tankmovement.mp3" id="3_53"]
+[ext_resource type="AudioStream" uid="uid://cn3k42q71p5gf" path="res://Assets/GameSounds/turnover.mp3" id="3_54"]
+[ext_resource type="AudioStream" uid="uid://dy887svgqxb60" path="res://Assets/GameSounds/victory.mp3" id="3_55"]
+[ext_resource type="AudioStream" uid="uid://c4qs8m6hagw45" path="res://Assets/GameSounds/wilhelm_scream.ogg" id="3_56"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wx2gs"]
 load_path = "res://.godot/imported/battlebackground.jpg-6866cf063b553bdf60aa92fea124be47.ctex"
@@ -67,33 +67,33 @@ texture = SubResource("CompressedTexture2D_wx2gs")
 
 [node name="MeasureLine" type="Line2D" parent="." unique_id=1407114456]
 visible = false
-z_as_relative = false
 z_index = 1000
+z_as_relative = false
 width = 4.0
 default_color = Color(1, 0.35, 0.1, 1)
 
 [node name="MeasureLabel" type="Label" parent="." unique_id=1407114457]
 visible = false
-z_as_relative = false
 z_index = 1001
+z_as_relative = false
 theme_override_font_sizes/font_size = 22
-horizontal_alignment = 1
 text = "0.0\""
+horizontal_alignment = 1
 
 [node name="MoveLine" type="Line2D" parent="." unique_id=1407114458]
 visible = false
-z_as_relative = false
 z_index = 1000
+z_as_relative = false
 width = 4.0
 default_color = Color(0.2, 1, 0.45, 1)
 
 [node name="MoveLabel" type="Label" parent="." unique_id=1407114459]
 visible = false
-z_as_relative = false
 z_index = 1001
+z_as_relative = false
 theme_override_font_sizes/font_size = 22
-horizontal_alignment = 1
 text = "0.0\""
+horizontal_alignment = 1
 
 [node name="AudioManager" type="Node" parent="." unique_id=1447000001]
 script = ExtResource("2_audio")
