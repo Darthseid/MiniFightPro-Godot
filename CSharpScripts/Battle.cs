@@ -51,7 +51,7 @@ public partial class Battle : Node2D
     private bool _awaitingEnemyTargetSelection;
     private int _enemyTargetTeamId = -1;
     private HashSet<Squad>? _enemyTargetAllowedSquads;
-    private readonly AudioStream _gameOverMusic = GD.Load<AudioStream>("res://Assets/raw/victory.mp3");
+    private readonly AudioStream _gameOverMusic = GD.Load<AudioStream>("res://Assets/GameSounds/victory.mp3");
     private CombatSequence _sequence;
     private bool _measureModeEnabled;
     private DicePresenter _dicePresenter;
@@ -238,26 +238,26 @@ public partial class Battle : Node2D
 
         if (isTeamA)
         {
-            texturePath = squadTypes.Contains("Aircraft") ? "res://Assets/drawable/combatjet.png"
-                : squadTypes.Contains("Titanic") ? "res://Assets/drawable/mecha.png"
-                : squadTypes.Contains("Fortification") || squadTypes.Contains("Building") ? "res://Assets/drawable/fort.png"
-                : squadTypes.Contains("Character") ? "res://Assets/drawable/vip.png"
-                : squadTypes.Contains("Mounted") ? "res://Assets/drawable/biker.png"
-                : squadTypes.Contains("Monster") ? "res://Assets/drawable/monsterbug.png"
-                : squadTypes.Contains("Vehicle") ? "res://Assets/drawable/tank.png"
-                : squadTypes.Contains("Infantry") ? "res://Assets/drawable/gunman.png"
-                : "res://Assets/drawable/red-square.png";
+            texturePath = squadTypes.Contains("Aircraft") ? "res://Assets/ModelIcons/combatjet.png"
+                : squadTypes.Contains("Titanic") ? "res://Assets/ModelIcons/mecha.png"
+                : squadTypes.Contains("Fortification") || squadTypes.Contains("Building") ? "res://Assets/ModelIcons/fort.png"
+                : squadTypes.Contains("Character") ? "res://Assets/ModelIcons/vip.png"
+                : squadTypes.Contains("Mounted") ? "res://Assets/ModelIcons/biker.png"
+                : squadTypes.Contains("Monster") ? "res://Assets/ModelIcons/monsterbug.png"
+                : squadTypes.Contains("Vehicle") ? "res://Assets/ModelIcons/tank.png"
+                : squadTypes.Contains("Infantry") ? "res://Assets/ModelIcons/gunman.png"
+                : "res://Assets/ModelIcons/red-square.png";
         }
         else
         {
-            texturePath = squadTypes.Contains("Aircraft") ? "res://Assets/drawable/helicopter.png"
-                : squadTypes.Contains("Fortification") || squadTypes.Contains("Building") ? "res://Assets/drawable/fort2.png"
-                : squadTypes.Contains("Character") ? "res://Assets/drawable/vip2.png"
-                : squadTypes.Contains("Mounted") ? "res://Assets/drawable/dinorider.png"
-                : squadTypes.Contains("Monster") ? "res://Assets/drawable/monsterspike.png"
-                : squadTypes.Contains("Vehicle") ? "res://Assets/drawable/tank2.png"
-                : squadTypes.Contains("Infantry") ? "res://Assets/drawable/gunman2.png"
-                : "res://Assets/drawable/red-circle.svg";
+            texturePath = squadTypes.Contains("Aircraft") ? "res://Assets/ModelIcons/helicopter.png"
+                : squadTypes.Contains("Fortification") || squadTypes.Contains("Building") ? "res://Assets/ModelIcons/fort2.png"
+                : squadTypes.Contains("Character") ? "res://Assets/ModelIcons/vip2.png"
+                : squadTypes.Contains("Mounted") ? "res://Assets/ModelIcons/dinorider.png"
+                : squadTypes.Contains("Monster") ? "res://Assets/ModelIcons/monsterspike.png"
+                : squadTypes.Contains("Vehicle") ? "res://Assets/ModelIcons/tank2.png"
+                : squadTypes.Contains("Infantry") ? "res://Assets/ModelIcons/gunman2.png"
+                : "res://Assets/ModelIcons/red-circle.svg";
         }
 
         return GD.Load<Texture2D>(texturePath);
