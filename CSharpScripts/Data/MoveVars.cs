@@ -3,13 +3,13 @@ using System;
 public class MoveVars
 {
     public bool Move;
-    public bool Advance;
+    public bool Rush;
     public bool Retreat;
 
-    public MoveVars(bool move, bool advance, bool retreat)
+    public MoveVars(bool move, bool rush, bool retreat)
     {
         Move = move;
-        Advance = advance;
+        Rush = rush;
         Retreat = retreat;
     }
 }

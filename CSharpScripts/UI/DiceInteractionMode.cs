@@ -1,6 +1,6 @@
 public enum DiceInteractionMode
 {
     None,
-    AwaitingPlayerAdvance,
+    AwaitingPlayerRush,
     AwaitingRerollSelection
 }

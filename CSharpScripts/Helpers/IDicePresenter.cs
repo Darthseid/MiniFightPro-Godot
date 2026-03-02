@@ -4,5 +4,5 @@ public interface IDicePresenter
 {
     int ActivePlayerTeamId { get; set; }
     Task PresentAsync(RollEvent rollEvent);
-    Task<bool> WaitForAdvanceAsync();
+    Task<bool> WaitForRushAsync();
 }

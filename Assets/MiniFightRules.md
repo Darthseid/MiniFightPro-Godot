@@ -52,7 +52,7 @@ At the beginning of the match, pre-game checks and decisions will be made. You c
 
 The Active Player is whomever turn it is. The Inactive Player is the other player.
 
-The Stages in Miniature Fight are Starting Stage, Move Stage, Shoot Stage, Charge Stage, Fight Stage, and End Stage.
+The Stages in Miniature Fight are Starting Stage, Move Stage, Shoot Stage, Engagement Stage, Melee Stage, and End Stage.
 
 ·       Starting Stage is when the beginning of turn/round checks are made. This is also when the Shellshock test is taken. If a Squad is missing over half of the minis it started with, or it is a single-model Squad that is missing over half of its health, it is considered Understrength. Understrength Squads take a Shellshock Test at the beginning of its Starting Stage. If the Shellshock Test fails, it is considered Shell-shocked. Shell-shocked Squads risk losing Minis whenever they Retreat.
 
@@ -64,7 +64,7 @@ o   During a Standard Move, a Squad moves equal to its **🏃** plus modifiers
 
 o   During a Rush, a Squad moves equal to its **🏃** and D6 inches plus modifiers. Squads in Fight Range cannot Rush. If a Squad rushes, they generally cannot charge or shoot.
 
-o   Squads that try to move while they’re in Fight Range (within 1 inch of an enemy Squad) are Falling Back. Squads that Fall Back normally cannot shoot or charge.
+o   Squads that try to move while they’re in Fight Range (within 1 inch of an enemy Squad) are Retreating. Squads that Retreat normally cannot shoot or charge.
 
 o   Aircraft have different rules for movement. They can move up to 100 inches in any direction, but they must move a minimum of 20 inches if able.
 
@@ -96,9 +96,9 @@ o   For each Serious Wound, the Squad suffers **🩸** **from the weapon.** **
 
 §  Low-health miniatures receive damage first before their undamaged allies in their Squad do.
 
-·       Charge Stage is when Squads within 12” of each other can charge into Fight Range (1”). A Charge Test is equal to 2D6 + Modifiers. If it is passed, the charging Squad is moved next to the target Squad and fights first.
+·       Engagement Stage is when Squads within 12” of each other can charge into Fight Range (1”). A Charge Test is equal to 2D6 + Modifiers. If it is passed, the charging Squad is moved next to the target Squad and fights first.
 
-·       Fight Stage only occurs if both Squads are within Fight Range of each other. If so, Fight Order is determined as follows:
+·       Melee Stage only occurs if both Squads are within Fight Range of each other. If so, Melee Order is determined as follows:
 
 ### Initiative Order
 
@@ -113,7 +113,7 @@ o   For each Serious Wound, the Squad suffers **🩸** **from the weapon.** **
 
 o   The player who fights first uses all their melee weapons on their opponent. If their opponent survives, they then use all their melee weapons on the player who fought first.
 
-o   The Hit Sequence, Injury Sequence, Defense Sequence, and Damage Sequence used during the Fight Stage are identical to the one used for the Shoot Stage, but different modifiers can be in play.
+o   The Hit Sequence, Injury Sequence, Defense Sequence, and Damage Sequence used during the Melee Stage are identical to the one used for the Shoot Stage, but different modifiers can be in play.
 
 o   If a model has multiple melee weapons, it uses them all.
 
@@ -136,11 +136,11 @@ The current list is as follows:
 * **Close to Shoot:** Enemy Squads further than 12 inches away from this Squad cannot shoot at it.
 * **Demonic Grief:** This Squad has a +1 modifier to the Shellshock Test. Whenever this Squad passes a Shellshock Test, Reanimate is triggered. Enemy Squads have a -1 Modifier to the Shellshock Test. Whenever an enemy Squad becomes Shellshocked, they suffer D3 Pure Damage.
 * **Fight After Melee Death:** When a model in this Squad dies, it can still fight an enemy Squad that it is within Fight Range of this turn.
-* **Fight Stances:** This Squad can choose different Fighting Stances at the beginning of the Fight Stage. You can choose to give all melee weapons this stage Bonus Hits, all melee weapons Hard Hits, or to have a -1 to Hit Modifier applied for attacks against this Squad. The effect resets when the Fight Stage ends.
-* **First Strike:** This Squad generally fights first in a Fight Stage.
+* **Fight Stances:** This Squad can choose different Melee Stances at the beginning of the Melee Stage. You can choose to give all melee weapons this stage Bonus Hits, all melee weapons Hard Hits, or to have a -1 to Hit Modifier applied for attacks against this Squad. The effect resets when the Melee Stage ends.
+* **First Strike:** This Squad generally fights first in a Melee Stage.
 * **Flying:** This Squad is considered a flying Squad for rules purposes.
 * **Grim:** Enemy Squads within 12” of this Squad have a -1 modifier in the Shellshock Test. After Round 2, this Squad has a +1 Penetrating Modifier when shooting at Shellshocked enemies. Shellshocked enemies have a -1 Hit Modifier towards shooting this Squad.
-* **Guaranteed Rush:** This Squad always advances 6 inches when advancing.
+* **Guaranteed Rush:** This Squad always rushs 6 inches when advancing.
 * **Hive Mind:** This Squad has a D6 Modifier for Shellshock Tests.
 * **Minus Hit:** causes all attacks against this Squad to have a -1 to Hit Modifier.
 * **Minus Hit Melee:** causes all ranged attacks against this Squad to have a -1 to Hit Modifier.

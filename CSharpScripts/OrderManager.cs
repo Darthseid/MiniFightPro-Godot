@@ -80,7 +80,7 @@ public sealed class OrderManager
     public void CloseWindow(OrderWindowType windowType)
     {
         _openWindows.Remove(windowType);
-        if (windowType == OrderWindowType.OpponentChargePhaseStart)
+        if (windowType == OrderWindowType.OpponentEngagementPhaseStart)
         {
             _overwatchArmedSquad[1] = null;
             _overwatchArmedSquad[2] = null;
@@ -127,13 +127,13 @@ public sealed class OrderManager
             return false;
         }
 
-        if (order.WindowType == OrderWindowType.ChargePhase && _battle.ActiveTeamId != playerId)
+        if (order.WindowType == OrderWindowType.EngagementPhase && _battle.ActiveTeamId != playerId)
         {
             reason = "Only active player can use this now.";
             return false;
         }
 
-        if (order.WindowType == OrderWindowType.OpponentChargePhaseStart && _battle.ActiveTeamId == playerId)
+        if (order.WindowType == OrderWindowType.OpponentEngagementPhaseStart && _battle.ActiveTeamId == playerId)
         {
             reason = "Only defending player can use this now.";
             return false;
@@ -277,7 +277,7 @@ public sealed class OrderManager
         SetOrderPoints(playerId, Math.Max(0, GetOrderPoints(playerId) - order.OrderCost));
         _usedOrderThisPhase[playerId] = true;
         _usedOrdersThisTurn[playerId].Add(order.OrderId);
-        AudioManager.Instance?.Play("stratagem");
+        AudioManager.Instance?.Play("order_ping");
         _battle.Hud?.ShowToast($"{_battle.GetSquadName(playerId)} used {order.OrderName}.");
         RefreshHud();
         return true;
@@ -479,7 +479,7 @@ public sealed class OrderManager
 
         if (_usedCommandRerollThisPhase[playerId])
         {
-            reason = "Command Reroll already used this phase.";
+            reason = "Order Reroll already used this phase.";
             return false;
         }
 
@@ -525,7 +525,7 @@ public sealed class OrderManager
 
         SetOrderPoints(playerId, Math.Max(0, GetOrderPoints(playerId) - 1));
         _usedCommandRerollThisPhase[playerId] = true;
-        _battle.Hud?.ShowToast("Command Reroll used.");
+        _battle.Hud?.ShowToast("Order Reroll used.");
         RefreshHud();
         reason = string.Empty;
         return true;
