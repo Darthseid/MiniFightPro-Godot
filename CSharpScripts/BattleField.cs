@@ -5,6 +5,7 @@ using System.Linq;
 
 public partial class BattleField : Node2D
 {
+    private const float FriendlyMinSeparationInches = 1f / 5f;
     [Export] public PackedScene ModelActorScene = GD.Load<PackedScene>("res://Scenes/BattleModelActor.tscn");
 
     public event Action? DragUpdated;
@@ -841,6 +842,7 @@ public partial class BattleField : Node2D
         var inv2 = GetViewport().GetCanvasTransform().AffineInverse();
         var canvasRect = inv2 * viewportRect;
         var enemyList = (enemies ?? Array.Empty<BattleModelActor>()).Where(IsActorUsable).ToList();
+        var proposedSet = proposedPositions.Keys.ToHashSet();
 
         foreach (var pair in proposedPositions)
         {
@@ -878,7 +880,41 @@ public partial class BattleField : Node2D
                     return false;
                 }
             }
+
+            var sameTeamActors = (actor.TeamId == 1 ? _teamAActors : _teamBActors)
+                .Where(IsActorUsable)
+                .Where(friendly => !ReferenceEquals(friendly, actor) && !proposedSet.Contains(friendly));
+
+            var minFriendlyEdgeDistancePx = FriendlyMinSeparationInches * GameGlobals.Instance.FakeInchPx;
+            foreach (var friendly in sameTeamActors)
+            {
+                var centerDistance = newPos.DistanceTo(friendly.GlobalPosition);
+                var edgeDistance = centerDistance - ((actor.BaseSizePx + friendly.BaseSizePx) * 0.25f);
+                if (edgeDistance < minFriendlyEdgeDistancePx)
+                {
+                    return false;
+                }
+            }
         }
+
+        var proposedArray = proposedPositions.ToArray();
+        var minFriendlyDistancePx = FriendlyMinSeparationInches * GameGlobals.Instance.FakeInchPx;
+        for (var i = 0; i < proposedArray.Length; i++)
+        {
+            for (var j = i + 1; j < proposedArray.Length; j++)
+            {
+                var first = proposedArray[i];
+                var second = proposedArray[j];
+
+                var centerDistance = first.Value.DistanceTo(second.Value);
+                var edgeDistance = centerDistance - ((first.Key.BaseSizePx + second.Key.BaseSizePx) * 0.25f);
+                if (edgeDistance < minFriendlyDistancePx)
+                {
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 

@@ -88,7 +88,7 @@ text = "Armor Penetration"
 unique_name_in_owner = true
 layout_mode = 2
 min_value = -9.0
-max_value = 9.0
+max_value = 0.0
 
 [node name="HSeparator" type="HSeparator" parent="ScrollContainer/MainContainer/StatGrid" unique_id=780849042]
 layout_mode = 2
