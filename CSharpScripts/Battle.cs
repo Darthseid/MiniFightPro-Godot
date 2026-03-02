@@ -62,6 +62,10 @@ public partial class Battle : Node2D
 
     public override void _Ready()
     {
+        CombatRolls.DamageResistanceModifierProvider = GetDamageResistanceAuraModifier;
+        StepChecks.FriendlyAuraSquadProvider = GetFriendlyAuraSquads;
+        StepChecks.EnemyAuraSquadProvider = GetEnemyAuraSquads;
+        StepChecks.AuraRangeCheckProvider = AreSquadsWithinDistance;
         _rng.Randomize();
         EnsureNodes();
 
@@ -70,6 +74,31 @@ public partial class Battle : Node2D
             _ = InitializeBattleAsync();
         }
     }
+
+
+    public override void _ExitTree()
+    {
+        if (ReferenceEquals(CombatRolls.DamageResistanceModifierProvider, GetDamageResistanceAuraModifier))
+        {
+            CombatRolls.DamageResistanceModifierProvider = null;
+        }
+
+        if (ReferenceEquals(StepChecks.FriendlyAuraSquadProvider, GetFriendlyAuraSquads))
+        {
+            StepChecks.FriendlyAuraSquadProvider = null;
+        }
+
+        if (ReferenceEquals(StepChecks.EnemyAuraSquadProvider, GetEnemyAuraSquads))
+        {
+            StepChecks.EnemyAuraSquadProvider = null;
+        }
+
+        if (ReferenceEquals(StepChecks.AuraRangeCheckProvider, AreSquadsWithinDistance))
+        {
+            StepChecks.AuraRangeCheckProvider = null;
+        }
+    }
+
     public void SetupSquads(Squad unitOne, Squad unitTwo)
     {
         _pendingUnitOne = unitOne;
@@ -216,6 +245,7 @@ public partial class Battle : Node2D
             actor.Selected += HandleActorSelected;
         }
 
+        LogFreeHealthcareAuraDebugMatrix();
 
         AudioManager.Instance?.Play("startbattle");
 
@@ -1457,6 +1487,57 @@ public partial class Battle : Node2D
         }
 
         return false;
+    }
+
+    private IEnumerable<Squad> GetFriendlyAuraSquads(Squad targetSquad)
+    {
+        return GetAliveSquadsForTeam(GetTeamIdForSquad(targetSquad));
+    }
+
+    private IEnumerable<Squad> GetEnemyAuraSquads(Squad targetSquad)
+    {
+        var teamId = GetTeamIdForSquad(targetSquad);
+        return GetAliveSquadsForTeam(teamId == 1 ? 2 : 1);
+    }
+
+    private int GetDamageResistanceAuraModifier(Squad targetSquad)
+    {
+        if (targetSquad == null)
+        {
+            return 0;
+        }
+
+        var hasAura = CombatHelpers.HasFriendlyAura(
+            targetSquad,
+            GetFriendlyAuraSquads(targetSquad),
+            SquadAbilities.FreeHealthcare.Innate,
+            6f,
+            AreSquadsWithinDistance,
+            includeSelf: true);
+
+        return hasAura ? -1 : 0;
+    }
+
+    private void LogFreeHealthcareAuraDebugMatrix()
+    {
+        var allSquads = GetAliveSquadsForTeam(1).Concat(GetAliveSquadsForTeam(2)).ToList();
+        var auraSources = allSquads
+            .Where(squad => squad.SquadAbilities.Any(ability => ability.Innate == "FHC"))
+            .ToList();
+
+        if (auraSources.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var target in allSquads)
+        {
+            var effectiveResist = CombatRolls.ResolveEffectiveDamageResistance(target);
+            var sourceCount = auraSources
+                .Count(source => GetTeamIdForSquad(source) == GetTeamIdForSquad(target)
+                                 && AreSquadsWithinDistance(source, target, 6f));
+            GD.Print($"[FHC Debug] target={target.Name}, team={GetTeamIdForSquad(target)}, in-range friendly sources={sourceCount}, modifier={(sourceCount > 0 ? -1 : 0)}, effective DR={effectiveResist}");
+        }
     }
 
     internal bool AreSquadsWithinDistance(Squad first, Squad second, float distanceInches)
