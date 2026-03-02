@@ -1241,9 +1241,7 @@ public partial class Battle : Node2D
             _battleField,
             PostDamageCleanupAndVictoryCheck,
             HandleExplosionProcess,
-            selectedWeaponFingerprint,
-            false,
-            hasLineOfSight
+            selectedWeaponFingerprint
         );
     }
 

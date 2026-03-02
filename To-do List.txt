@@ -4,12 +4,9 @@ To do list for mini fight free godot:
 * Make sure that all the option dialogs are fully readable on mobile devices.
 * Test on multiple devices.
 * Stop squads from hitting themselves sometimes.
-* Have Advance work properly.
 * Change die size and gif and presentation.
-* Have squads able to retreat.
 * Remove 40k terminology.
 * Translate into other languages.
 * Remove Bespoke functions.
-* Have PureDamage carry over to other models in the unit.
 * Apply oneShot, perilous, Benefit of Cover, Ignores Cover, and pure damage changes to MiniFightFree.
 * Fix Mists of Deimos.
