@@ -1481,6 +1481,20 @@ public partial class Battle : Node2D
         var enemyActors = GetAliveSquadsForTeam(enemyTeamId).SelectMany(GetActorsForSquad).ToList();
         SetActiveSquadForTeam(teamId, squad);
         SetSquadStrategicReserveVisual(squad, false);
+
+        var squadActors = GetActorsForSquad(squad);
+        if (squadActors.Count > 0)
+        {
+            var viewportCenter = _battleField.ToGlobal(_battleField.GetViewportRect().Size * 0.5f);
+            var spacing = Mathf.Max(24f, GameGlobals.Instance?.FakeInchPx ?? 24f);
+            for (int i = 0; i < squadActors.Count; i++)
+            {
+                var offset = new Vector2((i % 5 - 2) * spacing, (i / 5) * spacing * 0.8f);
+                squadActors[i].GlobalPosition = viewportCenter + offset;
+                squadActors[i].Visible = true;
+            }
+        }
+
         var moved = await MovingStuff(99f, true, 0f, false, false, false, $"{squad.Name}: place strategic reserve squad", false);
         var placedActors = GetActorsForSquad(squad);
         var closestEnemyDistanceInches = BoardGeometry.ClosestDistanceInches(placedActors, enemyActors);

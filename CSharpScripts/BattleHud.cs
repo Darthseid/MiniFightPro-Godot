@@ -16,6 +16,8 @@ public partial class BattleHud : Control
     private Button? _measureButton;
     private Label? _player1OrdersPoints;
     private Label? _player2OrdersPoints;
+    private Label? _player1OrdersHeader;
+    private Label? _player2OrdersHeader;
     private VBoxContainer? _player1OrdersList;
     private VBoxContainer? _player2OrdersList;
 
@@ -34,6 +36,8 @@ public partial class BattleHud : Control
         _gameOverLabel = GetNodeOrNull<Label>("%GameOverLabel");
         _player1OrdersPoints = GetNodeOrNull<Label>("%Player1OrderPoints");
         _player2OrdersPoints = GetNodeOrNull<Label>("%Player2OrderPoints");
+        _player1OrdersHeader = GetNodeOrNull<Label>("%Player1OrdersHeader");
+        _player2OrdersHeader = GetNodeOrNull<Label>("%Player2OrdersHeader");
         _player1OrdersList = GetNodeOrNull<VBoxContainer>("%Player1OrdersList");
         _player2OrdersList = GetNodeOrNull<VBoxContainer>("%Player2OrdersList");
 
@@ -97,9 +101,19 @@ public partial class BattleHud : Control
             _player1OrdersPoints.Text = $"Order Points: {player1.OrderPoints}";
         }
 
+        if (_player1OrdersHeader != null)
+        {
+            _player1OrdersHeader.Text = $"{player1.PlayerName} Orders";
+        }
+
         if (_player2OrdersPoints != null)
         {
             _player2OrdersPoints.Text = $"Order Points: {player2.OrderPoints}";
+        }
+
+        if (_player2OrdersHeader != null)
+        {
+            _player2OrdersHeader.Text = $"{player2.PlayerName} Orders";
         }
 
         RenderOrderButtons(_player1OrdersList, player1, 1, manager, onOrderPressed);
