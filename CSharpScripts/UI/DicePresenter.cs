@@ -10,17 +10,20 @@ public partial class DicePresenter : Node, IDicePresenter
     private DiceOverlay _overlay;
     private TaskCompletionSource<bool>? _advanceTcs;
     private RollEvent? _currentRoll;
-    private OrderManager? _orderManager;
     private bool _rerollUsedThisRoll;
 
     public DiceInteractionMode InteractionMode { get; private set; } = DiceInteractionMode.None;
     public int ActivePlayerTeamId { get; set; } = 1;
     public int CurrentRollOwnerTeamId => _currentRoll?.OwnerTeamId ?? -1;
 
-    public override void _Ready()
+    private Battle? GetBattle()
     {
-        var battle = GetParentOrNull<Battle>();
-        _orderManager = battle?.OrderManager;
+        return GetParentOrNull<Battle>();
+    }
+
+    private OrderManager? GetOrderManager()
+    {
+        return GetBattle()?.OrderManager;
     }
 
     public async Task PresentAsync(RollEvent rollEvent)
@@ -77,14 +80,15 @@ public partial class DicePresenter : Node, IDicePresenter
 
     private void OnCommandRerollPressed()
     {
-        if (_currentRoll == null || _orderManager == null)
+        var orderManager = GetOrderManager();
+        if (_currentRoll == null || orderManager == null)
         {
             return;
         }
 
-        if (!_orderManager.CanUseCommandReroll(ActivePlayerTeamId, _currentRoll, out var reason))
+        if (!orderManager.CanUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, out var reason))
         {
-            GetParentOrNull<Battle>()?.Hud?.ShowToast(reason);
+            GetBattle()?.Hud?.ShowToast(reason);
             return;
         }
 
@@ -95,14 +99,15 @@ public partial class DicePresenter : Node, IDicePresenter
 
     private void OnDieClicked(int index)
     {
-        if (_currentRoll == null || _orderManager == null || InteractionMode != DiceInteractionMode.AwaitingRerollSelection)
+        var orderManager = GetOrderManager();
+        if (_currentRoll == null || orderManager == null || InteractionMode != DiceInteractionMode.AwaitingRerollSelection)
         {
             return;
         }
 
-        if (!_orderManager.TryUseCommandReroll(ActivePlayerTeamId, _currentRoll, index, out var reason))
+        if (!orderManager.TryUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, index, out var reason))
         {
-            GetParentOrNull<Battle>()?.Hud?.ShowToast(reason);
+            GetBattle()?.Hud?.ShowToast(reason);
             return;
         }
 
@@ -117,9 +122,10 @@ public partial class DicePresenter : Node, IDicePresenter
     private void UpdateButtons()
     {
         var canReroll = false;
-        if (_currentRoll != null && _orderManager != null && !_rerollUsedThisRoll)
+        var orderManager = GetOrderManager();
+        if (_currentRoll != null && orderManager != null && !_rerollUsedThisRoll)
         {
-            canReroll = _orderManager.CanUseCommandReroll(ActivePlayerTeamId, _currentRoll, out _);
+            canReroll = orderManager.CanUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, out _);
         }
 
         _overlay.SetButtonsState(

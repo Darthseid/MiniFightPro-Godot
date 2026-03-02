@@ -428,6 +428,7 @@ public partial class Battle : Node2D
     internal async Task EnterPhaseWithCadenceAsync(BattlePhase phase, string? overrideToast = null)
     {
         EnterPhase(phase, announce: false);
+        _orderManager?.OnPhaseStarted();
         var toast = overrideToast ?? $"{phase.ToString().ToUpper()} PHASE";
         _battleHud?.ShowToast(toast, 2f);
         await DelaySecondsAsync(2f);

@@ -5,5 +5,6 @@ public sealed record RollContext(
     string DefenderName = null,
     string WeaponName = null,
     string WeaponFingerprint = null,
-    bool OnlySixesHit = false
+    bool OnlySixesHit = false,
+    int OwnerTeamId = 0
 );

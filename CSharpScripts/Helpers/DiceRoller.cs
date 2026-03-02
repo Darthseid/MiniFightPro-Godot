@@ -60,7 +60,7 @@ public static class DiceRoller
             sides,
             results,
             rerolledFlags,
-            _presenter.ActivePlayerTeamId,
+            ctx.OwnerTeamId > 0 ? ctx.OwnerTeamId : _presenter.ActivePlayerTeamId,
             ctx.Phase,
             ctx.Label,
             ctx.AttackerName,

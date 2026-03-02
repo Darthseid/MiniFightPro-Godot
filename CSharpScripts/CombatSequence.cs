@@ -329,7 +329,7 @@ public sealed class CombatSequence
 
         var heroicEnemy = _battle.GetAliveSquadsForTeam(activeTeamId)
             .FirstOrDefault(enemy => _battle.GetAliveSquadsForTeam(inactiveTeamId)
-                .Any(friend => _battle.IsSquadInFightRange(friend, activeTeamId)));
+                .Any(friend => _battle.AreSquadsWithinDistance(friend, enemy, 1f)));
         _battle.OrderManager?.ConfigureHeroicInterventionEnemy(inactiveTeamId, heroicEnemy);
         if (!_battle.IsTeamAI(inactiveTeamId) && heroicEnemy != null)
         {

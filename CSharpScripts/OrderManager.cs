@@ -65,6 +65,12 @@ public sealed class OrderManager
         _usedCommandRerollThisPhase[2] = false;
     }
 
+    public void OnPhaseStarted()
+    {
+        _usedCommandRerollThisPhase[1] = false;
+        _usedCommandRerollThisPhase[2] = false;
+    }
+
     public void OpenWindow(OrderWindowType windowType, int activeTeamId)
     {
         _openWindows.Add(windowType);
