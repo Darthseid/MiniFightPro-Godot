@@ -540,7 +540,7 @@ public partial class Battle : Node2D
 
     internal bool SquadHasFirstStrike(Squad squad)
     {
-        return squad?.SquadAbilities?.Any(ability => ability?.Innate == SquadAbilities.FirstStrike.Innate) == true;
+        return squad?.SquadAbilities?.Any(ability => ability?.Innate == SquadAbilities.FirstStrike.Innate || ability?.Innate == SquadAbilities.TempFirstStrike.Innate) == true;
     }
 
     internal void GrantTemporaryFirstStrike(Squad squad)
@@ -1407,11 +1407,111 @@ public partial class Battle : Node2D
         _phaseAdvanceTcs = null;
     }
 
+
+    internal bool IsSquadInFightRange(Squad squad, int enemyTeamId)
+    {
+        if (squad == null)
+        {
+            return false;
+        }
+
+        var squadActors = GetActorsForSquad(squad);
+        if (squadActors.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var enemy in GetAliveSquadsForTeam(enemyTeamId))
+        {
+            var enemyActors = GetActorsForSquad(enemy);
+            if (enemyActors.Count == 0)
+            {
+                continue;
+            }
+
+            if (BoardGeometry.ClosestDistanceInches(squadActors, enemyActors) <= 1f)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    internal bool AreSquadsWithinDistance(Squad first, Squad second, float distanceInches)
+    {
+        if (first == null || second == null)
+        {
+            return false;
+        }
+
+        var a = GetActorsForSquad(first);
+        var b = GetActorsForSquad(second);
+        if (a.Count == 0 || b.Count == 0)
+        {
+            return false;
+        }
+
+        return BoardGeometry.ClosestDistanceInches(a, b) <= distanceInches;
+    }
+
+    internal bool TryMoveSquadIntoEngagement(Squad mover, Squad target)
+    {
+        var moverActors = GetActorsForSquad(mover);
+        var targetActors = GetActorsForSquad(target);
+        if (moverActors.Count == 0 || targetActors.Count == 0)
+        {
+            return false;
+        }
+
+        return BoardGeometry.TryMoveIntoEngagement(moverActors, targetActors, _battleField).GetAwaiter().GetResult();
+    }
+
+    internal void SetSquadStrategicReserveVisual(Squad squad, bool inReserve)
+    {
+        foreach (var actor in GetActorsForSquad(squad))
+        {
+            actor.Visible = !inReserve;
+        }
+    }
+
+    internal async Task<bool> RedeployStrategicReserveSquadAsync(int teamId, Squad squad)
+    {
+        var enemyTeamId = teamId == 1 ? 2 : 1;
+        var enemyActors = GetAliveSquadsForTeam(enemyTeamId).SelectMany(GetActorsForSquad).ToList();
+        SetActiveSquadForTeam(teamId, squad);
+        SetSquadStrategicReserveVisual(squad, false);
+
+        var squadActors = GetActorsForSquad(squad);
+        if (squadActors.Count > 0)
+        {
+            var viewportCenter = _battleField.ToGlobal(_battleField.GetViewportRect().Size * 0.5f);
+            var spacing = Mathf.Max(24f, GameGlobals.Instance?.FakeInchPx ?? 24f);
+            for (int i = 0; i < squadActors.Count; i++)
+            {
+                var offset = new Vector2((i % 5 - 2) * spacing, (i / 5) * spacing * 0.8f);
+                squadActors[i].GlobalPosition = viewportCenter + offset;
+                squadActors[i].Visible = true;
+            }
+        }
+
+        var moved = await MovingStuff(99f, true, 0f, false, false, false, $"{squad.Name}: place strategic reserve squad", false);
+        var placedActors = GetActorsForSquad(squad);
+        var closestEnemyDistanceInches = BoardGeometry.ClosestDistanceInches(placedActors, enemyActors);
+        if (enemyActors.Count > 0 && closestEnemyDistanceInches <= 9f)
+        {
+            Hud?.ShowToast("Reserve redeploy must end more than 9\" away from enemies.");
+            SetSquadStrategicReserveVisual(squad, true);
+            return false;
+        }
+
+        return true;
+    }
     internal List<Squad> GetAliveSquadsForTeam(int teamId)
     {
         var player = teamId == 1 ? _teamAPlayer : _teamBPlayer;
         return player?.TheirSquads?
-            .Where(s => s != null && s.Composition != null && s.Composition.Count > 0 && !IsSquadEmbarked(s))
+            .Where(s => s != null && s.Composition != null && s.Composition.Count > 0 && !IsSquadEmbarked(s) && !s.IsInStrategicReserve)
             .ToList() ?? new List<Squad>();
     }
 
