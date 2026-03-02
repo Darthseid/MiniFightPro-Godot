@@ -36,7 +36,7 @@ public class Squad
     public Squad TransportedBy;
     public bool IsInStrategicReserve;
     public bool CannotChargeThisTurn;
-    public bool AdvancedThisTurn;
+    public bool RushedThisTurn;
     public bool RetreatedThisTurn;
 	
 	public Squad() { }
@@ -72,7 +72,7 @@ public class Squad
         TransportedBy = null;
         IsInStrategicReserve = false;
         CannotChargeThisTurn = false;
-        AdvancedThisTurn = false;
+        RushedThisTurn = false;
         RetreatedThisTurn = false;
     }
 
@@ -121,7 +121,7 @@ public class Squad
 
         copy.IsInStrategicReserve = IsInStrategicReserve;
         copy.CannotChargeThisTurn = CannotChargeThisTurn;
-        copy.AdvancedThisTurn = AdvancedThisTurn;
+        copy.RushedThisTurn = RushedThisTurn;
         copy.RetreatedThisTurn = RetreatedThisTurn;
 
         return copy;
@@ -191,8 +191,8 @@ public static class SquadAbilities
     public static readonly SquadAbility ReanimatorTemp = new SquadAbility("Zombie", "Temp Reanimator", 0, true);
     public static readonly SquadAbility AdvBoost1 = new SquadAbility("+Rush", "+1 Rush Boost", 1, false);
     public static readonly SquadAbility AdvBoost1Temp = new SquadAbility("+Rush", "Temp Rush Boost 1", 0, true);
-    public static readonly SquadAbility AdvBoost6 = new SquadAbility("Super Advance", "Turbo Rush", 6, false);
-    public static readonly SquadAbility AdvBoost6Temp = new SquadAbility("Super Advance", "Turbo Rush", 6, true);
+    public static readonly SquadAbility AdvBoost6 = new SquadAbility("Super Rush", "Turbo Rush", 6, false);
+    public static readonly SquadAbility AdvBoost6Temp = new SquadAbility("Super Rush", "Turbo Rush", 6, true);
     public static readonly SquadAbility Stampede = new SquadAbility("Crush", "Stampede", 0, false);
     public static readonly SquadAbility StampedeTemp = new SquadAbility("Crush", "Stampede", 0, true);
     public static readonly SquadAbility PlusOneToCharge = new SquadAbility("+Charge", "+1 Charge Bonus", 1, false);

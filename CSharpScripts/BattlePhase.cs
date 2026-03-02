@@ -3,11 +3,11 @@ public enum BattlePhase
     TerrainSetup,
     SquadDeployment,
     NormalPlay,
-    Command,
+    Starting,
     Movement,
     Shooting,
-    Charge,
-    Fight,
+    Engagement,
+    Melee,
     EndTurn,
     BattleOver
 }

@@ -31,10 +31,10 @@ public sealed class CombatSequence
     private async Task RunTurnAsync()
     {
         await _battle.DelaySecondsAsync(1f);
-        await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Command);
+        await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Starting);
 
         var activeTeamIsAI = _battle.IsTeamAI(_battle.ActiveTeamId);
-        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Command, activeTeamIsAI);
+        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Starting, activeTeamIsAI);
         var activePlayer = _battle.ActiveTeamId == 1 ? _battle.TeamAPlayer : _battle.TeamBPlayer;
         var inactivePlayer = _battle.ActiveTeamId == 1 ? _battle.TeamBPlayer : _battle.TeamAPlayer;
 
@@ -69,7 +69,7 @@ public sealed class CombatSequence
 
         _battle.OrderManager?.RefreshHud();
         _battle.Hud?.ShowToast($"Phase start: use Orders, then press ➡️ to continue {phase}.");
-        await _battle.WaitForPhaseAdvanceAsync();
+        await _battle.WaitForPhaseRushAsync();
     }
 
     private async Task HandleMovementAsync(bool activeTeamIsAI)
@@ -112,25 +112,25 @@ public sealed class CombatSequence
                 }
 
                 var movementBonus = StepChecks.MovementPhaseChecks(squad);
-                if (movementType == MovementType.Advance)
+                if (movementType == MovementType.Rush)
                 {
-                    var advanceRoll = await DiceRoller.PresentAndRollAsync(
+                    var rushRoll = await DiceRoller.PresentAndRollAsync(
                         6,
                         1,
                         new RollContext(
                             RollPhase.Other,
-                            "Rush / Advance",
+                            "Rush",
                             AttackerName: squad.Name,
                             OwnerTeamId: activeTeamId));
-                    movementBonus += advanceRoll.Results.Sum();
+                    movementBonus += rushRoll.Results.Sum();
                 }
 
                 var movementAllowance = Math.Max(0f, squad.Movement + movementBonus);
                 var ignoreMaxDistance = hasTeleport && squad.Movement <= 0.01f;
                 var moveVars = await _battle.MovingStuff(movementAllowance, ignoreMaxDistance, 1.05f, true, true, true, string.Empty, true);
-                moveVars.Advance = movementType == MovementType.Advance;
+                moveVars.Rush = movementType == MovementType.Rush;
                 moveVars.Retreat = movementType == MovementType.Retreat;
-                squad.AdvancedThisTurn = moveVars.Move && movementType == MovementType.Advance;
+                squad.RushedThisTurn = moveVars.Move && movementType == MovementType.Rush;
                 squad.RetreatedThisTurn = moveVars.Move && movementType == MovementType.Retreat;
 
                 if (moveVars.Retreat && squad.ShellShock && !squad.SquadType.Contains("Titanic"))
@@ -164,16 +164,16 @@ public sealed class CombatSequence
             if (aggressive)
             {
                 moved = await BoardGeometry.TryMoveSquadTowardTarget(movers, targetActors, _battle.Field, squad.Movement);
-                SetMoveVarsForActiveTeam(moved, advance: false, retreat: false);
-                squad.AdvancedThisTurn = false;
+                SetMoveVarsForActiveTeam(moved, rush: false, retreat: false);
+                squad.RushedThisTurn = false;
                 squad.RetreatedThisTurn = false;
             }
             else
             {
                 var shouldRetreat = !aggressive && _battle.GetAliveSquadsForTeam(activeTeamId).Count > 1;
                 moved = await BoardGeometry.TryMoveSquadAwayFromTarget(movers, targetActors, _battle.Field, squad.Movement);
-                SetMoveVarsForActiveTeam(moved, advance: false, retreat: shouldRetreat);
-                squad.AdvancedThisTurn = false;
+                SetMoveVarsForActiveTeam(moved, rush: false, retreat: shouldRetreat);
+                squad.RushedThisTurn = false;
                 squad.RetreatedThisTurn = moved && shouldRetreat;
                 if (shouldRetreat && squad.ShellShock && !squad.SquadType.Contains("Titanic"))
                 {
@@ -203,7 +203,7 @@ public sealed class CombatSequence
         }
         if (!_battle.IsTeamAI(defenderTeamId))
         {
-            await _battle.WaitForPhaseAdvanceAsync();
+            await _battle.WaitForPhaseRushAsync();
         }
         _battle.OrderManager?.CloseWindow(OrderWindowType.OpponentShootingPhaseStart);
         var activeSquads = _battle.GetAliveSquadsForTeam(activeTeamId);
@@ -212,7 +212,7 @@ public sealed class CombatSequence
         foreach (var squad in activeSquads)
         {
             _battle.SetActiveSquadForTeam(activeTeamId, squad);
-            SetMoveVarsForActiveTeam(squad.AdvancedThisTurn || squad.RetreatedThisTurn, squad.AdvancedThisTurn, squad.RetreatedThisTurn);
+            SetMoveVarsForActiveTeam(squad.RushedThisTurn || squad.RetreatedThisTurn, squad.RushedThisTurn, squad.RetreatedThisTurn);
             var enemyOptions = _battle.GetAliveSquadsForTeam(enemyTeamId);
             if (enemyOptions.Count == 0) return;
 
@@ -260,7 +260,7 @@ public sealed class CombatSequence
             _battle.OrderManager?.OpenWindow(OrderWindowType.OnTargetedByShooting, activeTeamId);
             if (!_battle.IsTeamAI(enemyTeamId))
             {
-                await _battle.WaitForPhaseAdvanceAsync();
+                await _battle.WaitForPhaseRushAsync();
             }
             _battle.OrderManager?.CloseWindow(OrderWindowType.OnTargetedByShooting);
 
@@ -295,11 +295,11 @@ public sealed class CombatSequence
 
     private async Task HandleChargeAsync(bool activeTeamIsAI)
     {
-        await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Charge);
+        await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Engagement);
         _battle.OrderManager?.ResetPhaseUsage();
-        _battle.OrderManager?.OpenWindow(OrderWindowType.ChargePhase, _battle.ActiveTeamId);
-        _battle.OrderManager?.OpenWindow(OrderWindowType.OpponentChargePhaseStart, _battle.ActiveTeamId);
-        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Charge, activeTeamIsAI);
+        _battle.OrderManager?.OpenWindow(OrderWindowType.EngagementPhase, _battle.ActiveTeamId);
+        _battle.OrderManager?.OpenWindow(OrderWindowType.OpponentEngagementPhaseStart, _battle.ActiveTeamId);
+        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Engagement, activeTeamIsAI);
         var activeTeamId = _battle.ActiveTeamId;
         var enemyTeamId = activeTeamId == 1 ? 2 : 1;
         var activeSquads = _battle.GetAliveSquadsForTeam(activeTeamId);
@@ -377,7 +377,7 @@ public sealed class CombatSequence
             var activeActors = _battle.GetActiveActors();
             var inactiveActors = _battle.GetInactiveActors();
             var distanceInches = BoardGeometry.ClosestDistanceInches(activeActors, inactiveActors);
-            var moveVars = new MoveVars(squad.AdvancedThisTurn || squad.RetreatedThisTurn, squad.AdvancedThisTurn, squad.RetreatedThisTurn);
+            var moveVars = new MoveVars(squad.RushedThisTurn || squad.RetreatedThisTurn, squad.RushedThisTurn, squad.RetreatedThisTurn);
             if (squad.CannotChargeThisTurn)
             {
                 if (!activeTeamIsAI)
@@ -412,7 +412,7 @@ public sealed class CombatSequence
                 continue;
             }
 
-            var chargeModifier = await StepChecks.ChargePhaseChecks(squad, target, _battle.ActiveSquadMovedAfterShootingThisTurn);
+            var chargeModifier = await StepChecks.EngagementPhaseChecks(squad, target, _battle.ActiveSquadMovedAfterShootingThisTurn);
             var chargeRoll = await _battle.RollInteractiveAsync(
                 2,
                 6,
@@ -445,16 +445,16 @@ public sealed class CombatSequence
             }
         }
 
-        _battle.OrderManager?.CloseWindow(OrderWindowType.ChargePhase);
-        _battle.OrderManager?.CloseWindow(OrderWindowType.OpponentChargePhaseStart);
+        _battle.OrderManager?.CloseWindow(OrderWindowType.EngagementPhase);
+        _battle.OrderManager?.CloseWindow(OrderWindowType.OpponentEngagementPhaseStart);
     }
 
     private async Task HandleFightAsync(bool activeTeamIsAI)
     {
-        await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Fight);
+        await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Melee);
         _battle.OrderManager?.ResetPhaseUsage();
-        _battle.OrderManager?.OpenWindow(OrderWindowType.StartOfFightPhase, _battle.ActiveTeamId);
-        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Fight, activeTeamIsAI);
+        _battle.OrderManager?.OpenWindow(OrderWindowType.StartOfMeleePhase, _battle.ActiveTeamId);
+        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Melee, activeTeamIsAI);
         var activeTeamId = _battle.ActiveTeamId;
         var inactiveTeamId = activeTeamId == 1 ? 2 : 1;
 
@@ -464,7 +464,7 @@ public sealed class CombatSequence
         _battle.OrderManager?.ConfigureHeroicInterventionEnemy(inactiveTeamId, heroicEnemy);
         if (!_battle.IsTeamAI(inactiveTeamId) && heroicEnemy != null)
         {
-            await _battle.WaitForPhaseAdvanceAsync();
+            await _battle.WaitForPhaseRushAsync();
         }
 
         var activeRucks = _battle.GetAliveSquadsForTeam(activeTeamId)
@@ -483,7 +483,7 @@ public sealed class CombatSequence
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
         await ResolveFightTierAlternating(inactiveTeamId, activeTeamId, inactiveNormal, activeNormal, activeTeamIsAI);
-        _battle.OrderManager?.CloseWindow(OrderWindowType.StartOfFightPhase);
+        _battle.OrderManager?.CloseWindow(OrderWindowType.StartOfMeleePhase);
         _battle.OrderManager?.EndFightPhaseCleanup();
     }
 
@@ -670,9 +670,9 @@ public sealed class CombatSequence
         SetMoveVarsForActiveTeam(moved, false, retreat);
     }
 
-    private void SetMoveVarsForActiveTeam(bool moved, bool advance, bool retreat)
+    private void SetMoveVarsForActiveTeam(bool moved, bool rush, bool retreat)
     {
-        var moveVars = new MoveVars(moved, advance, retreat);
+        var moveVars = new MoveVars(moved, rush, retreat);
         if (_battle.ActiveTeamId == 1)
         {
             _battle.TeamAMove = moveVars;
@@ -716,18 +716,18 @@ public sealed class CombatSequence
 
         var moveChoice = await _battle.Hud.ChooseOptionAsync(
             $"{squad.Name}: Choose movement type.",
-            new[] { "Standard Move", "Advance / Rush", "Skip" });
+            new[] { "Standard Move", "Rush", "Skip" });
         return moveChoice switch
         {
             0 => MovementType.Standard,
-            1 => MovementType.Advance,
+            1 => MovementType.Rush,
             _ => null
         };
     }
 
     private static bool CanSquadAttemptCharge(Squad squad)
     {
-        if (squad == null || squad.CannotChargeThisTurn || squad.AdvancedThisTurn || squad.RetreatedThisTurn)
+        if (squad == null || squad.CannotChargeThisTurn || squad.RushedThisTurn || squad.RetreatedThisTurn)
         {
             return false;
         }

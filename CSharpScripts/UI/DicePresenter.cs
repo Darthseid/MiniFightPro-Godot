@@ -8,7 +8,7 @@ public partial class DicePresenter : Node, IDicePresenter
 
     private readonly SemaphoreSlim _queueSemaphore = new(1, 1);
     private DiceOverlay _overlay;
-    private TaskCompletionSource<bool>? _advanceTcs;
+    private TaskCompletionSource<bool>? _rushTcs;
     private RollEvent? _currentRoll;
     private bool _rerollUsedThisRoll;
     private bool _fateReplacementLockedThisRoll;
@@ -38,9 +38,9 @@ public partial class DicePresenter : Node, IDicePresenter
             _fateReplacementLockedThisRoll = false;
             await _overlay.ShowRollAsync(rollEvent);
             RefreshFateSixHud();
-            InteractionMode = DiceInteractionMode.AwaitingPlayerAdvance;
+            InteractionMode = DiceInteractionMode.AwaitingPlayerRush;
             UpdateButtons();
-            await WaitForAdvanceAsync();
+            await WaitForRushAsync();
             _overlay.HideOverlay();
             _currentRoll = null;
             InteractionMode = DiceInteractionMode.None;
@@ -51,10 +51,10 @@ public partial class DicePresenter : Node, IDicePresenter
         }
     }
 
-    public Task<bool> WaitForAdvanceAsync()
+    public Task<bool> WaitForRushAsync()
     {
-        _advanceTcs = new TaskCompletionSource<bool>();
-        return _advanceTcs.Task;
+        _rushTcs = new TaskCompletionSource<bool>();
+        return _rushTcs.Task;
     }
 
     private void EnsureOverlay()
@@ -73,7 +73,7 @@ public partial class DicePresenter : Node, IDicePresenter
 
     private void OnNextPressed()
     {
-        if (InteractionMode != DiceInteractionMode.AwaitingPlayerAdvance && InteractionMode != DiceInteractionMode.AwaitingRerollSelection)
+        if (InteractionMode != DiceInteractionMode.AwaitingPlayerRush && InteractionMode != DiceInteractionMode.AwaitingRerollSelection)
         {
             return;
         }
@@ -81,11 +81,11 @@ public partial class DicePresenter : Node, IDicePresenter
         if (InteractionMode == DiceInteractionMode.AwaitingRerollSelection)
         {
             _overlay.SetRerollSelectionState(false);
-            InteractionMode = DiceInteractionMode.AwaitingPlayerAdvance;
+            InteractionMode = DiceInteractionMode.AwaitingPlayerRush;
             UpdateButtons();
         }
 
-        _advanceTcs?.TrySetResult(true);
+        _rushTcs?.TrySetResult(true);
     }
 
     private void OnCommandRerollPressed()
@@ -128,13 +128,13 @@ public partial class DicePresenter : Node, IDicePresenter
             DiceRoller.RerollDie(_currentRoll, index);
             _overlay.UpdateDieFace(index);
             _rerollUsedThisRoll = true;
-            InteractionMode = DiceInteractionMode.AwaitingPlayerAdvance;
+            InteractionMode = DiceInteractionMode.AwaitingPlayerRush;
             _overlay.SetRerollSelectionState(false);
             UpdateButtons();
             return;
         }
 
-        if (InteractionMode != DiceInteractionMode.AwaitingPlayerAdvance)
+        if (InteractionMode != DiceInteractionMode.AwaitingPlayerRush)
         {
             return;
         }
@@ -162,7 +162,7 @@ public partial class DicePresenter : Node, IDicePresenter
 
         if (player.FateSixPool <= 0)
         {
-            battle.Hud?.ShowToast("No Fate Sixes remaining.");
+            battle.Hud?.ShowToast("No Psychic Sixes remaining.");
             return;
         }
 
@@ -185,7 +185,7 @@ public partial class DicePresenter : Node, IDicePresenter
 
         if (!battle.TryConsumeFateSix(ActivePlayerTeamId))
         {
-            battle.Hud?.ShowToast("No Fate Sixes remaining.");
+            battle.Hud?.ShowToast("No Psychic Sixes remaining.");
             return;
         }
 
@@ -223,14 +223,14 @@ public partial class DicePresenter : Node, IDicePresenter
         }
 
         _overlay.SetButtonsState(
-            canAdvance: InteractionMode == DiceInteractionMode.AwaitingPlayerAdvance || InteractionMode == DiceInteractionMode.AwaitingRerollSelection,
-            canReroll: InteractionMode == DiceInteractionMode.AwaitingPlayerAdvance && canReroll);
+            canRush: InteractionMode == DiceInteractionMode.AwaitingPlayerRush || InteractionMode == DiceInteractionMode.AwaitingRerollSelection,
+            canReroll: InteractionMode == DiceInteractionMode.AwaitingPlayerRush && canReroll);
 
         if (InteractionMode == DiceInteractionMode.AwaitingRerollSelection)
         {
             _overlay.SetRerollSelectionState(true);
         }
-        else if (InteractionMode == DiceInteractionMode.AwaitingPlayerAdvance)
+        else if (InteractionMode == DiceInteractionMode.AwaitingPlayerRush)
         {
             _overlay.SetNormalSelectionState(true);
         }

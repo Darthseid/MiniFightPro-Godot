@@ -598,9 +598,9 @@ public partial class GameData : Node
             new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1", new List<WeaponAbility>())
         };
 
-        var tauroxWeapons = new List<Weapon>
+        var varnoxWeapons = new List<Weapon>
         {
-            new Weapon("Taurox Battle Cannon", 48f, "D6+1", 4, 10, -1, "3", new List<WeaponAbility> { WeaponAbilities.Blast }),
+            new Weapon("Varnox Battle Cannon", 48f, "D6+1", 4, 10, -1, "3", new List<WeaponAbility> { WeaponAbilities.Blast }),
             new Weapon("Twin Autocannon", 48f, "2", 4, 9, -1, "3", new List<WeaponAbility>()),
             new Weapon("Twin Hot-shot Volley Gun", 24f, "6", 4, 5, -1, "1", new List<WeaponAbility>()),
             new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1", new List<WeaponAbility>())
@@ -638,12 +638,12 @@ public partial class GameData : Node
         ApplyPresetWeaponHitSfx(guardSargeWeapons);
         ApplyPresetWeaponHitSfx(sergeantWeapons);
         ApplyPresetWeaponHitSfx(tankWeapons);
-        ApplyPresetWeaponHitSfx(tauroxWeapons);
+        ApplyPresetWeaponHitSfx(varnoxWeapons);
         ApplyPresetWeaponHitSfx(clairvoyantWeapons);
         ApplyPresetWeaponHitSfx(pylonWeapon);
         ApplyPresetWeaponHitSfx(hugeMechaWeapons);
 
-        presetWeapons.AddRange(tauroxWeapons.Select(weapon => weapon.DeepCopy()));
+        presetWeapons.AddRange(varnoxWeapons.Select(weapon => weapon.DeepCopy()));
 
         var presetModels = new List<Model>
         {
@@ -658,7 +658,7 @@ public partial class GameData : Node
             new Model("Zapper Pylon", 10, 0, pylonWeapon),
             new Model("Huge Mecha", 100, 33, hugeMechaWeapons),
             new Model("Floating Biker", 5, 0, jetBikeWeapons),
-            new Model("Taurox", 14, 5, tauroxWeapons)
+            new Model("Varnox", 14, 5, varnoxWeapons)
         };
 
         var mechaSquad = new List<Model> { new Model("Huge Mecha", 100, 33, hugeMechaWeapons) };
@@ -699,13 +699,13 @@ public partial class GameData : Node
             tankSquad.Add(presetModels[5].DeepCopy());
         }
 
-        var tauroxSquad = new List<Model> { presetModels[11].DeepCopy() };
+        var varnoxSquad = new List<Model> { presetModels[11].DeepCopy() };
 
         var ast = new Squad("Guard Squad", 6f, 3, 5, 7, 7, 7, new List<string> { "Infantry" }, false, guardSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility> { SquadAbilities.SubRoutine });
         var ade = new Squad("Marine Squad", 6f, 4, 3, 7, 7, 6, new List<string> { "Infantry" }, false, marineSquad.Select(m => m.DeepCopy()).ToList(), 20, new List<SquadAbility> { SquadAbilities.Satanic });
         var tnk = new Squad("Battle Tanks", 10f, 11, 2, 13, 7, 7, new List<string> { "Vehicle" }, false, tankSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "2") });
         var vert = new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.MartialStance });
-        var tau = new Squad("Taurox", 12f, 10, 3, 5, 7, 7, new List<string> { "Vehicle", "Transport" }, false, tauroxSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.FiringDeck });
+        var tau = new Squad("Varnox", 12f, 10, 3, 5, 7, 7, new List<string> { "Vehicle", "Transport" }, false, varnoxSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.FiringDeck });
         var hmk = new Squad("Huge Mecha", 10f, 16, 2, 5, 7, 6, new List<string> { "Titanic", "Vehicle" }, false, mechaSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "3") });
         var dak = new Squad("Homemade Biplane", 99.9f, 9, 3, 4, 7, 7, new List<string> { "Aircraft", "Fly", "Vehicle" }, false, planeSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.MinusHitRanged });
         var pyl = new Squad("Zapper Pylon", 0f, 8, 3, 7, 7, 7, new List<string> { "Fortification", "Vehicle" }, false, pylonModel.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "2"), SquadAbilities.Reanimator, SquadAbilities.Teleport });
@@ -721,7 +721,7 @@ public partial class GameData : Node
             new Squad("Clairvoyant", 7f, 3, 6, 4, 7, 6, new List<string> { "Character", "Infantry", "Psychic" }, true, clairvoyantModels.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.PsiDefense }),
             new Squad("Huge Mecha", 10f, 16, 2, 5, 7, 6, new List<string> { "Titanic", "Vehicle" }, false, mechaSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.CreateVariableAbility(SquadAbilities.DeathExplode1, "3") }),
             new Squad("MagLev Bikes", 12f, 7, 2, 4, 7, 6, new List<string> { "Mounted", "Fly" }, false, bikerSquad.Select(m => m.DeepCopy()).ToList(), 3, new List<SquadAbility> { SquadAbilities.MartialStance }),
-            new Squad("Taurox", 12f, 10, 3, 5, 7, 7, new List<string> { "Vehicle", "Transport" }, false, tauroxSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.FiringDeck })
+            new Squad("Varnox", 12f, 10, 3, 5, 7, 7, new List<string> { "Vehicle", "Transport" }, false, varnoxSquad.Select(m => m.DeepCopy()).ToList(), 1, new List<SquadAbility> { SquadAbilities.FiringDeck })
         };
 
         var infForces = new List<Squad> { ast, ade, tau };

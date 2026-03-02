@@ -1,6 +1,6 @@
 public enum MovementType
 {
     Standard,
-    Advance,
+    Rush,
     Retreat
 }

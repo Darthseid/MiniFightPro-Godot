@@ -36,7 +36,7 @@ public partial class Battle : Node2D
     private bool _activeSquadChargedThisTurn;
     private bool _activeSquadMovedAfterShootingThisTurn;
     private bool _isBattleEnding;
-    private TaskCompletionSource<bool> _phaseAdvanceTcs;
+    private TaskCompletionSource<bool> _phaseRushTcs;
     private TaskCompletionSource<Squad?>? _enemyTargetSelectionTcs;
     private bool _awaitingEnemyTargetSelection;
     private int _enemyTargetTeamId = -1;
@@ -303,7 +303,7 @@ public partial class Battle : Node2D
         {
             GameGlobals.Instance.CurrentRound = _round;
             GameGlobals.Instance.CurrentTurn = _currentTurn;
-            GameGlobals.Instance.CurrentPhase = BattlePhase.Command.ToString();
+            GameGlobals.Instance.CurrentPhase = BattlePhase.Starting.ToString();
         }
         _orderManager = new OrderManager(this);
         _orderManager.InitializeBattlePoints();
@@ -670,7 +670,7 @@ public partial class Battle : Node2D
             }
 
             squad.SquadAbilities = StepChecks.CleanupTemporaryAbilities(squad);
-            squad.AdvancedThisTurn = false;
+            squad.RushedThisTurn = false;
             squad.RetreatedThisTurn = false;
         }
 
@@ -730,11 +730,11 @@ public partial class Battle : Node2D
 
         var phaseSound = phase switch
         {
-            BattlePhase.Command => "stratagem",
+            BattlePhase.Starting => "order_ping",
             BattlePhase.Movement => "startmovement",
             BattlePhase.Shooting => "startshooting",
-            BattlePhase.Charge => "charge",
-            BattlePhase.Fight => "startfight",
+            BattlePhase.Engagement => "charge",
+            BattlePhase.Melee => "startfight",
             BattlePhase.EndTurn => "turnover",
             _ => null
         };
@@ -1129,7 +1129,7 @@ public partial class Battle : Node2D
         _battleHud?.ShowToast($"Terrain Setup: {_terrainCount} pieces", 4f);
         _battleHud?.ShowToast("Terrain Setup: place and move terrain, then press Continue →", 5f);
         GD.Print($"[Terrain] Terrain Setup: {_terrainCount} pieces");
-        await WaitForPhaseAdvanceAsync();
+        await WaitForPhaseRushAsync();
         LockTerrain();
         EnterPhase(BattlePhase.Movement, announce: false);
         _battleHud?.ShowToast("Continue → Squad Deployment", 3f);
@@ -1248,14 +1248,14 @@ public partial class Battle : Node2D
 
     private void OnNextPhasePressed()
     {
-        _phaseAdvanceTcs?.TrySetResult(true);
+        _phaseRushTcs?.TrySetResult(true);
     }
 
-    internal async Task WaitForPhaseAdvanceAsync()
+    internal async Task WaitForPhaseRushAsync()
     {
-        _phaseAdvanceTcs = new TaskCompletionSource<bool>();
-        await _phaseAdvanceTcs.Task;
-        _phaseAdvanceTcs = null;
+        _phaseRushTcs = new TaskCompletionSource<bool>();
+        await _phaseRushTcs.Task;
+        _phaseRushTcs = null;
     }
 
 

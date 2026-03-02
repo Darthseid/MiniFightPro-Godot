@@ -42,7 +42,7 @@
 [ext_resource type="AudioStream" uid="uid://cwneyuf0ns8aw" path="res://Assets/GameSounds/startmovement.mp3" id="3_47"]
 [ext_resource type="AudioStream" uid="uid://bvlcd4tmby4bm" path="res://Assets/GameSounds/startpsychic.mp3" id="3_48"]
 [ext_resource type="AudioStream" uid="uid://ejd35x0eggfd" path="res://Assets/GameSounds/startshooting.mp3" id="3_49"]
-[ext_resource type="AudioStream" uid="uid://bcaqfsqonnb13" path="res://Assets/GameSounds/stratagem.mp3" id="3_50"]
+[ext_resource type="AudioStream" uid="uid://bcaqfsqonnb13" path="res://Assets/GameSounds/order_ping.mp3" id="3_50"]
 [ext_resource type="AudioStream" uid="uid://c8ar84a5glqvi" path="res://Assets/GameSounds/subroutine.mp3" id="3_51"]
 [ext_resource type="AudioStream" uid="uid://i1dra1s31etc" path="res://Assets/WeaponSounds/swordinjury.mp3" id="3_52"]
 [ext_resource type="AudioStream" uid="uid://cnlnuxyrg2hwy" path="res://Assets/GameSounds/tankmovement.mp3" id="3_53"]
@@ -260,7 +260,7 @@ bus = &"SFX"
 stream = ExtResource("3_49")
 bus = &"SFX"
 
-[node name="stratagem" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001050]
+[node name="order_ping" type="AudioStreamPlayer" parent="SfxPlayers" unique_id=1447001050]
 stream = ExtResource("3_50")
 bus = &"SFX"
 

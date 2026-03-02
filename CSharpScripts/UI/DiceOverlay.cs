@@ -72,18 +72,18 @@ public partial class DiceOverlay : CanvasLayer
     {
         _player1FateSixLabel.Visible = team1HasAbility;
         _player2FateSixLabel.Visible = team2HasAbility;
-        _player1FateSixLabel.Text = $"P1 Fate Sixes: {team1Pool}";
-        _player2FateSixLabel.Text = $"P2 Fate Sixes: {team2Pool}";
+        _player1FateSixLabel.Text = $"P1 Psychic Sixes: {team1Pool}";
+        _player2FateSixLabel.Text = $"P2 Psychic Sixes: {team2Pool}";
     }
 
-    public void SetButtonsState(bool canAdvance, bool canReroll)
+    public void SetButtonsState(bool canRush, bool canReroll)
     {
-        _nextButton.Disabled = !canAdvance;
+        _nextButton.Disabled = !canRush;
         _commandRerollButton.Disabled = !canReroll;
 
         for (var i = 0; i < _widgets.Length; i++)
         {
-            _widgets[i].SetInteractable(canAdvance, false);
+            _widgets[i].SetInteractable(canRush, false);
         }
     }
 

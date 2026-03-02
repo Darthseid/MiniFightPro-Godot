@@ -276,7 +276,7 @@ public static class StepChecks
         return 0f;
     }
 
-    public static async Task<float> ChargePhaseChecks(Squad activeSquad, Squad enemySquad, bool movedAfterShooting)
+    public static async Task<float> EngagementPhaseChecks(Squad activeSquad, Squad enemySquad, bool movedAfterShooting)
     {
         await Task.Yield();
         if (movedAfterShooting)

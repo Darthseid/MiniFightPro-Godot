@@ -95,7 +95,7 @@ public static class ShapeHelpers
             return false;
         }
 
-        if (moveVars.Advance && activeSquad.SquadAbilities.All(ability => ability.Innate != "DashBash"))
+        if (moveVars.Rush && activeSquad.SquadAbilities.All(ability => ability.Innate != "DashBash"))
         {
             return false;
         }

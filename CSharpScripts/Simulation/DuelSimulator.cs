@@ -9,7 +9,7 @@ public sealed class DuelSimulator
     private static readonly FieldInfo DiceRngField = typeof(DiceHelpers)
         .GetField("Rng", BindingFlags.NonPublic | BindingFlags.Static);
 
-    private readonly MoveVars _stationaryMove = new MoveVars(move: false, advance: false, retreat: false);
+    private readonly MoveVars _stationaryMove = new MoveVars(move: false, rush: false, retreat: false);
 
     private long _trialSquadAAttacks;
     private long _trialSquadBAttacks;

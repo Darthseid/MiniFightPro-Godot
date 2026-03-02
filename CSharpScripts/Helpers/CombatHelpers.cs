@@ -95,7 +95,7 @@ public static class CombatHelpers
         {
             return false;
         }
-        if (shooterMove.Advance && shotAbilities.All(ability => ability.Innate != "RunGun"))
+        if (shooterMove.Rush && shotAbilities.All(ability => ability.Innate != "RunGun"))
         {
             validShooting = false;
         }
