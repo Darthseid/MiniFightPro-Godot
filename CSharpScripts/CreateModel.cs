@@ -10,6 +10,10 @@ public partial class CreateModel : Control
     private SpinBox _bracketedInput;
     private ItemList _weaponList;
     private Label _titleLabel;
+    private TextureRect _imagePreview;
+    private FileDialog _imageFileDialog;
+    private Label _mobileImportHint;
+    private Model _editingModel;
     private List<Weapon> _selectedWeapons = new List<Weapon>();
 
     private const ulong LongPressThresholdMs = 500;
@@ -27,9 +31,19 @@ public partial class CreateModel : Control
         _healthInput = GetNode<SpinBox>("%ModelHealthInput");
         _bracketedInput = GetNode<SpinBox>("%ModelBracketedInput");
         _weaponList = GetNode<ItemList>("%WeaponList");
+        _imagePreview = GetNode<TextureRect>("%ModelImagePreview");
+        _imageFileDialog = GetNode<FileDialog>("%ModelImageFileDialog");
+        _mobileImportHint = GetNode<Label>("%MobileImportHint");
 
         GetNode<Button>("%BtnSave").Pressed += OnSavePressed;
         GetNode<Button>("%BtnDiscard").Pressed += OnDiscardPressed;
+        GetNode<Button>("%BtnChangeImage").Pressed += OnChangeImagePressed;
+        GetNode<Button>("%BtnImportFolder").Pressed += OnImportFolderPressed;
+
+        _imageFileDialog.FileSelected += OnImageFileSelected;
+
+        _mobileImportHint.Text = "On mobile, copy images into: user://import then select from there.";
+        EnsureImportFolderExists();
 
         // Use GuiInput to detect presses/touches and drags for long-press behaviour.
         _weaponList.GuiInput += OnWeaponListGuiInput;
@@ -61,6 +75,11 @@ public partial class CreateModel : Control
         {
             _weaponList.SetItemText(i, GetWeaponDisplayText(data.WeaponList[i]));
         }
+    }
+
+    private void RefreshImagePreview()
+    {
+        _imagePreview.Texture = ModelImageService.LoadTextureForModel(_editingModel);
     }
 
     // Use ItemList.GetItemAtPosition with global=true to get item under the pointer.
@@ -173,18 +192,22 @@ public partial class CreateModel : Control
         if (data.SelectedModelIndex >= 0 && data.SelectedModelIndex < data.ModelList.Count)
         {
             _titleLabel.Text = "Edit Model";
-            var model = data.ModelList[data.SelectedModelIndex];
-            _nameInput.Text = model.Name;
-            _healthInput.Value = model.StartingHealth;
-            _bracketedInput.Value = model.Bracketed;
+            _editingModel = data.ModelList[data.SelectedModelIndex].DeepCopy();
+            _nameInput.Text = _editingModel.Name;
+            _healthInput.Value = _editingModel.StartingHealth;
+            _bracketedInput.Value = _editingModel.Bracketed;
 
-            _selectedWeapons = new List<Weapon>(model.Tools);
+            _selectedWeapons = new List<Weapon>(_editingModel.Tools);
             RefreshWeaponListDisplay();
         }
         else
         {
             _titleLabel.Text = "Create Model";
+            _editingModel = new Model("", 1, 1, 0, new List<Weapon>());
         }
+
+        ModelImageService.EnsureModelIdentityAndDefault(_editingModel);
+        RefreshImagePreview();
     }
 
     private void OnSavePressed()
@@ -201,21 +224,20 @@ public partial class CreateModel : Control
 
         var data = GameData.Instance;
 
-        var model = new Model(
-            modelName,
-            health,
-            health,
-            bracketed,
-            _selectedWeapons
-        );
+        _editingModel.Name = modelName;
+        _editingModel.StartingHealth = health;
+        _editingModel.Health = health;
+        _editingModel.Bracketed = bracketed;
+        _editingModel.Tools = _selectedWeapons;
+        ModelImageService.EnsureModelIdentityAndDefault(_editingModel);
 
         if (data.SelectedModelIndex == -1)
         {
-            data.ModelList.Add(model);
+            data.ModelList.Add(_editingModel);
         }
         else
         {
-            data.ModelList[data.SelectedModelIndex] = model;
+            data.ModelList[data.SelectedModelIndex] = _editingModel;
         }
 
         data.SaveModelsToFile();
@@ -227,5 +249,37 @@ public partial class CreateModel : Control
     {
         GameData.Instance.SelectedModelIndex = -1;
         GetTree().ChangeSceneToFile("res://Scenes/ModelList.tscn");
+    }
+
+    private void OnChangeImagePressed()
+    {
+        _imageFileDialog.Access = FileDialog.AccessEnum.Filesystem;
+        _imageFileDialog.CurrentDir = OS.HasFeature("mobile") ? ProjectSettings.GlobalizePath("user://import") : string.Empty;
+        _imageFileDialog.PopupCenteredRatio();
+    }
+
+    private void OnImportFolderPressed()
+    {
+        EnsureImportFolderExists();
+        _imageFileDialog.Access = FileDialog.AccessEnum.Userdata;
+        _imageFileDialog.CurrentDir = "user://import";
+        _imageFileDialog.PopupCenteredRatio();
+    }
+
+    private void EnsureImportFolderExists()
+    {
+        DirAccess.MakeDirRecursiveAbsolute("user://import");
+    }
+
+    private void OnImageFileSelected(string path)
+    {
+        var result = ModelImageService.ImportAndApplyCustomImage(_editingModel, path);
+        if (result != Error.Ok)
+        {
+            OS.Alert($"Could not import image: {result}", "Import Failed");
+            return;
+        }
+
+        RefreshImagePreview();
     }
 }

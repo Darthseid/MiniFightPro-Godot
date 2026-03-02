@@ -103,6 +103,18 @@ public partial class GameData : Node
             var options = new JsonSerializerOptions { IncludeFields = true };
             var loadedModels = JsonSerializer.Deserialize<List<Model>>(json, options);
             ModelList = loadedModels ?? new List<Model>();
+
+            var changed = false;
+            foreach (var model in ModelList)
+            {
+                changed |= ModelImageService.EnsureModelIdentityAndDefault(model);
+            }
+
+            if (changed)
+            {
+                SaveModelsToFile();
+            }
+
             _modelsLoaded = true;
         }
         catch (Exception error)
