@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -96,10 +97,34 @@ public sealed class CombatSequence
                 var enemy = inactiveSquads.FirstOrDefault();
                 _battle.SetActiveSquadForTeam(enemyTeamId, enemy);
 
-                var wantsMove = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Move/Advance this phase?");
-                if (!wantsMove) continue;
+                var movementType = await ChooseMovementTypeAsync(squad, enemyTeamId, activeTeamIsAI);
+                if (movementType == null)
+                {
+                    SetMoveVarsForActiveTeam(false, false, false);
+                    continue;
+                }
 
-                var moveVars = await _battle.MovingStuff(squad.Movement, false, 1.05f, true, true, true, string.Empty, true);
+                var movementBonus = StepChecks.MovementPhaseChecks(squad);
+                if (movementType == MovementType.Advance)
+                {
+                    var advanceRoll = await DiceRoller.PresentAndRollAsync(
+                        6,
+                        1,
+                        new RollContext(
+                            RollPhase.Other,
+                            "Rush / Advance",
+                            AttackerName: squad.Name,
+                            OwnerTeamId: activeTeamId));
+                    movementBonus += advanceRoll.Results.Sum();
+                }
+
+                var movementAllowance = Math.Max(0f, squad.Movement + movementBonus);
+                var moveVars = await _battle.MovingStuff(movementAllowance, false, 1.05f, true, true, true, string.Empty, true);
+                moveVars.Advance = movementType == MovementType.Advance;
+                moveVars.Retreat = movementType == MovementType.Retreat;
+                squad.AdvancedThisTurn = moveVars.Move && movementType == MovementType.Advance;
+                squad.RetreatedThisTurn = moveVars.Move && movementType == MovementType.Retreat;
+
                 if (moveVars.Retreat && squad.ShellShock && !squad.SquadType.Contains("Titanic"))
                 {
                     _battle.ApplyRout(squad);
@@ -131,13 +156,17 @@ public sealed class CombatSequence
             if (aggressive)
             {
                 moved = await BoardGeometry.TryMoveSquadTowardTarget(movers, targetActors, _battle.Field, squad.Movement);
-                SetMoveVarsForActiveTeam(moved, retreat: false);
+                SetMoveVarsForActiveTeam(moved, advance: false, retreat: false);
+                squad.AdvancedThisTurn = false;
+                squad.RetreatedThisTurn = false;
             }
             else
             {
                 var shouldRetreat = !aggressive && _battle.GetAliveSquadsForTeam(activeTeamId).Count > 1;
                 moved = await BoardGeometry.TryMoveSquadAwayFromTarget(movers, targetActors, _battle.Field, squad.Movement);
-                SetMoveVarsForActiveTeam(moved, retreat: shouldRetreat);
+                SetMoveVarsForActiveTeam(moved, advance: false, retreat: shouldRetreat);
+                squad.AdvancedThisTurn = false;
+                squad.RetreatedThisTurn = moved && shouldRetreat;
                 if (shouldRetreat && squad.ShellShock && !squad.SquadType.Contains("Titanic"))
                 {
                     _battle.ApplyRout(squad);
@@ -175,8 +204,14 @@ public sealed class CombatSequence
         foreach (var squad in activeSquads)
         {
             _battle.SetActiveSquadForTeam(activeTeamId, squad);
+            SetMoveVarsForActiveTeam(squad.AdvancedThisTurn || squad.RetreatedThisTurn, squad.AdvancedThisTurn, squad.RetreatedThisTurn);
             var enemyOptions = _battle.GetAliveSquadsForTeam(enemyTeamId);
             if (enemyOptions.Count == 0) return;
+
+            if (!_battle.SquadHasRangedWeaponThatCanShoot(squad, enemyTeamId))
+            {
+                continue;
+            }
 
             if (!activeTeamIsAI)
             {
@@ -285,23 +320,56 @@ public sealed class CombatSequence
                 continue;
             }
 
+            if (!CanSquadAttemptCharge(squad))
+            {
+                if (!activeTeamIsAI)
+                {
+                    _battle.Hud?.ShowToast($"{squad.Name} cannot charge this turn.");
+                }
+
+                continue;
+            }
+
             if (!activeTeamIsAI)
             {
                 var wantsCharge = await _battle.Hud.ConfirmActionAsync($"{squad.Name}: Charge this phase?");
                 if (!wantsCharge) continue;
             }
 
+            var validChargeTargets = enemyOptions
+                .Where(target => ShapeHelpers.CanDeclareChargeTarget(squad, target))
+                .ToList();
+            if (validChargeTargets.Count == 0)
+            {
+                if (!activeTeamIsAI)
+                {
+                    _battle.Hud?.ShowToast($"{squad.Name}: No valid charge targets.");
+                }
+
+                continue;
+            }
+
             Squad? target = activeTeamIsAI
-                ? SimpleAIController.PickClosestEnemySquad(_battle, squad, enemyTeamId, enemyOptions)
-                : await _battle.PromptForEnemySquadTargetAsync($"{squad.Name}: Click enemy squad to charge", enemyTeamId);
+                ? SimpleAIController.PickClosestEnemySquad(_battle, squad, enemyTeamId, validChargeTargets)
+                : await _battle.PromptForEnemySquadTargetAsync($"{squad.Name}: Click enemy squad to charge", enemyTeamId, validChargeTargets);
             if (target == null) continue;
+
+            if (!ShapeHelpers.CanDeclareChargeTarget(squad, target))
+            {
+                if (!activeTeamIsAI)
+                {
+                    _battle.Hud?.ShowToast("Only units with Fly can charge Aircraft.");
+                }
+
+                continue;
+            }
 
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
 
             var activeActors = _battle.GetActiveActors();
             var inactiveActors = _battle.GetInactiveActors();
             var distanceInches = BoardGeometry.ClosestDistanceInches(activeActors, inactiveActors);
-            var moveVars = CombatHelpers.GetMoveVarsForTeam(activeTeamId, _battle.TeamAMove, _battle.TeamBMove);
+            var moveVars = new MoveVars(squad.AdvancedThisTurn || squad.RetreatedThisTurn, squad.AdvancedThisTurn, squad.RetreatedThisTurn);
             if (squad.CannotChargeThisTurn)
             {
                 if (!activeTeamIsAI)
@@ -333,6 +401,27 @@ public sealed class CombatSequence
                 }
 
                 GD.Print($"[Rules] Charge blocked. Distance: {distanceInches:0.0}\" Squad: {squad.Name}.");
+                continue;
+            }
+
+            var chargeModifier = await StepChecks.ChargePhaseChecks(squad, target, _battle.ActiveSquadMovedAfterShootingThisTurn);
+            var chargeRoll = await _battle.RollInteractiveAsync(
+                2,
+                6,
+                "Charge Roll (2D6)",
+                activeTeamId,
+                attackerName: squad.Name,
+                defenderName: target.Name,
+                phase: RollPhase.Other);
+            var chargeTotal = chargeRoll.Results.Sum() + chargeModifier;
+            if (chargeTotal < distanceInches)
+            {
+                if (!activeTeamIsAI)
+                {
+                    _battle.Hud?.ShowToast($"Charge failed ({chargeTotal:0.#}\" < {distanceInches:0.#}\").");
+                    AudioManager.Instance?.Play("failedcharge");
+                }
+
                 continue;
             }
 
@@ -570,7 +659,12 @@ public sealed class CombatSequence
 
     private void SetMoveVarsForActiveTeam(bool moved, bool retreat)
     {
-        var moveVars = new MoveVars(moved, false, retreat);
+        SetMoveVarsForActiveTeam(moved, false, retreat);
+    }
+
+    private void SetMoveVarsForActiveTeam(bool moved, bool advance, bool retreat)
+    {
+        var moveVars = new MoveVars(moved, advance, retreat);
         if (_battle.ActiveTeamId == 1)
         {
             _battle.TeamAMove = moveVars;
@@ -581,6 +675,52 @@ public sealed class CombatSequence
         }
     }
 
+    private async Task<MovementType?> ChooseMovementTypeAsync(Squad squad, int enemyTeamId, bool actingTeamIsAI)
+    {
+        var startsInFightRange = _battle.IsSquadInFightRange(squad, enemyTeamId);
+        if (actingTeamIsAI)
+        {
+            return startsInFightRange ? MovementType.Retreat : MovementType.Standard;
+        }
+
+        if (startsInFightRange)
+        {
+            var retreatChoice = await _battle.Hud.ChooseOptionAsync(
+                $"{squad.Name}: In Fight Range. Choose movement.",
+                new[] { "Retreat", "Stay" });
+            return retreatChoice == 0 ? MovementType.Retreat : null;
+        }
+
+        var moveChoice = await _battle.Hud.ChooseOptionAsync(
+            $"{squad.Name}: Choose movement type.",
+            new[] { "Standard Move", "Advance / Rush", "Skip" });
+        return moveChoice switch
+        {
+            0 => MovementType.Standard,
+            1 => MovementType.Advance,
+            _ => null
+        };
+    }
+
+    private static bool CanSquadAttemptCharge(Squad squad)
+    {
+        if (squad == null || squad.CannotChargeThisTurn || squad.AdvancedThisTurn || squad.RetreatedThisTurn)
+        {
+            return false;
+        }
+
+        if (squad.SquadType.Contains("Aircraft"))
+        {
+            return false;
+        }
+
+        if (squad.SquadType.Contains("Fortification") || squad.Movement <= 0.01f)
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     private void EndTurn()
     {

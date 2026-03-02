@@ -36,6 +36,8 @@ public class Squad
     public Squad TransportedBy;
     public bool IsInStrategicReserve;
     public bool CannotChargeThisTurn;
+    public bool AdvancedThisTurn;
+    public bool RetreatedThisTurn;
 	
 	public Squad() { }
 
@@ -70,6 +72,8 @@ public class Squad
         TransportedBy = null;
         IsInStrategicReserve = false;
         CannotChargeThisTurn = false;
+        AdvancedThisTurn = false;
+        RetreatedThisTurn = false;
     }
 
     public Squad DeepCopy()
@@ -97,6 +101,8 @@ public class Squad
 
         copy.IsInStrategicReserve = IsInStrategicReserve;
         copy.CannotChargeThisTurn = CannotChargeThisTurn;
+        copy.AdvancedThisTurn = AdvancedThisTurn;
+        copy.RetreatedThisTurn = RetreatedThisTurn;
 
         return copy;
     }
