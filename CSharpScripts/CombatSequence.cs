@@ -97,6 +97,13 @@ public sealed class CombatSequence
                 var enemy = inactiveSquads.FirstOrDefault();
                 _battle.SetActiveSquadForTeam(enemyTeamId, enemy);
 
+                var hasTeleport = SquadHasTeleportMove(squad);
+                if (squad.Movement <= 0.01f && !hasTeleport)
+                {
+                    SetMoveVarsForActiveTeam(false, false, false);
+                    continue;
+                }
+
                 var movementType = await ChooseMovementTypeAsync(squad, enemyTeamId, activeTeamIsAI);
                 if (movementType == null)
                 {
@@ -119,7 +126,8 @@ public sealed class CombatSequence
                 }
 
                 var movementAllowance = Math.Max(0f, squad.Movement + movementBonus);
-                var moveVars = await _battle.MovingStuff(movementAllowance, false, 1.05f, true, true, true, string.Empty, true);
+                var ignoreMaxDistance = hasTeleport && squad.Movement <= 0.01f;
+                var moveVars = await _battle.MovingStuff(movementAllowance, ignoreMaxDistance, 1.05f, true, true, true, string.Empty, true);
                 moveVars.Advance = movementType == MovementType.Advance;
                 moveVars.Retreat = movementType == MovementType.Retreat;
                 squad.AdvancedThisTurn = moveVars.Move && movementType == MovementType.Advance;
@@ -677,6 +685,21 @@ public sealed class CombatSequence
 
     private async Task<MovementType?> ChooseMovementTypeAsync(Squad squad, int enemyTeamId, bool actingTeamIsAI)
     {
+        if (squad == null)
+        {
+            return null;
+        }
+
+        if (SquadHasTeleportMove(squad) || squad.SquadType.Contains("Aircraft"))
+        {
+            return MovementType.Standard;
+        }
+
+        if (squad.Movement <= 0.01f)
+        {
+            return null;
+        }
+
         var startsInFightRange = _battle.IsSquadInFightRange(squad, enemyTeamId);
         if (actingTeamIsAI)
         {
@@ -720,6 +743,11 @@ public sealed class CombatSequence
         }
 
         return true;
+    }
+
+    private static bool SquadHasTeleportMove(Squad squad)
+    {
+        return squad?.SquadAbilities?.Any(ability => ability?.Innate == "Tele") == true;
     }
 
     private void EndTurn()
