@@ -87,6 +87,15 @@ public partial class DiceOverlay : CanvasLayer
         }
     }
 
+
+    public void SetNormalSelectionState(bool isActive)
+    {
+        for (var i = 0; i < _widgets.Length; i++)
+        {
+            _widgets[i].SetInteractable(isActive, false);
+        }
+    }
+
     public void SetRerollSelectionState(bool isActive)
     {
         if (_currentRoll == null)

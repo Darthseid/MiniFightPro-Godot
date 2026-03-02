@@ -11,6 +11,7 @@ public partial class DicePresenter : Node, IDicePresenter
     private TaskCompletionSource<bool>? _advanceTcs;
     private RollEvent? _currentRoll;
     private bool _rerollUsedThisRoll;
+    private bool _fateReplacementLockedThisRoll;
 
     public DiceInteractionMode InteractionMode { get; private set; } = DiceInteractionMode.None;
     public int ActivePlayerTeamId { get; set; } = 1;
@@ -34,6 +35,7 @@ public partial class DicePresenter : Node, IDicePresenter
             EnsureOverlay();
             _currentRoll = rollEvent;
             _rerollUsedThisRoll = false;
+            _fateReplacementLockedThisRoll = false;
             await _overlay.ShowRollAsync(rollEvent);
             RefreshFateSixHud();
             InteractionMode = DiceInteractionMode.AwaitingPlayerAdvance;
@@ -71,9 +73,16 @@ public partial class DicePresenter : Node, IDicePresenter
 
     private void OnNextPressed()
     {
-        if (InteractionMode != DiceInteractionMode.AwaitingPlayerAdvance)
+        if (InteractionMode != DiceInteractionMode.AwaitingPlayerAdvance && InteractionMode != DiceInteractionMode.AwaitingRerollSelection)
         {
             return;
+        }
+
+        if (InteractionMode == DiceInteractionMode.AwaitingRerollSelection)
+        {
+            _overlay.SetRerollSelectionState(false);
+            InteractionMode = DiceInteractionMode.AwaitingPlayerAdvance;
+            UpdateButtons();
         }
 
         _advanceTcs?.TrySetResult(true);
@@ -94,6 +103,7 @@ public partial class DicePresenter : Node, IDicePresenter
         }
 
         InteractionMode = DiceInteractionMode.AwaitingRerollSelection;
+        _fateReplacementLockedThisRoll = true;
         _overlay.SetRerollSelectionState(true);
         UpdateButtons();
     }
@@ -140,6 +150,11 @@ public partial class DicePresenter : Node, IDicePresenter
         }
 
         var player = battle.GetPlayerByTeam(ActivePlayerTeamId);
+        if (_fateReplacementLockedThisRoll)
+        {
+            return;
+        }
+
         if (player?.HasStrandedMiracle != true)
         {
             return;
@@ -208,7 +223,20 @@ public partial class DicePresenter : Node, IDicePresenter
         }
 
         _overlay.SetButtonsState(
-            canAdvance: InteractionMode == DiceInteractionMode.AwaitingPlayerAdvance,
+            canAdvance: InteractionMode == DiceInteractionMode.AwaitingPlayerAdvance || InteractionMode == DiceInteractionMode.AwaitingRerollSelection,
             canReroll: InteractionMode == DiceInteractionMode.AwaitingPlayerAdvance && canReroll);
+
+        if (InteractionMode == DiceInteractionMode.AwaitingRerollSelection)
+        {
+            _overlay.SetRerollSelectionState(true);
+        }
+        else if (InteractionMode == DiceInteractionMode.AwaitingPlayerAdvance)
+        {
+            _overlay.SetNormalSelectionState(true);
+        }
+        else
+        {
+            _overlay.SetNormalSelectionState(false);
+        }
     }
 }
