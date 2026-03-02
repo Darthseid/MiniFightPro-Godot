@@ -5,6 +5,9 @@ using System.Linq;
 
 public partial class CreatePlayer : Control
 {
+    private const int MaxSquadsPerPlayer = 10;
+    private const int MaxPlayers = 1000;
+
     private Label _titleLabel = null!;
     private LineEdit _playerNameInput = null!;
     private CheckBox _isAICheckBox = null!;
@@ -130,6 +133,12 @@ public partial class CreatePlayer : Control
     {
         foreach (int index in _availableSquads.GetSelectedItems())
         {
+            if (_selectedSquads.ItemCount >= MaxSquadsPerPlayer)
+            {
+                OS.Alert($"A player cannot have more than {MaxSquadsPerPlayer} squads.", "Limit reached");
+                return;
+            }
+
             var name = _availableSquads.GetItemText(index);
             _selectedSquads.AddItem(name);
         }
@@ -202,7 +211,19 @@ public partial class CreatePlayer : Control
             return;
         }
 
+        if (_selectedSquads.ItemCount > MaxSquadsPerPlayer)
+        {
+            OS.Alert($"A player cannot have more than {MaxSquadsPerPlayer} squads.", "Validation Error");
+            return;
+        }
+
         var data = GameData.Instance;
+
+        if (data.SelectedPlayerIndex == -1 && data.PlayerList.Count >= MaxPlayers)
+        {
+            OS.Alert($"Player list cannot contain more than {MaxPlayers} players.", "Limit reached");
+            return;
+        }
 
         var selectedSquadNames = new List<string>();
         for (int i = 0; i < _selectedSquads.ItemCount; i++)

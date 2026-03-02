@@ -655,6 +655,8 @@ public partial class Battle : Node2D
             }
 
             squad.SquadAbilities = StepChecks.CleanupTemporaryAbilities(squad);
+            squad.AdvancedThisTurn = false;
+            squad.RetreatedThisTurn = false;
         }
 
         _teamAMove = new MoveVars(false, false, false);
@@ -853,6 +855,29 @@ public partial class Battle : Node2D
         }
 
         _activeTeamId = prevActiveTeam;
+    }
+
+    internal Task<RollEvent> RollInteractiveAsync(
+        int diceCount,
+        int sides,
+        string titleText,
+        int ownerTeamId,
+        string attackerName = null,
+        string defenderName = null,
+        string weaponName = null,
+        string weaponFingerprint = null,
+        RollPhase phase = RollPhase.Other)
+    {
+        var context = new RollContext(
+            phase,
+            titleText,
+            attackerName,
+            defenderName,
+            weaponName,
+            weaponFingerprint,
+            false,
+            ownerTeamId);
+        return DiceRoller.PresentAndRollAsync(sides, diceCount, context);
     }
 
     private Squad? FindSquadByActor(BattleModelActor actor, int teamId)

@@ -5,6 +5,8 @@ using System.Linq;
 
 public partial class CreateModel : Control
 {
+    private const int MaxWeaponsPerModel = 30;
+
     private LineEdit _nameInput;
     private SpinBox _healthInput;
     private SpinBox _bracketedInput;
@@ -167,6 +169,12 @@ public partial class CreateModel : Control
         if (index < 0 || index >= data.WeaponList.Count)
             return;
 
+        if (_selectedWeapons.Count >= MaxWeaponsPerModel)
+        {
+            OS.Alert($"A model cannot have more than {MaxWeaponsPerModel} weapons.", "Limit reached");
+            return;
+        }
+
         _selectedWeapons.Add(data.WeaponList[index]);
         RefreshWeaponListDisplay();
     }
@@ -219,6 +227,12 @@ public partial class CreateModel : Control
         if (string.IsNullOrWhiteSpace(modelName) || health <= 0)
         {
             OS.Alert("Please enter valid model details.", "Validation Error");
+            return;
+        }
+
+        if (_selectedWeapons.Count > MaxWeaponsPerModel)
+        {
+            OS.Alert($"A model cannot have more than {MaxWeaponsPerModel} weapons.", "Validation Error");
             return;
         }
 
