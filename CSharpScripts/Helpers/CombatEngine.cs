@@ -112,7 +112,7 @@ public static class CombatEngine
                 ? BoardGeometry.DistanceInches(attacker, currentRecipient)
                 : _currentDistance;
             var halfRange = distance <= weapon.Range / 2f;
-            var baseDamage = CombatHelpers.DamageParser(weapon.Damage);
+            var baseDamage = DiceHelpers.DamageParser(weapon.Damage);
             var finalDamage = CombatHelpers.DamageMods(baseDamage, defenderSquad.SquadAbilities, weapon.Special, halfRange);
             if (finalDamage <= 0)
             {
@@ -327,7 +327,7 @@ public static class CombatEngine
             .Select(group =>
             {
                 var representative = group.First();
-                var totalAttacks = group.Sum(weapon => CombatHelpers.DamageParser(weapon.Attacks));
+                var totalAttacks = group.Sum(weapon => DiceHelpers.DamageParser(weapon.Attacks));
                 return new WeaponBatch(representative, totalAttacks);
             })
             .Where(batch => batch.TotalAttacks > 0)
@@ -500,7 +500,7 @@ public static class CombatEngine
 
             for (int i = 0; i < unsaved && remainingHealth > 0; i++)
             {
-                var baseDamage = CombatHelpers.DamageParser(weapon.Damage);
+                var baseDamage = DiceHelpers.DamageParser(weapon.Damage);
                 var halfRange = _currentDistance <= weapon.Range / 2f;
                 var finalDamage = CombatHelpers.DamageMods(baseDamage, defenderSquad.SquadAbilities, weapon.Special, halfRange);
                 var applied = finalDamage > remainingHealth ? remainingHealth : finalDamage;
@@ -549,7 +549,7 @@ public static class CombatEngine
         }
 
         var weaponBatches = weapons
-            .Select(weapon => new WeaponBatch(weapon, CombatHelpers.DamageParser(weapon.Attacks)))
+            .Select(weapon => new WeaponBatch(weapon, DiceHelpers.DamageParser(weapon.Attacks)))
             .ToList();
 
         return ResolveWeaponBatchesAttack(

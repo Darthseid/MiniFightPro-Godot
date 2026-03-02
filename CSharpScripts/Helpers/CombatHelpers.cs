@@ -251,59 +251,6 @@ public static class CombatHelpers
         return new DiceModifiers(hitMod, woundMod, hitReroll, woundReroll, armorMod, critThreshold, antiThreshold);
     }
 
-    private static readonly System.Text.RegularExpressions.Regex DamageRegex =
-    new(@"^\s*(\d*)\s*[dD]\s*(\d+)\s*([+-]\s*\d+)?\s*$",
-        System.Text.RegularExpressions.RegexOptions.Compiled);
-
-    public static bool IsDamageExpressionValid(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            return false;
-        }
-
-        var trimmed = input.Trim();
-        return int.TryParse(trimmed, out _) || DamageRegex.IsMatch(trimmed);
-    }
-
-    public static int DamageParser(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input))
-            throw new ArgumentException("Damage string is empty.");
-
-        input = input.Trim();
-
-        // Allow pure numbers
-        if (int.TryParse(input, out var constantValue))
-            return constantValue;
-
-        var match = DamageRegex.Match(input);
-        if (!match.Success)
-            throw new ArgumentException($"Invalid damage format: '{input}'");
-
-        // Multiplier: "D6" -> "" -> 1
-        var multiplierText = match.Groups[1].Value;
-        var multiplier = string.IsNullOrEmpty(multiplierText) ? 1 : int.Parse(multiplierText);
-
-        var sides = int.Parse(match.Groups[2].Value);
-        if (sides <= 0 || multiplier <= 0)
-            throw new ArgumentException($"Invalid dice values in: '{input}'");
-
-        var result = 0;
-        for (var i = 0; i < multiplier; i++)
-            result += DiceHelpers.SimpleRoll(sides);
-
-        if (match.Groups[3].Success)
-        {
-            // Group 3 includes sign, like "+1" or "- 2"
-            var modText = match.Groups[3].Value.Replace(" ", "");
-            result += int.Parse(modText);
-        }
-
-        return result;
-    }
-
-
     public static int DamageMods(int damage, List<SquadAbility> targetSquadAbilities, List<WeaponAbility> specials, bool half)
     {
         if (targetSquadAbilities.Any(ability => ability.Innate == "BrainBlock") &&

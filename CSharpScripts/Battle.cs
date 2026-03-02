@@ -1063,12 +1063,12 @@ public partial class Battle : Node2D
 
     internal bool IsSquadEmbarked(Squad? squad)
     {
-        return squad.IsEmbarked();
+        return squad?.IsEmbarked() == true;
     }
 
     internal bool IsTransportSquad(Squad? squad)
     {
-        return squad.IsTransport();
+        return squad?.IsTransport() == true;
     }
 
     internal bool SquadInFightRangeOfEnemy(Squad squad, int enemyTeamId)
@@ -1098,7 +1098,7 @@ public partial class Battle : Node2D
 
     private static bool IsEmbarkEligiblePassenger(Squad? squad)
     {
-        return squad.IsEmbarkEligiblePassenger();
+        return squad?.IsEmbarkEligiblePassenger() == true;
     }
 
     private void SetSquadActorsEmbarkedVisualState(Squad squad, bool embarked)
