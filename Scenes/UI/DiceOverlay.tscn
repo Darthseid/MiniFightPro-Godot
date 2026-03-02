@@ -56,5 +56,15 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "➡️"
 
+[node name="Player1FateSixes" type="Label" parent="Panel/Margin/VBox/Actions"]
+layout_mode = 2
+text = "P1 Fate Sixes: 0"
+visible = false
+
+[node name="Player2FateSixes" type="Label" parent="Panel/Margin/VBox/Actions"]
+layout_mode = 2
+text = "P2 Fate Sixes: 0"
+visible = false
+
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("2_audio")
