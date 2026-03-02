@@ -24,6 +24,7 @@ public partial class StartGame : Control
         data.LoadPlayersFromFile();
         data.SyncModelsWithWeapons();
         data.SyncSquadsWithModels();
+        data.SyncPlayersWithSquads();
 
         _unit1Dropdown = GetNode<OptionButton>("%Unit1Dropdown");
         _unit2Dropdown = GetNode<OptionButton>("%Unit2Dropdown");
