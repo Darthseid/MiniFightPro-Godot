@@ -61,6 +61,8 @@ public sealed class OrderManager
     {
         _usedOrderThisPhase[1] = false;
         _usedOrderThisPhase[2] = false;
+        _usedCommandRerollThisPhase[1] = false;
+        _usedCommandRerollThisPhase[2] = false;
     }
 
     public void OnPhaseStarted()
