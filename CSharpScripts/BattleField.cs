@@ -230,7 +230,7 @@ public partial class BattleField : Node2D
         ResetMoveRulerVisuals();
     }
 
-    public IReadOnlyList<BattleModelActor> SpawnSquad(Squad theSquad, bool isTeamA, Texture2D teamTexture)
+    public IReadOnlyList<BattleModelActor> SpawnSquad(Squad theSquad, bool isTeamA)
     {
         var container = isTeamA ? _unitsTeamA : _unitsTeamB;
         if (container == null || ModelActorScene == null || theSquad == null || theSquad.Composition == null)
@@ -296,10 +296,9 @@ public partial class BattleField : Node2D
             actor.Position = new Vector2(startX + col * spacingX, startY + row * spacingY);
 
             // Bind logical model + team (you already do this)
-            actor.Bind(theSquad.Composition[i], isTeamA ? 1 : 2);
-
-            // Choose texture later by team + squadType (or pass a resolved texture)
-            actor.SetTexture(teamTexture);
+            var model = theSquad.Composition[i];
+            actor.Bind(model, isTeamA ? 1 : 2);
+            actor.SetTexture(ModelImageService.LoadTextureForModel(model));
 
             // Let the actor size itself (sprite scale / collision / hp label offset)
             actor.SetBaseSize(baseSize);
@@ -313,7 +312,7 @@ public partial class BattleField : Node2D
         return actors;
     }
 
-    public BattleModelActor? SpawnModelActor(Model model, int teamId, Texture2D teamTexture, Vector2 position, float baseSize)
+    public BattleModelActor? SpawnModelActor(Model model, int teamId, Vector2 position, float baseSize)
     {
         if (model == null || ModelActorScene == null)
         {
@@ -335,7 +334,7 @@ public partial class BattleField : Node2D
         container.AddChild(actor);
         actor.Position = position;
         actor.Bind(model, teamId);
-        actor.SetTexture(teamTexture);
+        actor.SetTexture(ModelImageService.LoadTextureForModel(model));
         actor.SetBaseSize(baseSize);
 
         if (teamId == 1)

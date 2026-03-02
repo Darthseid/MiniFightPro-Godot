@@ -32,6 +32,7 @@ public partial class DuelComparison : Control
         data.LoadSquadsFromFile();
         data.SyncModelsWithWeapons();
         data.SyncSquadsWithModels();
+        data.SyncPlayersWithSquads();
 
         _squadASelect = GetNode<OptionButton>("%SquadASelect");
         _squadBSelect = GetNode<OptionButton>("%SquadBSelect");

@@ -103,6 +103,18 @@ public partial class GameData : Node
             var options = new JsonSerializerOptions { IncludeFields = true };
             var loadedModels = JsonSerializer.Deserialize<List<Model>>(json, options);
             ModelList = loadedModels ?? new List<Model>();
+
+            var changed = false;
+            foreach (var model in ModelList)
+            {
+                changed |= ModelImageService.EnsureModelIdentityAndDefault(model);
+            }
+
+            if (changed)
+            {
+                SaveModelsToFile();
+            }
+
             _modelsLoaded = true;
         }
         catch (Exception error)
@@ -301,12 +313,18 @@ public partial class GameData : Node
             return;
         }
 
-        var modelLookup = new Dictionary<string, Model>();
+        var modelLookupById = new Dictionary<string, Model>();
+        var modelLookupByName = new Dictionary<string, Model>();
         foreach (var model in ModelList)
         {
+            if (!string.IsNullOrWhiteSpace(model.ModelId))
+            {
+                modelLookupById[model.ModelId] = model;
+            }
+
             if (!string.IsNullOrWhiteSpace(model.Name))
             {
-                modelLookup[model.Name] = model;
+                modelLookupByName[model.Name] = model;
             }
         }
 
@@ -326,9 +344,15 @@ public partial class GameData : Node
                     continue;
                 }
 
-                if (modelLookup.TryGetValue(model.Name, out var latestModel))
+                if (!string.IsNullOrWhiteSpace(model.ModelId) && modelLookupById.TryGetValue(model.ModelId, out var latestModelById))
                 {
-                    updatedModels.Add(latestModel);
+                    updatedModels.Add(latestModelById);
+                    continue;
+                }
+
+                if (modelLookupByName.TryGetValue(model.Name, out var latestModelByName))
+                {
+                    updatedModels.Add(latestModelByName);
                 }
             }
 
@@ -360,6 +384,69 @@ public partial class GameData : Node
         if (updated)
         {
             SaveSquadsToFile();
+        }
+    }
+
+
+    public void SyncPlayersWithSquads()
+    {
+        if (PlayerList.Count == 0 || SquadList.Count == 0)
+        {
+            return;
+        }
+
+        var squadLookup = new Dictionary<string, Squad>();
+        foreach (var squad in SquadList)
+        {
+            if (!string.IsNullOrWhiteSpace(squad.Name))
+            {
+                squadLookup[squad.Name] = squad;
+            }
+        }
+
+        var updated = false;
+        foreach (var player in PlayerList)
+        {
+            if (player?.TheirSquads == null)
+            {
+                continue;
+            }
+
+            var updatedSquads = new List<Squad>();
+            foreach (var squad in player.TheirSquads)
+            {
+                if (squad?.Name == null)
+                {
+                    continue;
+                }
+
+                if (squadLookup.TryGetValue(squad.Name, out var latestSquad))
+                {
+                    updatedSquads.Add(latestSquad.DeepCopy());
+                }
+            }
+
+            if (updatedSquads.Count != player.TheirSquads.Count)
+            {
+                player.TheirSquads = updatedSquads;
+                updated = true;
+                continue;
+            }
+
+            for (int i = 0; i < updatedSquads.Count; i++)
+            {
+                if (!ReferenceEquals(updatedSquads[i], player.TheirSquads[i]))
+                {
+                    player.TheirSquads = updatedSquads;
+                    updated = true;
+                    break;
+                }
+            }
+        }
+
+        if (updated)
+        {
+            SavePlayersToFile();
         }
     }
 
