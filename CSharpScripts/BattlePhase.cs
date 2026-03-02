@@ -1,5 +1,8 @@
 public enum BattlePhase
 {
+    TerrainSetup,
+    SquadDeployment,
+    NormalPlay,
     Command,
     Movement,
     Shooting,

@@ -86,7 +86,7 @@ public static class CombatHelpers
         return weaponList.GroupBy(weapon => weapon.WeaponName).Select(group => group.First()).ToList();
     }
 
-    public static bool CheckValidShooting(Squad shooterSquad, MoveVars shooterMove, Weapon firearm, Squad targetSquad, float currentDistance)
+    public static bool CheckValidShooting(Squad shooterSquad, MoveVars shooterMove, Weapon firearm, Squad targetSquad, float currentDistance, bool hasLineOfSight = true)
     {
         var validShooting = currentDistance <= firearm.Range;
         var shotAbilities = firearm.Special;
@@ -110,6 +110,10 @@ public static class CombatHelpers
                 validShooting = false;
             }
         }
+        if (!hasLineOfSight && firearm.Special.All(ability => ability.Innate != WeaponAbilities.IndirectFire.Innate))
+        {
+            validShooting = false;
+        }
         if (targetSquad.SquadAbilities.Any(ability => ability.Innate == "12 inch or bust") && currentDistance > 12f)
         {
             LogAbilityTrigger("Squad", "12 inch or bust", "invalidated shooting beyond 12 inches");
@@ -130,7 +134,8 @@ public static class CombatHelpers
         Squad defenderSquad,
         bool coverType,
         bool isFight,
-        float currentDistance
+        float currentDistance,
+        int additionalHitModifier = 0
     )
     {
         var hitMod = 0;
@@ -234,6 +239,8 @@ public static class CombatHelpers
             woundMod -= 1;
             LogAbilityTrigger("Squad", "4s Please", "reduced wound modifier by 1");
         }
+        hitMod += additionalHitModifier;
+
         if (attackerSquad.SquadAbilities.Any(ability => ability.Innate == "Pow-1"))
         {
             hitMod = Math.Max(hitMod, 0);
