@@ -171,7 +171,7 @@ public static class CombatEngine
         return $"{weapon.WeaponName}::{weapon.Attacks}::{weapon.Damage}::{weapon.Range}::{weapon.HitSkill}::{weapon.Strength}::{weapon.ArmorPenetration}::{weapon.IsMelee}::{specials}";
     }
 
-    private static int ResolvePerilousRecoil(
+    private static async Task<int> ResolvePerilousRecoilAsync(
         Squad attackerSquad,
         List<BattleModelActor> attackerActors,
         Weapon weapon,
@@ -201,7 +201,19 @@ public static class CombatEngine
                 continue;
             }
 
-            if (DiceHelpers.SimpleRoll(6) != 1)
+            var perilousRoll = await DiceRoller.PresentAndRollAsync(
+                6,
+                1,
+                new RollContext(
+                    RollPhase.Other,
+                    "Perilous Test (D6)",
+                    attackerSquad.Name,
+                    null,
+                    weapon.WeaponName,
+                    BuildWeaponFingerprint(weapon),
+                    false,
+                    attackerActor.TeamId));
+            if (perilousRoll.Results.FirstOrDefault() != 1)
             {
                 continue;
             }
@@ -796,7 +808,7 @@ public static class CombatEngine
             battleHud?.ShowToast(BuildWeaponToast(summary), 2f);
             await Task.Delay(2000);
 
-            ResolvePerilousRecoil(attackerSquad, attackerActors, weapon, battleHud);
+            await ResolvePerilousRecoilAsync(attackerSquad, attackerActors, weapon, battleHud);
             RemoveDeadModels(attackerActors, attackerSquad, battleField);
             checkVictory?.Invoke();
 
@@ -952,7 +964,7 @@ public static class CombatEngine
             battleHud?.ShowToast(BuildWeaponToast(summary), 2f);
             await Task.Delay(2000);
 
-            ResolvePerilousRecoil(attackerSquad, attackerActors, weapon, battleHud);
+            await ResolvePerilousRecoilAsync(attackerSquad, attackerActors, weapon, battleHud);
             RemoveDeadModels(attackerActors, attackerSquad, battleField);
             checkVictory?.Invoke();
 

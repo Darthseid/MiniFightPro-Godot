@@ -100,12 +100,27 @@ public static class ShapeHelpers
             return false;
         }
 
-        if (activeSquad.SquadType.Contains("Fortification") || activeSquad.Movement <= 0f)
+        if (activeSquad.SquadType.Contains("Fortification") || activeSquad.Movement <= 0.01f)
         {
             return false;
         }
 
         if (activeSquad.SquadType.Contains("Aircraft"))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static bool CanDeclareChargeTarget(Squad attacker, Squad target)
+    {
+        if (attacker == null || target == null)
+        {
+            return false;
+        }
+
+        if (target.SquadType.Contains("Aircraft") && !attacker.SquadType.Contains("Fly"))
         {
             return false;
         }

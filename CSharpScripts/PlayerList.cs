@@ -3,6 +3,8 @@ using System;
 
 public partial class PlayerList : Control
 {
+    private const int MaxPlayers = 1000;
+
     [Export] public PackedScene ListItemScene = GD.Load<PackedScene>("res://Scenes/PlayerRow.tscn");
     [Export] public string CreatePlayerScenePath = "res://Scenes/CreatePlayer.tscn";
 
@@ -30,9 +32,9 @@ public partial class PlayerList : Control
     private void OnCreatePressed()
     {
         var data = GameData.Instance;
-        if (data.PlayerList.Count > 1000)
+        if (data.PlayerList.Count >= MaxPlayers)
         {
-            OS.Alert("You have too many players.", "Limit reached");
+            OS.Alert($"Player list cannot contain more than {MaxPlayers} players.", "Limit reached");
             return;
         }
 
