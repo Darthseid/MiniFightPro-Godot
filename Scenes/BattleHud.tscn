@@ -56,61 +56,90 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 
-[node name="OrdersRoot" type="VBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 12.0
-offset_top = 12.0
-offset_right = 352.0
-offset_bottom = 360.0
-
-[node name="Player1OrdersPanel" type="PanelContainer" parent="OrdersRoot"]
-layout_mode = 2
-
-[node name="Player1OrdersWrap" type="VBoxContainer" parent="OrdersRoot/Player1OrdersPanel"]
-layout_mode = 2
-
-[node name="Player1OrdersToggle" type="Button" parent="OrdersRoot/Player1OrdersPanel/Player1OrdersWrap"]
+[node name="BtnPlayer1OrdersFolder" type="Button" parent="." unique_id=1883164833]
 unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -360.0
+offset_right = -295.0
+offset_bottom = 31.0
+grow_horizontal = 0
+text = "🗂️"
+modulate = Color(0.55, 0.8, 1, 1)
+
+[node name="BtnPlayer2OrdersFolder" type="Button" parent="." unique_id=1883164834]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -430.0
+offset_right = -365.0
+offset_bottom = 31.0
+grow_horizontal = 0
+text = "🗂️"
+modulate = Color(1, 0.65, 0.55, 1)
+
+[node name="Player1OrdersPanel" type="PanelContainer" parent="." unique_id=1883164835]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -380.0
+offset_top = 40.0
+offset_right = -140.0
+offset_bottom = 320.0
+grow_horizontal = 0
+
+[node name="Player1OrdersWrap" type="VBoxContainer" parent="Player1OrdersPanel"]
+layout_mode = 2
+
+[node name="Player1OrdersHeader" type="Label" parent="Player1OrdersPanel/Player1OrdersWrap"]
 layout_mode = 2
 text = "Player 1 Orders"
 
-[node name="Player1OrdersBody" type="VBoxContainer" parent="OrdersRoot/Player1OrdersPanel/Player1OrdersWrap"]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="Player1OrderPoints" type="Label" parent="OrdersRoot/Player1OrdersPanel/Player1OrdersWrap/Player1OrdersBody"]
+[node name="Player1OrderPoints" type="Label" parent="Player1OrdersPanel/Player1OrdersWrap"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Order Points: 0"
 
-[node name="Player1OrdersList" type="VBoxContainer" parent="OrdersRoot/Player1OrdersPanel/Player1OrdersWrap/Player1OrdersBody"]
+[node name="Player1OrdersList" type="VBoxContainer" parent="Player1OrdersPanel/Player1OrdersWrap"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Player2OrdersPanel" type="PanelContainer" parent="OrdersRoot"]
-layout_mode = 2
-
-[node name="Player2OrdersWrap" type="VBoxContainer" parent="OrdersRoot/Player2OrdersPanel"]
-layout_mode = 2
-
-[node name="Player2OrdersToggle" type="Button" parent="OrdersRoot/Player2OrdersPanel/Player2OrdersWrap"]
+[node name="Player2OrdersPanel" type="PanelContainer" parent="." unique_id=1883164836]
 unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -640.0
+offset_top = 40.0
+offset_right = -400.0
+offset_bottom = 320.0
+grow_horizontal = 0
+
+[node name="Player2OrdersWrap" type="VBoxContainer" parent="Player2OrdersPanel"]
+layout_mode = 2
+
+[node name="Player2OrdersHeader" type="Label" parent="Player2OrdersPanel/Player2OrdersWrap"]
 layout_mode = 2
 text = "Player 2 Orders"
 
-[node name="Player2OrdersBody" type="VBoxContainer" parent="OrdersRoot/Player2OrdersPanel/Player2OrdersWrap"]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="Player2OrderPoints" type="Label" parent="OrdersRoot/Player2OrdersPanel/Player2OrdersWrap/Player2OrdersBody"]
+[node name="Player2OrderPoints" type="Label" parent="Player2OrdersPanel/Player2OrdersWrap"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Order Points: 0"
 
-[node name="Player2OrdersList" type="VBoxContainer" parent="OrdersRoot/Player2OrdersPanel/Player2OrdersWrap/Player2OrdersBody"]
+[node name="Player2OrdersList" type="VBoxContainer" parent="Player2OrdersPanel/Player2OrdersWrap"]
 unique_name_in_owner = true
 layout_mode = 2
+
 [node name="BtnMeasure" type="Button" parent="." unique_id=1883164832]
 unique_name_in_owner = true
 layout_mode = 1

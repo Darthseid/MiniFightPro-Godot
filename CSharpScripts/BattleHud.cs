@@ -49,16 +49,16 @@ public partial class BattleHud : Control
             _measureButton.Pressed += () => EmitSignal(SignalName.MeasureRequested);
         }
 
-        var player1Toggle = GetNodeOrNull<Button>("%Player1OrdersToggle");
+        var player1Toggle = GetNodeOrNull<Button>("%BtnPlayer1OrdersFolder");
         if (player1Toggle != null)
         {
-            player1Toggle.Pressed += () => ToggleOrderPanel("%Player1OrdersBody");
+            player1Toggle.Pressed += () => ToggleOrderPanel("%Player1OrdersPanel");
         }
 
-        var player2Toggle = GetNodeOrNull<Button>("%Player2OrdersToggle");
+        var player2Toggle = GetNodeOrNull<Button>("%BtnPlayer2OrdersFolder");
         if (player2Toggle != null)
         {
-            player2Toggle.Pressed += () => ToggleOrderPanel("%Player2OrdersBody");
+            player2Toggle.Pressed += () => ToggleOrderPanel("%Player2OrdersPanel");
         }
 
         SetMeasureButtonEnabledVisual(false);
@@ -70,10 +70,19 @@ public partial class BattleHud : Control
     private void ToggleOrderPanel(string path)
     {
         var panel = GetNodeOrNull<Control>(path);
-        if (panel != null)
+        if (panel == null)
         {
-            panel.Visible = !panel.Visible;
+            return;
         }
+
+        var otherPath = path == "%Player1OrdersPanel" ? "%Player2OrdersPanel" : "%Player1OrdersPanel";
+        var other = GetNodeOrNull<Control>(otherPath);
+        if (other != null)
+        {
+            other.Visible = false;
+        }
+
+        panel.Visible = !panel.Visible;
     }
 
     public void ConfigureOrders(Player player1, Player player2, OrderManager manager, Action<int, string> onOrderPressed)

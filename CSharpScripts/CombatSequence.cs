@@ -33,6 +33,7 @@ public sealed class CombatSequence
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Command);
 
         var activeTeamIsAI = _battle.IsTeamAI(_battle.ActiveTeamId);
+        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Command, activeTeamIsAI);
         var activePlayer = _battle.ActiveTeamId == 1 ? _battle.TeamAPlayer : _battle.TeamBPlayer;
         var inactivePlayer = _battle.ActiveTeamId == 1 ? _battle.TeamBPlayer : _battle.TeamAPlayer;
 
@@ -41,40 +42,38 @@ public sealed class CombatSequence
         _battle.PostDamageCleanupAndVictoryCheck();
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
-        await WaitForHumanPhaseOrAutopilotAsync(activeTeamIsAI, "Movement");
         await HandleMovementAsync(activeTeamIsAI);
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
-        await WaitForHumanPhaseOrAutopilotAsync(activeTeamIsAI, "Shooting");
         await HandleShootingAsync(activeTeamIsAI);
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
-        await WaitForHumanPhaseOrAutopilotAsync(activeTeamIsAI, "Charge");
         await HandleChargeAsync(activeTeamIsAI);
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
-        await WaitForHumanPhaseOrAutopilotAsync(activeTeamIsAI, "Fight");
         await HandleFightAsync(activeTeamIsAI);
         if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
         EndTurn();
     }
 
-    private async Task WaitForHumanPhaseOrAutopilotAsync(bool activeTeamIsAI, string nextPhaseLabel)
+
+    private async Task WaitForOrdersAtPhaseStartAsync(BattlePhase phase, bool activeTeamIsAI)
     {
         if (activeTeamIsAI)
         {
-            await _battle.DelaySecondsAsync(0.2f);
             return;
         }
 
-        _battle.Hud?.ShowToast($"Press ➡️ for {nextPhaseLabel}");
+        _battle.OrderManager?.RefreshHud();
+        _battle.Hud?.ShowToast($"Phase start: use Orders, then press ➡️ to continue {phase}.");
         await _battle.WaitForPhaseAdvanceAsync();
     }
 
     private async Task HandleMovementAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Movement);
+        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Movement, activeTeamIsAI);
         var activeTeamId = _battle.ActiveTeamId;
         var enemyTeamId = activeTeamId == 1 ? 2 : 1;
         await _battle.HandleTransportEmbarkDisembarkStepAsync(activeTeamId, activeTeamIsAI);
@@ -152,6 +151,7 @@ public sealed class CombatSequence
     private async Task HandleShootingAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Shooting);
+        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Shooting, activeTeamIsAI);
         var activeTeamId = _battle.ActiveTeamId;
         var activeSquads = _battle.GetAliveSquadsForTeam(activeTeamId);
         var enemyTeamId = activeTeamId == 1 ? 2 : 1;
@@ -208,6 +208,7 @@ public sealed class CombatSequence
         _battle.OrderManager?.ResetPhaseUsage();
         _battle.OrderManager?.OpenWindow(OrderWindowType.ChargePhase, _battle.ActiveTeamId);
         _battle.OrderManager?.OpenWindow(OrderWindowType.OpponentChargePhaseStart, _battle.ActiveTeamId);
+        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Charge, activeTeamIsAI);
         var activeTeamId = _battle.ActiveTeamId;
         var enemyTeamId = activeTeamId == 1 ? 2 : 1;
         var activeSquads = _battle.GetAliveSquadsForTeam(activeTeamId);
@@ -286,6 +287,7 @@ public sealed class CombatSequence
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Fight);
         _battle.OrderManager?.ResetPhaseUsage();
         _battle.OrderManager?.OpenWindow(OrderWindowType.StartOfFightPhase, _battle.ActiveTeamId);
+        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Fight, activeTeamIsAI);
         var activeTeamId = _battle.ActiveTeamId;
         var inactiveTeamId = activeTeamId == 1 ? 2 : 1;
 

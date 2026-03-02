@@ -815,7 +815,8 @@ public static class CombatEngine
         BattleHud battleHud,
         BattleField battleField,
         System.Action checkVictory,
-        System.Action<Squad, Squad, int> handleExplosionProcess = null
+        System.Action<Squad, Squad, int> handleExplosionProcess = null,
+        bool onlySixesHit = false
     )
     {
         var attackerSquad = attackerTeamId == 1 ? teamASquad : teamBSquad;
@@ -894,7 +895,8 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                CombatEngine.GetWeaponFingerprint(weapon)
+                CombatEngine.GetWeaponFingerprint(weapon),
+                onlySixesHit
             );
             var (injuries, devastating) = await CombatRolls.WoundSequenceAsync(hits, weapon.Strength, defenderHardness, modifiers.WoundMod, modifiers.WoundReroll, weapon.Special, modifiers.AntiThreshold, woundContext);
             injuries += devastating;
