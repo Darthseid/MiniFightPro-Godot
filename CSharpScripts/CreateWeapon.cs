@@ -76,7 +76,7 @@ public partial class CreateWeapon : Control
 
         if (_hsIn.Value < 0 || _hsIn.Value > 9 ||
             _strIn.Value < 0 || _strIn.Value > 99 ||
-            _apIn.Value < -9 || _apIn.Value > 9 ||
+            _apIn.Value < -9 || _apIn.Value > 0 ||
             _rangeIn.Value < 0 || _rangeIn.Value > 999)
         {
             OS.Alert("Values are out of bounds!", "Validation Error");

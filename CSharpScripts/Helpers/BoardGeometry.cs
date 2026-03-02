@@ -162,6 +162,10 @@ public static class BoardGeometry
         }
         if (proposed.Count == 0)
             return false;
+
+        if (!battleField.ArePositionsValid(proposed, enemies))
+            return false;
+
         const float chargeMoveDuration = 0.4f;
         foreach (var pair in proposed)
         {
