@@ -5,6 +5,8 @@ using System.Linq;
 
 public partial class CreateSquad : Control
 {
+    private const int MaxModelsPerSquad = 70;
+
     private LineEdit _nameInput = null!;
     private SpinBox _movementInput = null!;
     private SpinBox _hardnessInput = null!;
@@ -170,6 +172,12 @@ public partial class CreateSquad : Control
     {
         foreach (int index in _availableModels.GetSelectedItems())
         {
+            if (_selectedModels.ItemCount >= MaxModelsPerSquad)
+            {
+                OS.Alert($"A squad cannot have more than {MaxModelsPerSquad} models.", "Limit reached");
+                return;
+            }
+
             var name = _availableModels.GetItemText(index);
             _selectedModels.AddItem(name);
         }
@@ -300,9 +308,9 @@ public partial class CreateSquad : Control
             return;
         }
 
-        if (_selectedModels.ItemCount > 200)
+        if (_selectedModels.ItemCount > MaxModelsPerSquad)
         {
-            OS.Alert("This Squad is too big!", "Validation Error");
+            OS.Alert($"A squad cannot have more than {MaxModelsPerSquad} models.", "Validation Error");
             return;
         }
 
