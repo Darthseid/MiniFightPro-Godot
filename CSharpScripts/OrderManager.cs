@@ -489,7 +489,7 @@ public sealed class OrderManager
             return false;
         }
 
-        if (rollEvent.RerolledFlags.All(v => v))
+        if (rollEvent.Results.Count == 0 || !rollEvent.RerolledFlags.Select((rerolled, idx) => !rerolled && !rollEvent.FateReplacedFlags[idx]).Any(can => can))
         {
             reason = "No rerollable dice.";
             return false;
@@ -514,6 +514,12 @@ public sealed class OrderManager
         if (rollEvent.RerolledFlags[dieIndex])
         {
             reason = "This die was already rerolled.";
+            return false;
+        }
+
+        if (rollEvent.FateReplacedFlags[dieIndex])
+        {
+            reason = "Fate-replaced dice cannot be rerolled.";
             return false;
         }
 

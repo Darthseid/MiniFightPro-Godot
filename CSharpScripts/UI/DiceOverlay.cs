@@ -12,6 +12,8 @@ public partial class DiceOverlay : CanvasLayer
     private PackedScene _dieWidgetScene;
     private Button _nextButton;
     private Button _commandRerollButton;
+    private Label _player1FateSixLabel;
+    private Label _player2FateSixLabel;
 
     private DieWidget[] _widgets = Array.Empty<DieWidget>();
     private RollEvent? _currentRoll;
@@ -27,6 +29,8 @@ public partial class DiceOverlay : CanvasLayer
         _audioPlayer = GetNode<AudioStreamPlayer>("AudioStreamPlayer");
         _nextButton = GetNode<Button>("Panel/Margin/VBox/Actions/BtnNextRoll");
         _commandRerollButton = GetNode<Button>("Panel/Margin/VBox/Actions/BtnCommandReroll");
+        _player1FateSixLabel = GetNode<Label>("Panel/Margin/VBox/Actions/Player1FateSixes");
+        _player2FateSixLabel = GetNode<Label>("Panel/Margin/VBox/Actions/Player2FateSixes");
         _dieWidgetScene = GD.Load<PackedScene>("res://Scenes/UI/DieWidget.tscn");
         _nextButton.Pressed += () => NextPressed?.Invoke();
         _commandRerollButton.Pressed += () => CommandRerollPressed?.Invoke();
@@ -64,10 +68,27 @@ public partial class DiceOverlay : CanvasLayer
         }
     }
 
+    public void SetFateSixes(int team1Pool, bool team1HasAbility, int team2Pool, bool team2HasAbility)
+    {
+        _player1FateSixLabel.Visible = team1HasAbility;
+        _player2FateSixLabel.Visible = team2HasAbility;
+        _player1FateSixLabel.Text = $"P1 Fate Sixes: {team1Pool}";
+        _player2FateSixLabel.Text = $"P2 Fate Sixes: {team2Pool}";
+    }
+
     public void SetButtonsState(bool canAdvance, bool canReroll)
     {
         _nextButton.Disabled = !canAdvance;
         _commandRerollButton.Disabled = !canReroll;
+    }
+
+
+    public void SetNormalSelectionState(bool isActive)
+    {
+        for (var i = 0; i < _widgets.Length; i++)
+        {
+            _widgets[i].SetInteractable(isActive, false);
+        }
     }
 
     public void SetRerollSelectionState(bool isActive)
@@ -79,7 +100,7 @@ public partial class DiceOverlay : CanvasLayer
 
         for (var i = 0; i < _widgets.Length; i++)
         {
-            var canPick = isActive && !_currentRoll.RerolledFlags[i];
+            var canPick = isActive && !_currentRoll.RerolledFlags[i] && !_currentRoll.FateReplacedFlags[i];
             _widgets[i].SetInteractable(canPick, canPick);
         }
     }

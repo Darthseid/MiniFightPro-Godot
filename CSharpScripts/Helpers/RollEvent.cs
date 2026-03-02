@@ -6,6 +6,7 @@ public sealed record RollEvent(
     int Sides,
     List<int> Results,
     bool[] RerolledFlags,
+    bool[] FateReplacedFlags,
     int OwnerTeamId,
     RollPhase Phase,
     string Label,

@@ -175,6 +175,10 @@ public partial class Battle : Node2D
 
         _teamAPlayer.OrderPoints = 0;
         _teamBPlayer.OrderPoints = 0;
+        _teamAPlayer.HasStrandedMiracle = _teamAPlayer.HasStrandedMiracle || (_teamAPlayer.PlayerAbilities?.Contains(PlayerAbilities.StrandedMiracle) == true);
+        _teamBPlayer.HasStrandedMiracle = _teamBPlayer.HasStrandedMiracle || (_teamBPlayer.PlayerAbilities?.Contains(PlayerAbilities.StrandedMiracle) == true);
+        _teamAPlayer.FateSixPool = _teamAPlayer.HasStrandedMiracle ? 3 : 0;
+        _teamBPlayer.FateSixPool = _teamBPlayer.HasStrandedMiracle ? 3 : 0;
 
         _teamASquad = _teamAPlayer.TheirSquads.FirstOrDefault();
         _teamBSquad = _teamBPlayer.TheirSquads.FirstOrDefault();
@@ -526,6 +530,8 @@ public partial class Battle : Node2D
             .Where(squad => squad != null)
             .ToList();
 
+        var destroyedCount = 0;
+
         foreach (var squad in allSquads)
         {
             var livingModels = squad.Composition?.Count(model => model != null && model.Health > 0) ?? 0;
@@ -535,6 +541,28 @@ public partial class Battle : Node2D
             }
 
             CombatEngine.RemoveDeadModels(GetActorsForSquad(squad), squad, _battleField);
+
+            var stillLivingModels = squad.Composition?.Count(model => model != null && model.Health > 0) ?? 0;
+            if (stillLivingModels <= 0)
+            {
+                destroyedCount++;
+            }
+        }
+
+        if (destroyedCount > 0)
+        {
+            if (_teamAPlayer?.HasStrandedMiracle == true)
+            {
+                _teamAPlayer.FateSixPool += destroyedCount;
+            }
+
+            if (_teamBPlayer?.HasStrandedMiracle == true)
+            {
+                _teamBPlayer.FateSixPool += destroyedCount;
+            }
+
+            _orderManager?.RefreshHud();
+            _dicePresenter?.RefreshFateSixHud();
         }
 
         CheckVictory();
@@ -688,6 +716,27 @@ public partial class Battle : Node2D
     internal Player GetPlayerByTeam(int teamId)
     {
         return teamId == 1 ? _teamAPlayer : _teamBPlayer;
+    }
+
+
+    internal int GetFateSixPool(int teamId)
+    {
+        var player = GetPlayerByTeam(teamId);
+        return player?.HasStrandedMiracle == true ? Math.Max(0, player.FateSixPool) : 0;
+    }
+
+    internal bool TryConsumeFateSix(int teamId)
+    {
+        var player = GetPlayerByTeam(teamId);
+        if (player == null || !player.HasStrandedMiracle || player.FateSixPool <= 0)
+        {
+            return false;
+        }
+
+        player.FateSixPool--;
+        _orderManager?.RefreshHud();
+        _dicePresenter?.RefreshFateSixHud();
+        return true;
     }
 
     internal bool SquadHasRangedWeaponThatCanShoot(Squad shooter, int enemyTeamId)
