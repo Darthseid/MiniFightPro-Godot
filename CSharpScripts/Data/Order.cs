@@ -10,7 +10,6 @@ public enum OrderWindowType
     OpponentChargePhaseStart,
     OpponentShootingPhaseStart,
     OnTargetedByShooting,
-    AfterEnemyUnitFights,
     OnChargeDeclared
 }
 
@@ -159,8 +158,8 @@ public class Order
                 "Counter-Offensive",
                 "Fight",
                 false,
-                "After an enemy squad fights, choose a friendly eligible squad to fight immediately next and gain temporary First Strike this turn.",
-                OrderWindowType.AfterEnemyUnitFights,
+                "At start of fight phase, choose a friendly eligible squad; it gains temporary First Strike for this turn.",
+                OrderWindowType.StartOfFightPhase,
                 OrderTargetSide.Friendly,
                 OrderTargetType.FightEligible,
                 true),

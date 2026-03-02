@@ -15,7 +15,6 @@ public sealed class OrderManager
     private readonly HashSet<Squad> _goToGroundTargets = new();
     private readonly Dictionary<int, List<Squad>> _mistsReserveTargetsByOwner = new();
     private readonly Dictionary<int, Squad?> _heroicInterventionEnemyByPlayer = new();
-    private readonly Dictionary<int, Squad?> _counterOffensivePreferredByPlayer = new();
     private Squad? _currentShootingDefender;
 
     public OrderManager(Battle battle)
@@ -31,8 +30,6 @@ public sealed class OrderManager
         _mistsReserveTargetsByOwner[2] = new List<Squad>();
         _heroicInterventionEnemyByPlayer[1] = null;
         _heroicInterventionEnemyByPlayer[2] = null;
-        _counterOffensivePreferredByPlayer[1] = null;
-        _counterOffensivePreferredByPlayer[2] = null;
     }
 
     public void InitializeBattlePoints()
@@ -52,8 +49,6 @@ public sealed class OrderManager
         _usedOrderThisPhase[2] = false;
         _overwatchArmedSquad[1] = null;
         _overwatchArmedSquad[2] = null;
-        _counterOffensivePreferredByPlayer[1] = null;
-        _counterOffensivePreferredByPlayer[2] = null;
         RefreshHud();
     }
 
@@ -137,11 +132,6 @@ public sealed class OrderManager
             return false;
         }
 
-        if (order.WindowType == OrderWindowType.AfterEnemyUnitFights && _battle.ActiveTeamId == playerId)
-        {
-            reason = "Only defending player can use this now.";
-            return false;
-        }
         if (string.Equals(order.OrderId, "heroic_intervention", StringComparison.OrdinalIgnoreCase) && _battle.ActiveTeamId == playerId)
         {
             reason = "Only defending player can use this now.";
@@ -324,7 +314,6 @@ public sealed class OrderManager
                 target.SquadAbilities.Add(SquadAbilities.TempFirstStrike);
             }
 
-            _counterOffensivePreferredByPlayer[playerId] = target;
             return;
         }
 
@@ -367,17 +356,6 @@ public sealed class OrderManager
 
         _goToGroundTargets.Clear();
         _currentShootingDefender = null;
-    }
-
-    public Squad? ConsumeCounterOffensivePreferredSquad(int playerId)
-    {
-        if (!_counterOffensivePreferredByPlayer.TryGetValue(playerId, out var squad))
-        {
-            return null;
-        }
-
-        _counterOffensivePreferredByPlayer[playerId] = null;
-        return squad;
     }
 
     public async Task HandleMistsRedeployAtShootingStartAsync(int playerId)

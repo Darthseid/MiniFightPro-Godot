@@ -205,21 +205,6 @@ public static class CombatHelpers
         return new DiceModifiers(hitMod, woundMod, hitReroll, woundReroll, armorMod, critThreshold, antiThreshold);
     }
 
-    public static int ResolveEffectiveDodge(Squad defenderSquad)
-    {
-        if (defenderSquad == null)
-        {
-            return 7;
-        }
-
-        if (defenderSquad.Dodge > 6 && defenderSquad.SquadAbilities.Any(ability => ability.Innate == SquadAbilities.SixPlusDodge.Innate))
-        {
-            return defenderSquad.Dodge - 1;
-        }
-
-        return defenderSquad.Dodge;
-    }
-
     private static readonly System.Text.RegularExpressions.Regex DamageRegex =
     new(@"^\s*(\d*)\s*[dD]\s*(\d+)\s*([+-]\s*\d+)?\s*$",
         System.Text.RegularExpressions.RegexOptions.Compiled);

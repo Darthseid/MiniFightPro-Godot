@@ -389,8 +389,6 @@ public sealed class CombatSequence
                 _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
-                await TryCounterOffensiveInterruptAsync(firstTeamId, secondTeamId, activeTeamIsAI);
-                if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
 
             if (i < secondTier.Count)
@@ -424,8 +422,6 @@ public sealed class CombatSequence
                 _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
 
-                await TryCounterOffensiveInterruptAsync(secondTeamId, firstTeamId, activeTeamIsAI);
-                if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
         }
     }
@@ -543,49 +539,6 @@ public sealed class CombatSequence
         }
     }
 
-
-    private async Task TryCounterOffensiveInterruptAsync(int justFoughtTeamId, int reactingTeamId, bool activeTeamIsAI)
-    {
-        _battle.OrderManager?.ResetPhaseUsage();
-        _battle.OrderManager?.OpenWindow(OrderWindowType.AfterEnemyUnitFights, justFoughtTeamId);
-        if (!_battle.IsTeamAI(reactingTeamId))
-        {
-            await _battle.WaitForPhaseAdvanceAsync();
-        }
-
-        var preferred = _battle.OrderManager?.ConsumeCounterOffensivePreferredSquad(reactingTeamId);
-        _battle.OrderManager?.CloseWindow(OrderWindowType.AfterEnemyUnitFights);
-        if (preferred == null)
-        {
-            return;
-        }
-
-        var enemyTargets = GetFightTargetsInRange(preferred, justFoughtTeamId);
-        if (enemyTargets.Count == 0)
-        {
-            return;
-        }
-
-        _battle.SetActiveSquadForTeam(reactingTeamId, preferred);
-        var target = await PickFightTargetAsync(preferred, justFoughtTeamId, enemyTargets, _battle.IsTeamAI(reactingTeamId));
-        if (target == null)
-        {
-            return;
-        }
-
-        _battle.SetActiveSquadForTeam(justFoughtTeamId, target);
-        var meleeProfile = await ChooseMultiProfileWeaponFingerprintAsync(preferred, true, "fight", _battle.IsTeamAI(reactingTeamId));
-        if (meleeProfile == string.Empty)
-        {
-            return;
-        }
-
-        var prev = _battle.ActiveTeamId;
-        _battle.ActiveTeamId = reactingTeamId;
-        await _battle.ResolveFightPhase(meleeProfile);
-        _battle.ActiveTeamId = prev;
-        _battle.PostDamageCleanupAndVictoryCheck();
-    }
 
     private void EndTurn()
     {
