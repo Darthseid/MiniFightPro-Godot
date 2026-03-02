@@ -34,6 +34,8 @@ public class Squad
     public List<SquadAbility> SquadAbilities;
     public Squad EmbarkedSquad;
     public Squad TransportedBy;
+    public bool IsInStrategicReserve;
+    public bool CannotChargeThisTurn;
 	
 	public Squad() { }
 
@@ -66,6 +68,8 @@ public class Squad
         SquadAbilities = squadAbilities ?? new List<SquadAbility>();
         EmbarkedSquad = null;
         TransportedBy = null;
+        IsInStrategicReserve = false;
+        CannotChargeThisTurn = false;
     }
 
     public Squad DeepCopy()
@@ -90,6 +94,9 @@ public class Squad
         {
             copy.EmbarkedSquad.TransportedBy = copy;
         }
+
+        copy.IsInStrategicReserve = IsInStrategicReserve;
+        copy.CannotChargeThisTurn = CannotChargeThisTurn;
 
         return copy;
     }
@@ -204,6 +211,11 @@ public static class SquadAbilities
     public static readonly SquadAbility MartialStance = new SquadAbility("martialStance", "Martial Stances", 1, false);
      public static readonly SquadAbility SubRoutine = new SquadAbility("SubRoutine", "Subroutines", 1, false);
     public static readonly SquadAbility FiringDeck = new SquadAbility("Firing Deck", "Firing Deck", 0, false);
+    public static readonly SquadAbility CoverBenefit = new SquadAbility("CoverBenefit", "Cover Benefit", 1, false);
+    public static readonly SquadAbility CoverBenefitTemp = new SquadAbility("CoverBenefit", "Temp Cover Benefit", 1, true);
+    public static readonly SquadAbility SixPlusDodge = new SquadAbility("SixPlusDodge", "Six Plus Dodge", 1, false);
+    public static readonly SquadAbility SixPlusDodgeTemp = new SquadAbility("SixPlusDodge", "Temp Six Plus Dodge", 1, true);
+    public static readonly SquadAbility TempFirstStrike = new SquadAbility("TempFirstStrike", "Temp First Strike", 0, true);
 
     public static readonly IReadOnlyList<SquadAbility> VariableBaseAbilities = new List<SquadAbility>
     {
@@ -284,5 +296,7 @@ public static class SquadAbilities
         StopRerolls,
         NoModifiers,
         FiringDeck,
+        CoverBenefit,
+        SixPlusDodge,
     };
 }

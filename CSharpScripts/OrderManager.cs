@@ -12,6 +12,11 @@ public sealed class OrderManager
     private readonly Dictionary<int, bool> _usedOrderThisPhase = new();
     private readonly Dictionary<int, Squad?> _overwatchArmedSquad = new();
     private readonly HashSet<Squad> _fightPhasePrecisionTargets = new();
+    private readonly HashSet<Squad> _goToGroundTargets = new();
+    private readonly Dictionary<int, List<Squad>> _mistsReserveTargetsByOwner = new();
+    private readonly Dictionary<int, Squad?> _heroicInterventionEnemyByPlayer = new();
+    private readonly Dictionary<int, Squad?> _counterOffensivePreferredByPlayer = new();
+    private Squad? _currentShootingDefender;
 
     public OrderManager(Battle battle)
     {
@@ -22,6 +27,12 @@ public sealed class OrderManager
         _usedOrderThisPhase[2] = false;
         _overwatchArmedSquad[1] = null;
         _overwatchArmedSquad[2] = null;
+        _mistsReserveTargetsByOwner[1] = new List<Squad>();
+        _mistsReserveTargetsByOwner[2] = new List<Squad>();
+        _heroicInterventionEnemyByPlayer[1] = null;
+        _heroicInterventionEnemyByPlayer[2] = null;
+        _counterOffensivePreferredByPlayer[1] = null;
+        _counterOffensivePreferredByPlayer[2] = null;
     }
 
     public void InitializeBattlePoints()
@@ -41,6 +52,8 @@ public sealed class OrderManager
         _usedOrderThisPhase[2] = false;
         _overwatchArmedSquad[1] = null;
         _overwatchArmedSquad[2] = null;
+        _counterOffensivePreferredByPlayer[1] = null;
+        _counterOffensivePreferredByPlayer[2] = null;
         RefreshHud();
     }
 
@@ -65,12 +78,18 @@ public sealed class OrderManager
             _overwatchArmedSquad[2] = null;
         }
 
+        if (windowType == OrderWindowType.OnTargetedByShooting)
+        {
+            _currentShootingDefender = null;
+        }
+
         RefreshHud();
     }
 
     public void CloseAllWindows()
     {
         _openWindows.Clear();
+        _currentShootingDefender = null;
         RefreshHud();
     }
 
@@ -112,6 +131,23 @@ public sealed class OrderManager
             return false;
         }
 
+        if ((order.WindowType == OrderWindowType.OpponentShootingPhaseStart || order.WindowType == OrderWindowType.OnTargetedByShooting) && _battle.ActiveTeamId == playerId)
+        {
+            reason = "Only defending player can use this now.";
+            return false;
+        }
+
+        if (order.WindowType == OrderWindowType.AfterEnemyUnitFights && _battle.ActiveTeamId == playerId)
+        {
+            reason = "Only defending player can use this now.";
+            return false;
+        }
+        if (string.Equals(order.OrderId, "heroic_intervention", StringComparison.OrdinalIgnoreCase) && _battle.ActiveTeamId == playerId)
+        {
+            reason = "Only defending player can use this now.";
+            return false;
+        }
+
         if (_usedOrderThisPhase[playerId])
         {
             reason = "Already used an order this phase.";
@@ -142,6 +178,20 @@ public sealed class OrderManager
 
     public IReadOnlyList<Squad> GetValidTargets(int playerId, Order order)
     {
+        if (string.Equals(order.OrderId, "go_to_ground", StringComparison.OrdinalIgnoreCase))
+        {
+            return _currentShootingDefender != null
+                ? new List<Squad> { _currentShootingDefender }
+                : new List<Squad>();
+        }
+
+        if (string.Equals(order.OrderId, "heroic_intervention", StringComparison.OrdinalIgnoreCase))
+        {
+            return _battle.GetAliveSquadsForTeam(playerId)
+                .Where(s => IsHeroicInterventionTarget(playerId, s))
+                .ToList();
+        }
+
         var targetTeamId = order.TargetSide switch
         {
             OrderTargetSide.Friendly => playerId,
@@ -165,6 +215,11 @@ public sealed class OrderManager
         {
             var enemyTeamId = playerId == 1 ? 2 : 1;
             return _battle.SquadHasRangedWeaponThatCanShoot(squad, enemyTeamId);
+        }
+
+        if (order.TargetType == OrderTargetType.FightEligible)
+        {
+            return _battle.IsSquadInFightRange(squad, playerId == 1 ? 2 : 1);
         }
 
         return true;
@@ -243,7 +298,124 @@ public sealed class OrderManager
         if (string.Equals(order.OrderId, "fire_overwatch", StringComparison.OrdinalIgnoreCase))
         {
             _overwatchArmedSquad[playerId] = target;
+            return;
         }
+
+        if (string.Equals(order.OrderId, "go_to_ground", StringComparison.OrdinalIgnoreCase))
+        {
+            if (target.SquadAbilities.All(ability => ability.Innate != SquadAbilities.CoverBenefitTemp.Innate || !ability.IsTemporary))
+            {
+                target.SquadAbilities.Add(SquadAbilities.CoverBenefitTemp);
+            }
+
+            if (target.SquadAbilities.All(ability => ability.Innate != SquadAbilities.SixPlusDodgeTemp.Innate || !ability.IsTemporary))
+            {
+                target.SquadAbilities.Add(SquadAbilities.SixPlusDodgeTemp);
+            }
+
+            _goToGroundTargets.Add(target);
+            return;
+        }
+
+        if (string.Equals(order.OrderId, "counter_offensive", StringComparison.OrdinalIgnoreCase))
+        {
+            if (target.SquadAbilities.All(ability => ability.Innate != SquadAbilities.TempFirstStrike.Innate || !ability.IsTemporary))
+            {
+                target.SquadAbilities.Add(SquadAbilities.TempFirstStrike);
+            }
+
+            _counterOffensivePreferredByPlayer[playerId] = target;
+            return;
+        }
+
+        if (string.Equals(order.OrderId, "heroic_intervention", StringComparison.OrdinalIgnoreCase))
+        {
+            var enemy = _heroicInterventionEnemyByPlayer[playerId];
+            if (enemy != null)
+            {
+                var moved = _battle.TryMoveSquadIntoEngagement(target, enemy);
+                if (moved)
+                {
+                    _battle.Hud?.ShowToast($"{target.Name} heroically intervenes into engagement.");
+                }
+            }
+
+            return;
+        }
+
+        if (string.Equals(order.OrderId, "mists_of_deimos", StringComparison.OrdinalIgnoreCase))
+        {
+            target.IsInStrategicReserve = true;
+            _battle.SetSquadStrategicReserveVisual(target, true);
+            _mistsReserveTargetsByOwner[playerId].Add(target);
+            return;
+        }
+    }
+
+    public void SetCurrentShootingDefender(Squad? defender)
+    {
+        _currentShootingDefender = defender;
+    }
+
+    public void ClearShootingPhaseTemporaryEffects()
+    {
+        foreach (var squad in _goToGroundTargets)
+        {
+            squad.SquadAbilities.RemoveAll(ability => ability.IsTemporary &&
+                (ability.Innate == SquadAbilities.CoverBenefitTemp.Innate || ability.Innate == SquadAbilities.SixPlusDodgeTemp.Innate));
+        }
+
+        _goToGroundTargets.Clear();
+        _currentShootingDefender = null;
+    }
+
+    public Squad? ConsumeCounterOffensivePreferredSquad(int playerId)
+    {
+        if (!_counterOffensivePreferredByPlayer.TryGetValue(playerId, out var squad))
+        {
+            return null;
+        }
+
+        _counterOffensivePreferredByPlayer[playerId] = null;
+        return squad;
+    }
+
+    public async Task HandleMistsRedeployAtShootingStartAsync(int playerId)
+    {
+        var reserves = _mistsReserveTargetsByOwner[playerId].Where(s => s != null && s.IsInStrategicReserve).ToList();
+        foreach (var squad in reserves)
+        {
+            var success = await _battle.RedeployStrategicReserveSquadAsync(playerId, squad);
+            if (success)
+            {
+                squad.IsInStrategicReserve = false;
+                squad.CannotChargeThisTurn = true;
+                _battle.SetSquadStrategicReserveVisual(squad, false);
+            }
+        }
+
+        _mistsReserveTargetsByOwner[playerId].RemoveAll(s => s == null || !s.IsInStrategicReserve);
+    }
+
+    public void ConfigureHeroicInterventionEnemy(int playerId, Squad? enemy)
+    {
+        _heroicInterventionEnemyByPlayer[playerId] = enemy;
+    }
+
+    private bool IsHeroicInterventionTarget(int playerId, Squad squad)
+    {
+        if (squad == null || _battle.IsSquadInFightRange(squad, playerId == 1 ? 2 : 1))
+        {
+            return false;
+        }
+
+        var enemy = _heroicInterventionEnemyByPlayer[playerId];
+        if (enemy == null)
+        {
+            return false;
+        }
+
+        return _battle.AreSquadsWithinDistance(squad, enemy, 6f);
     }
 
     public void EndFightPhaseCleanup()

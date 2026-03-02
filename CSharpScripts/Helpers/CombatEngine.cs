@@ -742,7 +742,7 @@ public static class CombatEngine
                 weapon.WeaponName,
                 CombatEngine.GetWeaponFingerprint(weapon)
             );
-            var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, defenderSquad.Dodge, saveContext);
+            var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, CombatHelpers.ResolveEffectiveDodge(defenderSquad), saveContext);
             if (weapon.IsMelee && unsaved > 0)
             {
                 AudioManager.Instance?.Play("chomp");
@@ -908,7 +908,7 @@ public static class CombatEngine
                 weapon.WeaponName,
                 CombatEngine.GetWeaponFingerprint(weapon)
             );
-            var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, defenderSquad.Dodge, saveContext);
+            var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, CombatHelpers.ResolveEffectiveDodge(defenderSquad), saveContext);
             if (weapon.IsMelee && unsaved > 0)
             {
                 AudioManager.Instance?.Play("chomp");

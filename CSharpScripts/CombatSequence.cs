@@ -151,8 +151,20 @@ public sealed class CombatSequence
     private async Task HandleShootingAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Shooting);
-        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Shooting, activeTeamIsAI);
         var activeTeamId = _battle.ActiveTeamId;
+        var defenderTeamId = activeTeamId == 1 ? 2 : 1;
+        _battle.OrderManager?.ResetPhaseUsage();
+        _battle.OrderManager?.OpenWindow(OrderWindowType.OpponentShootingPhaseStart, activeTeamId);
+        await WaitForOrdersAtPhaseStartAsync(BattlePhase.Shooting, activeTeamIsAI);
+        if (_battle.OrderManager != null)
+        {
+            await _battle.OrderManager.HandleMistsRedeployAtShootingStartAsync(activeTeamId);
+        }
+        if (!_battle.IsTeamAI(defenderTeamId))
+        {
+            await _battle.WaitForPhaseAdvanceAsync();
+        }
+        _battle.OrderManager?.CloseWindow(OrderWindowType.OpponentShootingPhaseStart);
         var activeSquads = _battle.GetAliveSquadsForTeam(activeTeamId);
         var enemyTeamId = activeTeamId == 1 ? 2 : 1;
 
@@ -187,6 +199,15 @@ public sealed class CombatSequence
 
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
 
+            _battle.OrderManager?.ResetPhaseUsage();
+            _battle.OrderManager?.SetCurrentShootingDefender(target);
+            _battle.OrderManager?.OpenWindow(OrderWindowType.OnTargetedByShooting, activeTeamId);
+            if (!_battle.IsTeamAI(enemyTeamId))
+            {
+                await _battle.WaitForPhaseAdvanceAsync();
+            }
+            _battle.OrderManager?.CloseWindow(OrderWindowType.OnTargetedByShooting);
+
             var selectedRangedProfile = await ChooseMultiProfileWeaponFingerprintAsync(squad, isMelee: false, "shoot", activeTeamIsAI);
             if (selectedRangedProfile == string.Empty)
             {
@@ -200,6 +221,8 @@ public sealed class CombatSequence
             _battle.CheckVictory();
             if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
         }
+
+        _battle.OrderManager?.ClearShootingPhaseTemporaryEffects();
     }
 
     private async Task HandleChargeAsync(bool activeTeamIsAI)
@@ -254,6 +277,16 @@ public sealed class CombatSequence
             var inactiveActors = _battle.GetInactiveActors();
             var distanceInches = BoardGeometry.ClosestDistanceInches(activeActors, inactiveActors);
             var moveVars = CombatHelpers.GetMoveVarsForTeam(activeTeamId, _battle.TeamAMove, _battle.TeamBMove);
+            if (squad.CannotChargeThisTurn)
+            {
+                if (!activeTeamIsAI)
+                {
+                    _battle.Hud?.ShowToast($"{squad.Name} cannot charge this turn.");
+                }
+
+                continue;
+            }
+
             if (!ShapeHelpers.CanCharge(squad, moveVars, distanceInches))
             {
                 if (!activeTeamIsAI)
@@ -290,6 +323,15 @@ public sealed class CombatSequence
         await WaitForOrdersAtPhaseStartAsync(BattlePhase.Fight, activeTeamIsAI);
         var activeTeamId = _battle.ActiveTeamId;
         var inactiveTeamId = activeTeamId == 1 ? 2 : 1;
+
+        var heroicEnemy = _battle.GetAliveSquadsForTeam(activeTeamId)
+            .FirstOrDefault(enemy => _battle.GetAliveSquadsForTeam(inactiveTeamId)
+                .Any(friend => _battle.IsSquadInFightRange(friend, activeTeamId)));
+        _battle.OrderManager?.ConfigureHeroicInterventionEnemy(inactiveTeamId, heroicEnemy);
+        if (!_battle.IsTeamAI(inactiveTeamId) && heroicEnemy != null)
+        {
+            await _battle.WaitForPhaseAdvanceAsync();
+        }
 
         var activeRucks = _battle.GetAliveSquadsForTeam(activeTeamId)
             .Where(s => BoardGeometry.ClosestDistanceInches(_battle.GetActorsForSquad(s), _battle.GetAliveSquadsForTeam(inactiveTeamId).SelectMany(es => _battle.GetActorsForSquad(es)).ToList()) <= 1f)
@@ -346,6 +388,9 @@ public sealed class CombatSequence
                 _battle.ActiveTeamId = prev;
                 _battle.PostDamageCleanupAndVictoryCheck();
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
+
+                await TryCounterOffensiveInterruptAsync(firstTeamId, secondTeamId, activeTeamIsAI);
+                if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
 
             if (i < secondTier.Count)
@@ -377,6 +422,9 @@ public sealed class CombatSequence
                 await _battle.ResolveFightPhase(selectedMeleeProfile);
                 _battle.ActiveTeamId = prev;
                 _battle.PostDamageCleanupAndVictoryCheck();
+                if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
+
+                await TryCounterOffensiveInterruptAsync(secondTeamId, firstTeamId, activeTeamIsAI);
                 if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
             }
         }
@@ -495,10 +543,58 @@ public sealed class CombatSequence
         }
     }
 
+
+    private async Task TryCounterOffensiveInterruptAsync(int justFoughtTeamId, int reactingTeamId, bool activeTeamIsAI)
+    {
+        _battle.OrderManager?.ResetPhaseUsage();
+        _battle.OrderManager?.OpenWindow(OrderWindowType.AfterEnemyUnitFights, justFoughtTeamId);
+        if (!_battle.IsTeamAI(reactingTeamId))
+        {
+            await _battle.WaitForPhaseAdvanceAsync();
+        }
+
+        var preferred = _battle.OrderManager?.ConsumeCounterOffensivePreferredSquad(reactingTeamId);
+        _battle.OrderManager?.CloseWindow(OrderWindowType.AfterEnemyUnitFights);
+        if (preferred == null)
+        {
+            return;
+        }
+
+        var enemyTargets = GetFightTargetsInRange(preferred, justFoughtTeamId);
+        if (enemyTargets.Count == 0)
+        {
+            return;
+        }
+
+        _battle.SetActiveSquadForTeam(reactingTeamId, preferred);
+        var target = await PickFightTargetAsync(preferred, justFoughtTeamId, enemyTargets, _battle.IsTeamAI(reactingTeamId));
+        if (target == null)
+        {
+            return;
+        }
+
+        _battle.SetActiveSquadForTeam(justFoughtTeamId, target);
+        var meleeProfile = await ChooseMultiProfileWeaponFingerprintAsync(preferred, true, "fight", _battle.IsTeamAI(reactingTeamId));
+        if (meleeProfile == string.Empty)
+        {
+            return;
+        }
+
+        var prev = _battle.ActiveTeamId;
+        _battle.ActiveTeamId = reactingTeamId;
+        await _battle.ResolveFightPhase(meleeProfile);
+        _battle.ActiveTeamId = prev;
+        _battle.PostDamageCleanupAndVictoryCheck();
+    }
+
     private void EndTurn()
     {
         _battle.EnterPhase(BattlePhase.EndTurn);
         _battle.ClearTemporaryAbilitiesAndTurnFlags();
+        foreach (var squad in _battle.GetAliveSquadsForTeam(1).Concat(_battle.GetAliveSquadsForTeam(2)))
+        {
+            squad.CannotChargeThisTurn = false;
+        }
         var nextTurn = _battle.CurrentTurn + 1;
         while (nextTurn > 2)
         {
