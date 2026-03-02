@@ -28,24 +28,14 @@ public partial class Battle : Node2D
     private int _selectedTeamId = -1;
     private MoveVars _teamAMove = new MoveVars(false, false, false);
     private MoveVars _teamBMove = new MoveVars(false, false, false);
-    private readonly Dictionary<BattleModelActor, Vector2> _movementStartPositions = new();
     private BattlePhase _currentPhase = BattlePhase.TerrainSetup;
     private int _activeTeamId = 1;
     private int _startingTeamId = 1;
     private int _currentTurn = 1;
     private int _round = 1;
-    private float _movementAllowanceInches;
-    private bool _movementIgnoresMaxLimit;
-    private float _movementEnemyBufferInches = 1.05f;
-    private bool _enforceAircraftMinMove;
-    private bool _movementCompletesPhase = true;
-    private bool _movementUpdatesMoveVars = true;
-    private bool _movementAllowsTeleport;
-    private bool _awaitingMovement;
     private bool _activeSquadChargedThisTurn;
     private bool _activeSquadMovedAfterShootingThisTurn;
     private bool _isBattleEnding;
-    private TaskCompletionSource<bool> _movementTcs;
     private TaskCompletionSource<bool> _phaseAdvanceTcs;
     private TaskCompletionSource<Squad?>? _enemyTargetSelectionTcs;
     private bool _awaitingEnemyTargetSelection;
@@ -55,16 +45,15 @@ public partial class Battle : Node2D
     private CombatSequence _sequence;
     private bool _measureModeEnabled;
     private DicePresenter _dicePresenter;
-    private readonly Dictionary<Squad, Vector2> _lastKnownTransportCenters = new();
     private OrderManager? _orderManager;
     private int _player1OrderPoints;
     private int _player2OrderPoints;
-    private readonly List<TerrainPiece> _terrainPieces = new();
     private int _terrainCount;
-    private int _terrainUnplacedCount;
-    private bool _terrainLocked;
-    private const float TerrainRadiusInches = 4f;
-    public List<TerrainFeature> ActiveTerrain { get; } = new();
+    private MovementManager _movementManager;
+    private TerrainManager _terrainManager = new();
+    private CombatManager _combatManager;
+    private TransportController _transportController;
+    public List<TerrainFeature> ActiveTerrain => _terrainManager.ActiveTerrain;
 
     public override void _Ready()
     {
@@ -191,6 +180,41 @@ public partial class Battle : Node2D
 
         DiceRoller.Initialize(_dicePresenter);
         _dicePresenter.ActivePlayerTeamId = _activeTeamId;
+
+        _movementManager ??= new MovementManager(
+            () => CombatHelpers.GetActiveMoveVars(_activeTeamId, _teamAMove, _teamBMove),
+            moved =>
+            {
+                var moveVars = CombatHelpers.GetActiveMoveVars(_activeTeamId, _teamAMove, _teamBMove);
+                moveVars.Move = moved;
+            });
+
+        _combatManager ??= new CombatManager(
+            _battleHud,
+            _battleField,
+            GetActiveActors,
+            GetInactiveActors,
+            () => _teamASquad,
+            () => _teamBSquad,
+            () => _teamAMove,
+            () => _teamBMove,
+            GetSquadsWithinRadius,
+            GetActorsForSquad,
+            PostDamageCleanupAndVictoryCheck,
+            HasLineOfSight);
+
+        _transportController ??= new TransportController(
+            _battleField,
+            GetAliveSquadsForTeam,
+            GetActorsForSquad,
+            GetTeamIdForSquad,
+            SquadInFightRangeOfEnemy,
+            async (prompt, teamId, allowed) => await PromptForSquadTargetAsync(prompt, teamId, allowed),
+            async prompt => await _battleHud.ConfirmActionAsync(prompt),
+            message => _battleHud?.ShowToast(message),
+            ApplyRout,
+            SetActiveSquadForTeam,
+            async (teamId, squad) => await MovingStuff(99f, true, 0f, false, false, false, $"{squad.Name}: place strategic reserve squad", false));
     }
 
     private async Task InitializeBattleAsync()
@@ -312,7 +336,7 @@ public partial class Battle : Node2D
             return;
         }
 
-        if (_awaitingMovement)
+        if (_movementManager.IsAwaitingMovement)
         {
             ShapeHelpers.SetSelectableVisuals(GetActiveActors(), false);
         }
@@ -320,7 +344,7 @@ public partial class Battle : Node2D
             actor,
             pointerGlobal,
             _currentPhase,
-            _awaitingMovement,
+            _movementManager.IsAwaitingMovement,
             _activeTeamId,
             _selectedTeamId,
             _selectedActors,
@@ -328,8 +352,8 @@ public partial class Battle : Node2D
             _teamAActors,
             _teamBActors,
             _battleField,
-            _movementIgnoresMaxLimit ? -1f : _movementAllowanceInches,
-            _movementEnemyBufferInches
+            _movementManager.MovementIgnoresMaxLimit ? -1f : _movementManager.MovementAllowanceInches,
+            _movementManager.MovementEnemyBufferInches
         );
         _selectedTeamId = selection.SelectedTeamId;
         _selectedActors = selection.SelectedActors;
@@ -342,7 +366,7 @@ public partial class Battle : Node2D
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (_currentPhase != BattlePhase.TerrainSetup || _terrainLocked || _terrainUnplacedCount <= 0)
+        if (_currentPhase != BattlePhase.TerrainSetup || _terrainManager.IsLocked || _terrainManager.UnplacedCount <= 0)
         {
             return;
         }
@@ -370,30 +394,21 @@ public partial class Battle : Node2D
     {
         FaceMovedSquadAfterDrag();
 
-        if ((_currentPhase == BattlePhase.Movement || _currentPhase == BattlePhase.SquadDeployment) && _awaitingMovement)
+        if ((_currentPhase == BattlePhase.Movement || _currentPhase == BattlePhase.SquadDeployment) && _movementManager.IsAwaitingMovement)
         {
             var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
             if (IsTerrainBlockingMovement(activeSquad))
             {
-                foreach (var actor in GetActiveActors())
-                {
-                    if (_movementStartPositions.TryGetValue(actor, out var startPos))
-                    {
-                        actor.GlobalPosition = startPos;
-                    }
-                }
-
+                _movementManager.RevertTrackedActors(GetActiveActors());
                 _battleHud?.ShowToast("Move blocked by terrain");
                 GD.Print("[Terrain] Move blocked by terrain");
-                _awaitingMovement = false;
                 FinishMovementPhase(false);
-                _movementTcs?.TrySetResult(true);
+                _movementManager.ResolveAwaitingMovement(false);
             }
             else
             {
-                _awaitingMovement = false;
                 FinishMovementPhase(true);
-                _movementTcs?.TrySetResult(true);
+                _movementManager.ResolveAwaitingMovement(true);
             }
         }
 
@@ -409,7 +424,7 @@ public partial class Battle : Node2D
     {
         foreach (var actor in GetActiveActors())
         {
-            if (actor == null || !_movementStartPositions.TryGetValue(actor, out var startPos))
+            if (actor == null || !_movementManager.TryGetStartPosition(actor, out var startPos))
             {
                 continue;
             }
@@ -674,8 +689,7 @@ public partial class Battle : Node2D
 
         _isBattleEnding = true;
         EnterPhase(BattlePhase.BattleOver, announce: false);
-        _awaitingMovement = false;
-        _movementTcs?.TrySetResult(true);
+        _movementManager.ResolveAwaitingMovement(false);
         SyncGlobalTurnRound();
 
         _battleHud?.ShowGameOverBanner($"Game Over. {winner.PlayerName} Wins!");
@@ -842,17 +856,12 @@ public partial class Battle : Node2D
             return;
         }
 
-        SetActiveSquadForTeam(defenderTeamId, defenderSquad);
-        SetActiveSquadForTeam(defenderTeamId == 1 ? 2 : 1, chargingSquad);
-        _activeTeamId = defenderTeamId;
-
-        var attacker = GetActorsForSquad(defenderSquad).FirstOrDefault(actor => actor?.BoundModel != null && actor.BoundModel.Health > 0);
-        var target = GetActorsForSquad(chargingSquad).FirstOrDefault(actor => actor?.BoundModel != null && actor.BoundModel.Health > 0);
-        if (attacker != null && target != null)
-        {
-            var hasLineOfSight = HasMajorityLineOfSight(defenderSquad, chargingSquad);
-            await CombatEngine.ResolveBatchedAttack(attacker, target, false, _teamASquad, _teamBSquad, _teamAActors, _teamBActors, _teamAMove, _teamBMove, _battleHud, _battleField, PostDamageCleanupAndVictoryCheck, HandleExplosionProcess, null, true, hasLineOfSight);
-        }
+        await _combatManager.ResolveOverwatchAsync(
+            defenderTeamId,
+            defenderSquad,
+            chargingSquad,
+            teamId => ActiveTeamId = teamId,
+            (teamId, squad) => SetActiveSquadForTeam(teamId, squad));
 
         _activeTeamId = prevActiveTeam;
     }
@@ -923,11 +932,6 @@ public partial class Battle : Node2D
             .Where(actor => actor?.BoundModel != null && actor.Visible && models.Contains(actor.BoundModel))
             .ToList();
 
-        if (IsTransportSquad(squad) && squad.EmbarkedSquad != null && actors.Count > 0)
-        {
-            _lastKnownTransportCenters[squad] = BoardGeometry.GetActorsCenter(actors);
-        }
-
         return actors;
     }
 
@@ -964,96 +968,26 @@ public partial class Battle : Node2D
 
     internal void PrepareMovementStartPositions(float movementAllowanceInches, bool ignoreMaxDistance, float enemyBufferInches, bool enforceAircraftMinMove)
     {
-        _movementStartPositions.Clear();
-        foreach (var actor in GetActiveActors())
-        {
-            _movementStartPositions[actor] = actor.GlobalPosition;
-        }
-
-        _movementAllowanceInches = movementAllowanceInches;
-        _movementIgnoresMaxLimit = ignoreMaxDistance;
-        _movementEnemyBufferInches = enemyBufferInches;
-        _enforceAircraftMinMove = enforceAircraftMinMove;
-
-        var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
-        _movementAllowsTeleport = activeSquad?.SquadAbilities?.Any(ability => ability?.Innate == "Tele") == true;
-        if (_movementAllowsTeleport)
-        {
-            _movementEnemyBufferInches = 0f;
-        }
+        _movementManager.PrepareMovement(
+            CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad),
+            GetActiveActors(),
+            GetInactiveActors(),
+            movementAllowanceInches,
+            ignoreMaxDistance,
+            enemyBufferInches,
+            enforceAircraftMinMove);
     }
 
     internal MoveVars FinishMovementPhase(bool didAttemptMove)
     {
         ShapeHelpers.SetSelectableVisuals(GetActiveActors(), false);
-        var activeActors = GetActiveActors();
-        var maxMoved = 0f;
-        foreach (var actor in activeActors)
-        {
-            if (_movementStartPositions.TryGetValue(actor, out var startPos))
-            {
-                maxMoved = Mathf.Max(maxMoved, actor.GlobalPosition.DistanceTo(startPos));
-            }
-        }
-
-        var didMove = didAttemptMove && maxMoved > 0.1f;
-        var movedInches = maxMoved / Mathf.Max(0.001f, GameGlobals.Instance.FakeInchPx);
-
-        var activeSquad = CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad);
-
-        if (_movementAllowsTeleport && didMove)
-        {
-            var enemyActors = GetInactiveActors();
-            var closestEnemyDistanceInches = BoardGeometry.ClosestDistanceInches(activeActors, enemyActors);
-            const float minTeleportEnemyDistanceInches = 9f;
-            if (enemyActors.Count > 0 && closestEnemyDistanceInches <= minTeleportEnemyDistanceInches)
-            {
-                foreach (var actor in activeActors)
-                {
-                    if (_movementStartPositions.TryGetValue(actor, out var startPos))
-                    {
-                        actor.GlobalPosition = startPos;
-                    }
-                }
-
-                didMove = false;
-                _battleHud?.ShowToast($"Teleport must end more than {minTeleportEnemyDistanceInches:0.#}\" away from enemies.");
-                GD.Print($"[Rules] Blocked teleport move within {minTeleportEnemyDistanceInches}\" of enemies (closest: {closestEnemyDistanceInches:0.0}\").");
-            }
-        }
-
-        if (didMove)
-        {
-            var moveSound = activeSquad?.SquadType.Contains("Mounted") == true ? "motorcycle" : "moved";
-            AudioManager.Instance?.Play(moveSound);
-        }
-        if (_enforceAircraftMinMove && activeSquad?.SquadType?.Contains("Aircraft") == true)
-        {
-            if (maxMoved < 20f * GameGlobals.Instance.FakeInchPx)
-            {
-                foreach (var actor in activeActors)
-                {
-                    if (_movementStartPositions.TryGetValue(actor, out var startPos))
-                    {
-                        actor.GlobalPosition = startPos;
-                    }
-                }
-
-                didMove = false;
-                _battleHud?.ShowToast($"Aircraft must move at least 20\" ({maxMoved / GameGlobals.Instance.FakeInchPx:0.0}\").");
-                GD.Print($"[Rules] Blocked aircraft move under 20\" (attempted {movedInches:0.0}\").");
-            }
-        }
-
-        var moveVars = CombatHelpers.GetActiveMoveVars(_activeTeamId, _teamAMove, _teamBMove);
-        if (_movementUpdatesMoveVars)
-        {
-            moveVars.Move = didMove;
-        }
-
-
-
-        return moveVars;
+        return _movementManager.FinishMovement(
+            didAttemptMove,
+            GetActiveActors,
+            () => CombatHelpers.GetActiveSquad(_activeTeamId, _teamASquad, _teamBSquad),
+            GetInactiveActors,
+            message => _battleHud?.ShowToast(message),
+            GD.Print);
     }
 
     internal async Task<MoveVars> MovingStuff(
@@ -1072,177 +1006,32 @@ public partial class Battle : Node2D
         }
 
         PrepareMovementStartPositions(movementAllowanceInches, ignoreMaxDistance, enemyBufferInches, enforceAircraftMinMove);
-        _movementCompletesPhase = completesPhase;
-        _movementUpdatesMoveVars = updateMoveVars;
+        _movementManager.SetMovementUpdatesMoveVars(updateMoveVars);
 
-        var wantsMove = autoMove;
-        if (!autoMove)
-        {
-            wantsMove = await _battleHud.ConfirmActionAsync(prompt);
-        }
-
-        if (!wantsMove)
-        {
-            return FinishMovementPhase(false);
-        }
-
-        _awaitingMovement = true;
-        ShapeHelpers.SetSelectableVisuals(GetActiveActors(), true);
-        _movementTcs = new TaskCompletionSource<bool>();
-        _battleHud.ShowToast("Drag your squad to move.");
-        await _movementTcs.Task;
-
-        if (_movementAllowsTeleport)
-        {
-            GD.Print("[Rules] Teleport movement validation applied for this squad.");
-        }
-
-        return CombatHelpers.GetActiveMoveVars(_activeTeamId, _teamAMove, _teamBMove);
+        return await _movementManager.StartMovementAsync(
+            prompt,
+            autoMove,
+            async () => await _battleHud.ConfirmActionAsync(prompt),
+            (message, duration) => _battleHud.ShowToast(message, duration ?? 2f),
+            ShapeHelpers.SetSelectableVisuals,
+            () => CombatHelpers.GetActiveMoveVars(_activeTeamId, _teamAMove, _teamBMove),
+            () => { });
     }
 
 
     internal void HandleExplosionProcess(Squad explodedSquad, Squad enemySquad, int demiseCheck)
     {
-        if (explodedSquad == null || enemySquad == null || demiseCheck <= 0 ||
-            explodedSquad.SquadAbilities.All(ability => ability.Innate != "Explodes"))
-        {
-            return;
-        }
-
-        var manyExplosions = 0;
-        for (int i = 0; i < demiseCheck; i++)
-        {
-            if (DiceHelpers.SimpleRoll(6) == 1)
-            {
-                manyExplosions++;
-            }
-        }
-
-        if (manyExplosions <= 0)
-        {
-            return;
-        }
-
-        const int safetyLimit = 10;
-        var processedExplosions = 0;
-
-        while (manyExplosions > 0 && processedExplosions < safetyLimit)
-        {
-            var explodeDamage = explodedSquad.SquadAbilities.FirstOrDefault(ability => ability.Innate == "Explodes")?.ResolveModifier() ?? 1;
-            AudioManager.Instance?.Play("explodes");
-            var blastDamage = explodeDamage * manyExplosions;
-
-            var nearby = GetSquadsWithinRadius(explodedSquad, 6f, includeSameTeam: true);
-            foreach (var nearbySquad in nearby)
-            {
-                CombatRolls.AllocatePure(blastDamage, nearbySquad);
-                foreach (var enemyActor in GetActorsForSquad(nearbySquad))
-                {
-                    enemyActor.RefreshHp();
-                }
-            }
-
-            var newExplosions = CombatRolls.AllocatePure(blastDamage, explodedSquad);
-            foreach (var explodedActor in GetActorsForSquad(explodedSquad))
-            {
-                explodedActor.RefreshHp();
-            }
-
-            manyExplosions = 0;
-            for (int i = 0; i < newExplosions; i++)
-            {
-                if (DiceHelpers.SimpleRoll(6) == 1)
-                {
-                    manyExplosions++;
-                }
-            }
-
-            processedExplosions++;
-        }
-
-        PostDamageCleanupAndVictoryCheck();
+        _combatManager.HandleExplosionProcess(explodedSquad, enemySquad, demiseCheck);
     }
 
     internal async Task ResolveShootingPhase(string selectedWeaponFingerprint = null, bool hasLineOfSight = true)
     {
-        var attackers = GetActiveActors().ToList();
-        var defenders = GetInactiveActors();
-        if (attackers.Count == 0 || defenders.Count == 0)
-        {
-            return;
-        }
-
-        var attacker = attackers.FirstOrDefault(actor => actor != null && actor.BoundModel != null && actor.BoundModel.Health > 0);
-        if (attacker == null)
-        {
-            return;
-        }
-
-        var target = BoardGeometry.GetClosestEnemy(attacker, defenders);
-        if (target == null)
-        {
-            return;
-        }
-
-        BoardGeometry.FaceGroupTowardsEnemies(attackers, defenders);
-        await CombatEngine.ResolveBatchedAttack(
-            attacker,
-            target,
-            false,
-            _teamASquad,
-            _teamBSquad,
-            attackers,
-            defenders,
-            _teamAMove,
-            _teamBMove,
-            _battleHud,
-            _battleField,
-            PostDamageCleanupAndVictoryCheck,
-            HandleExplosionProcess,
-            selectedWeaponFingerprint,
-            false,
-            hasLineOfSight
-        );
+        await _combatManager.ResolveShootingPhaseAsync(selectedWeaponFingerprint, hasLineOfSight);
     }
 
     internal async Task ResolveFightPhase(string selectedWeaponFingerprint = null)
     {
-        var attackers = GetActiveActors().ToList();
-        var defenders = GetInactiveActors();
-        if (attackers.Count == 0 || defenders.Count == 0)
-        {
-            return;
-        }
-
-        var attacker = attackers.FirstOrDefault(actor => actor != null && actor.BoundModel != null && actor.BoundModel.Health > 0);
-        if (attacker == null)
-        {
-            return;
-        }
-
-        var target = BoardGeometry.GetClosestEnemy(attacker, defenders);
-        if (target == null)
-        {
-            return;
-        }
-
-        BoardGeometry.FaceGroupTowardsEnemies(attackers, defenders);
-        await CombatEngine.ResolveBatchedAttack(
-            attacker,
-            target,
-            true,
-            _teamASquad,
-            _teamBSquad,
-            attackers,
-            defenders,
-            _teamAMove,
-            _teamBMove,
-            _battleHud,
-            _battleField,
-            PostDamageCleanupAndVictoryCheck,
-            HandleExplosionProcess,
-            selectedWeaponFingerprint
-        );
+        await _combatManager.ResolveFightPhaseAsync(selectedWeaponFingerprint);
     }
 
 
@@ -1274,12 +1063,12 @@ public partial class Battle : Node2D
 
     internal bool IsSquadEmbarked(Squad? squad)
     {
-        return squad?.TransportedBy != null;
+        return squad?.IsEmbarked() == true;
     }
 
     internal bool IsTransportSquad(Squad? squad)
     {
-        return squad?.SquadType?.Contains("Transport") == true;
+        return squad?.IsTransport() == true;
     }
 
     internal bool SquadInFightRangeOfEnemy(Squad squad, int enemyTeamId)
@@ -1309,240 +1098,27 @@ public partial class Battle : Node2D
 
     private static bool IsEmbarkEligiblePassenger(Squad? squad)
     {
-        if (squad == null || squad.TransportedBy != null)
-        {
-            return false;
-        }
-
-        return squad.SquadType?.Contains("Infantry") == true || squad.SquadType?.Contains("Character") == true;
+        return squad?.IsEmbarkEligiblePassenger() == true;
     }
 
     private void SetSquadActorsEmbarkedVisualState(Squad squad, bool embarked)
     {
-        foreach (var actor in _teamAActors.Concat(_teamBActors).Where(a => a?.BoundModel != null && squad.Composition.Contains(a.BoundModel)))
-        {
-            actor.Visible = !embarked;
-            var clickArea = actor.GetNodeOrNull<Area2D>("ClickArea");
-            if (clickArea != null)
-            {
-                clickArea.InputPickable = !embarked;
-            }
-
-            var collision = actor.GetNodeOrNull<CollisionShape2D>("ClickArea/CollisionShape2D");
-            if (collision != null)
-            {
-                collision.Disabled = embarked;
-            }
-        }
+        _transportController.SetSquadActorsEmbarkedVisualState(squad, embarked);
     }
 
     private bool TryEmbarkSquad(Squad transport, Squad passenger)
     {
-        if (!IsTransportSquad(transport) || transport.EmbarkedSquad != null || !IsEmbarkEligiblePassenger(passenger))
-        {
-            return false;
-        }
-
-        var transportTeamId = GetTeamIdForSquad(transport);
-        var enemyTeamId = transportTeamId == 1 ? 2 : 1;
-        if (SquadInFightRangeOfEnemy(transport, enemyTeamId) || SquadInFightRangeOfEnemy(passenger, enemyTeamId))
-        {
-            return false;
-        }
-
-        var transportActors = GetActorsForSquad(transport);
-        var passengerActors = GetActorsForSquad(passenger);
-        if (transportActors.Count == 0 || passengerActors.Count == 0)
-        {
-            return false;
-        }
-
-        if (BoardGeometry.ClosestDistanceInches(transportActors, passengerActors) > 3f)
-        {
-            return false;
-        }
-
-        transport.EmbarkedSquad = passenger;
-        passenger.TransportedBy = transport;
-        SetSquadActorsEmbarkedVisualState(passenger, true);
-        return true;
+        return _transportController.TryEmbarkSquad(transport, passenger);
     }
 
     private bool TryDisembarkSquad(Squad transport, bool emergency)
     {
-        var passenger = transport?.EmbarkedSquad;
-        if (transport == null || passenger == null)
-        {
-            return false;
-        }
-
-        var transportTeamId = GetTeamIdForSquad(transport);
-        var enemyTeamId = transportTeamId == 1 ? 2 : 1;
-        var transportActors = _teamAActors.Concat(_teamBActors)
-            .Where(actor => actor?.BoundModel != null && transport.Composition.Contains(actor.BoundModel))
-            .ToList();
-        var passengerActors = _teamAActors.Concat(_teamBActors)
-            .Where(actor => actor?.BoundModel != null && passenger.Composition.Contains(actor.BoundModel))
-            .ToList();
-        var enemyActors = GetAliveSquadsForTeam(enemyTeamId).SelectMany(GetActorsForSquad).ToList();
-
-        if (passengerActors.Count == 0)
-        {
-            return false;
-        }
-
-        SetSquadActorsEmbarkedVisualState(passenger, false);
-
-        bool placed;
-        if (transportActors.Count > 0)
-        {
-            placed = BoardGeometry.PlacePassengerSquadAroundTransport(
-                transportActors,
-                passengerActors,
-                emergency ? 6f : 3f,
-                enemyActors,
-                avoidFightRange: true
-            );
-
-            if (!placed)
-            {
-                placed = BoardGeometry.PlacePassengerSquadAroundTransport(
-                    transportActors,
-                    passengerActors,
-                    emergency ? 6f : 3f,
-                    enemyActors,
-                    avoidFightRange: false
-                );
-            }
-
-            if (placed)
-            {
-                _lastKnownTransportCenters[transport] = BoardGeometry.GetActorsCenter(transportActors);
-            }
-        }
-        else if (emergency && _lastKnownTransportCenters.TryGetValue(transport, out var lastCenter))
-        {
-            placed = BoardGeometry.PlacePassengerSquadAroundPoint(
-                lastCenter,
-                passengerActors,
-                6f,
-                enemyActors,
-                avoidFightRange: true
-            );
-
-            if (!placed)
-            {
-                placed = BoardGeometry.PlacePassengerSquadAroundPoint(
-                    lastCenter,
-                    passengerActors,
-                    6f,
-                    enemyActors,
-                    avoidFightRange: false
-                );
-            }
-        }
-        else
-        {
-            return false;
-        }
-
-        transport.EmbarkedSquad = null;
-        passenger.TransportedBy = null;
-        _lastKnownTransportCenters.Remove(transport);
-
-        if (emergency)
-        {
-            passenger.ShellShock = true;
-            AudioManager.Instance?.Play("demonlaugh");
-            _battleHud?.ShowToast($"{passenger.Name} became shell-shocked.");
-            ApplyRout(passenger, runCleanup: false);
-        }
-
-        return true;
+        return _transportController.TryDisembarkSquad(transport, emergency);
     }
 
     internal async Task HandleTransportEmbarkDisembarkStepAsync(int activeTeamId, bool activeTeamIsAI)
     {
-        if (activeTeamIsAI)
-        {
-            return;
-        }
-
-        var enemyTeamId = activeTeamId == 1 ? 2 : 1;
-        var activeSquads = GetAliveSquadsForTeam(activeTeamId);
-        var transports = activeSquads.Where(IsTransportSquad).ToList();
-
-        foreach (var transport in transports)
-        {
-            if (transport.EmbarkedSquad == null)
-            {
-                continue;
-            }
-
-            var wantsDisembark = await _battleHud.ConfirmActionAsync($"{transport.Name}: Disembark {transport.EmbarkedSquad.Name}?");
-            if (!wantsDisembark)
-            {
-                continue;
-            }
-
-            if (!TryDisembarkSquad(transport, emergency: false))
-            {
-                _battleHud?.ShowToast($"{transport.Name}: could not disembark now.");
-            }
-        }
-
-        foreach (var transport in transports)
-        {
-            if (transport.EmbarkedSquad != null)
-            {
-                continue;
-            }
-
-            var candidates = activeSquads
-                .Where(s => !ReferenceEquals(s, transport) && IsEmbarkEligiblePassenger(s))
-                .Where(s => BoardGeometry.ClosestDistanceInches(GetActorsForSquad(transport), GetActorsForSquad(s)) <= 3f)
-                .ToList();
-
-            if (candidates.Count == 0)
-            {
-                continue;
-            }
-
-            var wantsEmbark = await _battleHud.ConfirmActionAsync($"{transport.Name}: Embark a nearby squad?");
-            if (!wantsEmbark)
-            {
-                continue;
-            }
-
-            if (SquadInFightRangeOfEnemy(transport, enemyTeamId))
-            {
-                _battleHud?.ShowToast($"{transport.Name} cannot embark while in fight range.");
-                continue;
-            }
-
-            var passenger = await PromptForSquadTargetAsync(
-                $"{transport.Name}: Click friendly squad to embark",
-                activeTeamId,
-                candidates
-            );
-            if (passenger == null)
-            {
-                continue;
-            }
-            if (SquadInFightRangeOfEnemy(passenger, enemyTeamId))
-            {
-                _battleHud?.ShowToast($"{passenger.Name} cannot embark while in fight range.");
-                continue;
-            }
-
-            if (!TryEmbarkSquad(transport, passenger))
-            {
-                _battleHud?.ShowToast($"{passenger.Name} could not embark {transport.Name}.");
-                continue;
-            }
-
-            _battleHud?.ShowToast($"{passenger.Name} embarked {transport.Name}.");
-        }
+        await _transportController.HandleTransportEmbarkDisembarkStepAsync(activeTeamId, activeTeamIsAI);
     }
 
     private async Task RunTerrainSetupAsync()
@@ -1562,85 +1138,24 @@ public partial class Battle : Node2D
 
     private void BuildTerrainFeatures()
     {
-        ActiveTerrain.Clear();
-        _terrainUnplacedCount = _terrainCount;
-        for (int i = 0; i < _terrainCount; i++)
-        {
-            ActiveTerrain.Add(new TerrainFeature { Radius = TerrainRadiusInches, IsPlaced = false });
-        }
+        _terrainManager.Initialize(_terrainCount);
+        _terrainManager.BuildTerrainFeatures();
     }
 
     private void SpawnTerrainPieces()
     {
-        foreach (var piece in _terrainPieces)
-        {
-            piece?.QueueFree();
-        }
-
-        _terrainPieces.Clear();
-        if (_battleField == null)
-        {
-            return;
-        }
-
         var scene = GD.Load<PackedScene>("res://Scenes/Terrain/TerrainPiece.tscn");
-        if (scene == null)
-        {
-            return;
-        }
-
-        foreach (var terrain in ActiveTerrain)
-        {
-            var piece = scene.Instantiate<TerrainPiece>();
-            piece.Bind(terrain);
-            piece.Visible = false;
-            piece.SetLocked(false);
-            _battleField.AddChild(piece);
-            _terrainPieces.Add(piece);
-        }
-
-        _terrainLocked = false;
+        _terrainManager.SpawnTerrainPieces(_battleField, scene);
     }
 
     private void PlaceNextTerrainAt(Vector2 globalPos)
     {
-        if (_terrainLocked || _terrainUnplacedCount <= 0)
-        {
-            return;
-        }
-
-        var next = ActiveTerrain.FirstOrDefault(t => !t.IsPlaced);
-        if (next == null)
-        {
-            _terrainUnplacedCount = 0;
-            return;
-        }
-
-        next.Position = globalPos;
-        next.IsPlaced = true;
-        _terrainUnplacedCount = Math.Max(0, _terrainUnplacedCount - 1);
-
-        var piece = _terrainPieces.FirstOrDefault(p => p.Data == next);
-        if (piece != null)
-        {
-            piece.Visible = true;
-            piece.GlobalPosition = globalPos;
-            piece.Bind(next);
-        }
+        _terrainManager.PlaceNextTerrainAt(globalPos);
     }
 
     private void LockTerrain()
     {
-        _terrainLocked = true;
-        _terrainUnplacedCount = 0;
-        foreach (var piece in _terrainPieces)
-        {
-            piece?.SetLocked(true);
-            if (piece != null)
-            {
-                piece.Visible = true;
-            }
-        }
+        _terrainManager.LockTerrain();
     }
 
     private Vector2 GetPointerGlobal(Vector2 viewportPosition)
@@ -1656,25 +1171,16 @@ public partial class Battle : Node2D
             return false;
         }
 
+        var segments = new List<(Vector2 start, Vector2 end)>();
         foreach (var actor in GetActorsForSquad(squad))
         {
-            if (!_movementStartPositions.TryGetValue(actor, out var startPos))
+            if (_movementManager.TryGetStartPosition(actor, out var startPos))
             {
-                continue;
-            }
-
-            var endPos = actor.GlobalPosition;
-            foreach (var terrain in ActiveTerrain.Where(t => t.IsPlaced && t.BlocksMovement))
-            {
-                var radiusPx = terrain.Radius * Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f);
-                if (BoardGeometry.SegmentIntersectsCircle(startPos, endPos, terrain.Position, radiusPx))
-                {
-                    return true;
-                }
+                segments.Add((startPos, actor.GlobalPosition));
             }
         }
 
-        return false;
+        return _terrainManager.IsTerrainBlockingMovement(segments, Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f));
     }
 
     internal bool IsChargeBlockedByTerrain(Squad attacker, Squad target)
@@ -1708,16 +1214,7 @@ public partial class Battle : Node2D
 
     internal bool HasLineOfSight(Vector2 from, Vector2 to)
     {
-        foreach (var terrain in ActiveTerrain.Where(t => t.IsPlaced && t.BlocksLineOfSight))
-        {
-            var radiusPx = terrain.Radius * Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f);
-            if (BoardGeometry.SegmentIntersectsCircle(from, to, terrain.Position, radiusPx, 4f))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return _terrainManager.HasLineOfSight(from, to, Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f));
     }
 
     internal bool HasMajorityLineOfSight(Squad attacker, Squad target)
@@ -1736,36 +1233,17 @@ public partial class Battle : Node2D
 
     internal void ApplyTerrainCoverAtCommandPhaseStart()
     {
-        foreach (var squad in GetAliveSquadsForTeam(1).Concat(GetAliveSquadsForTeam(2)))
-        {
-            squad.SquadAbilities.RemoveAll(ability => ability.IsTemporary && ability.Innate == SquadAbilities.CoverBenefitTemp.Innate);
-            if (IsSquadInTerrainCover(squad))
-            {
-                squad.SquadAbilities.Add(SquadAbilities.CoverBenefitTemp);
-                GD.Print($"[Terrain] Cover applied to {squad.Name}");
-            }
-        }
+        _terrainManager.ApplyTerrainCoverAtCommandPhaseStart(
+            GetAliveSquadsForTeam(1).Concat(GetAliveSquadsForTeam(2)),
+            squad => GetActorsForSquad(squad).Select(actor => actor.GlobalPosition),
+            GD.Print);
     }
 
     private bool IsSquadInTerrainCover(Squad squad)
     {
-        var actors = GetActorsForSquad(squad);
-        if (actors.Count == 0)
-        {
-            return false;
-        }
-
-        var pxPerInch = Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f);
-        foreach (var terrain in ActiveTerrain.Where(t => t.IsPlaced && t.ProvidesCover))
-        {
-            var threshold = (terrain.Radius + 3f) * pxPerInch;
-            if (actors.Any(actor => actor.GlobalPosition.DistanceTo(terrain.Position) <= threshold))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return _terrainManager.IsSquadInTerrainCover(
+            GetActorsForSquad(squad).Select(actor => actor.GlobalPosition),
+            Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f));
     }
 
     private void OnNextPhasePressed()
@@ -1893,43 +1371,12 @@ public partial class Battle : Node2D
 
     internal void SetSquadStrategicReserveVisual(Squad squad, bool inReserve)
     {
-        foreach (var actor in GetActorsForSquad(squad))
-        {
-            actor.Visible = !inReserve;
-        }
+        _transportController.SetSquadStrategicReserveVisual(squad, inReserve);
     }
 
     internal async Task<bool> RedeployStrategicReserveSquadAsync(int teamId, Squad squad)
     {
-        var enemyTeamId = teamId == 1 ? 2 : 1;
-        var enemyActors = GetAliveSquadsForTeam(enemyTeamId).SelectMany(GetActorsForSquad).ToList();
-        SetActiveSquadForTeam(teamId, squad);
-        SetSquadStrategicReserveVisual(squad, false);
-
-        var squadActors = GetActorsForSquad(squad);
-        if (squadActors.Count > 0)
-        {
-            var viewportCenter = _battleField.ToGlobal(_battleField.GetViewportRect().Size * 0.5f);
-            var spacing = Mathf.Max(24f, GameGlobals.Instance?.FakeInchPx ?? 24f);
-            for (int i = 0; i < squadActors.Count; i++)
-            {
-                var offset = new Vector2((i % 5 - 2) * spacing, (i / 5) * spacing * 0.8f);
-                squadActors[i].GlobalPosition = viewportCenter + offset;
-                squadActors[i].Visible = true;
-            }
-        }
-
-        var moved = await MovingStuff(99f, true, 0f, false, false, false, $"{squad.Name}: place strategic reserve squad", false);
-        var placedActors = GetActorsForSquad(squad);
-        var closestEnemyDistanceInches = BoardGeometry.ClosestDistanceInches(placedActors, enemyActors);
-        if (enemyActors.Count > 0 && closestEnemyDistanceInches <= 9f)
-        {
-            Hud?.ShowToast("Reserve redeploy must end more than 9\" away from enemies.");
-            SetSquadStrategicReserveVisual(squad, true);
-            return false;
-        }
-
-        return true;
+        return await _transportController.RedeployStrategicReserveSquadAsync(teamId, squad);
     }
     internal List<Squad> GetAliveSquadsForTeam(int teamId)
     {

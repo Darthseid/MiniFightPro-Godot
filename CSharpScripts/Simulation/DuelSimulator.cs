@@ -304,7 +304,7 @@ public sealed class DuelSimulator
                 break;
             }
 
-            var baseDamage = CombatHelpers.DamageParser(weapon.Damage);
+            var baseDamage = DiceHelpers.DamageParser(weapon.Damage);
             var finalDamage = CombatHelpers.DamageMods(baseDamage, defender.WorkingSquad.SquadAbilities, weapon.Special, range <= weapon.Range / 2f);
 
             var resist = CombatRolls.ResolveEffectiveDamageResistance(defender.WorkingSquad);

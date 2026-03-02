@@ -55,9 +55,9 @@ public partial class StartGame : Control
 
         RefreshSelectablePlayers(data);
 
-        if (_selectablePlayers.Count < 2)
+        if (_selectablePlayers.Count < 1)
         {
-            _statusLabel.Text = "Need at least 2 players with squads.";
+            _statusLabel.Text = "Need at least 1 player with squads.";
             _beginBattleButton.Disabled = true;
             return;
         }
@@ -76,9 +76,9 @@ public partial class StartGame : Control
     {
         var unit1Index = _unit1Dropdown.Selected;
         var unit2Index = _unit2Dropdown.Selected;
-        if (unit1Index < 0 || unit2Index < 0 || unit1Index == unit2Index)
+        if (unit1Index < 0 || unit2Index < 0)
         {
-            _statusLabel.Text = "Please select two different valid players.";
+            _statusLabel.Text = "Please select two valid players.";
             return;
         }
 

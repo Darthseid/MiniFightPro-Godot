@@ -76,6 +76,26 @@ public class Squad
         RetreatedThisTurn = false;
     }
 
+
+    public bool IsTransport()
+    {
+        return SquadType?.Contains("Transport") == true;
+    }
+
+    public bool IsEmbarked()
+    {
+        return TransportedBy != null;
+    }
+
+    public bool IsEmbarkEligiblePassenger()
+    {
+        if (TransportedBy != null)
+        {
+            return false;
+        }
+
+        return SquadType?.Contains("Infantry") == true || SquadType?.Contains("Character") == true;
+    }
     public Squad DeepCopy()
     {
         var copy = new Squad(
@@ -132,7 +152,7 @@ public class SquadAbility
     {
         return string.IsNullOrWhiteSpace(ModifierExpression)
             ? Modifier
-            : CombatHelpers.DamageParser(ModifierExpression);
+            : DiceHelpers.DamageParser(ModifierExpression);
     }
 }
 
@@ -253,7 +273,7 @@ public static class SquadAbilities
 
     public static SquadAbility CreateVariableAbility(SquadAbility baseAbility, string modifierInput)
     {
-        var parsedModifier = CombatHelpers.DamageParser(modifierInput);
+        var parsedModifier = DiceHelpers.DamageParser(modifierInput);
         return new SquadAbility(
             baseAbility.Innate,
             $"{GetVariableBaseDisplayName(baseAbility.Name)} {modifierInput}",

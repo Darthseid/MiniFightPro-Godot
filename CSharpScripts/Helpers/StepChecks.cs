@@ -187,7 +187,7 @@ public static class StepChecks
                         .ToList()
                         .ForEach(weapon =>
                         {
-                            var currentAttacks = CombatHelpers.DamageParser(weapon.Attacks);
+                            var currentAttacks = DiceHelpers.DamageParser(weapon.Attacks);
                             weapon.Attacks = (currentAttacks + 1).ToString();
                         });
                     activeSquad.SquadAbilities.Add(ActiveShootBoost);
@@ -344,7 +344,7 @@ public static class StepChecks
                 .ToList()
                 .ForEach(weapon =>
                 {
-                    var attacks = CombatHelpers.DamageParser(weapon.Attacks) - 1;
+                    var attacks = DiceHelpers.DamageParser(weapon.Attacks) - 1;
                     weapon.Attacks = attacks.ToString();
                 });
             activeDude.SquadAbilities.RemoveAll(ability => ability.Name == ActiveShootBoost.Name);
@@ -568,7 +568,7 @@ public static class StepChecks
             .ForEach(w =>
             {
                 w.Strength += 1;
-                var a = CombatHelpers.DamageParser(w.Attacks);
+                var a = DiceHelpers.DamageParser(w.Attacks);
                 w.Attacks = (a + 1).ToString();
             });
     }
