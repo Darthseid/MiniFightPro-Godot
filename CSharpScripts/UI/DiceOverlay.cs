@@ -80,6 +80,11 @@ public partial class DiceOverlay : CanvasLayer
     {
         _nextButton.Disabled = !canAdvance;
         _commandRerollButton.Disabled = !canReroll;
+
+        for (var i = 0; i < _widgets.Length; i++)
+        {
+            _widgets[i].SetInteractable(canAdvance, false);
+        }
     }
 
 
