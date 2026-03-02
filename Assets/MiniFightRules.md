@@ -147,6 +147,7 @@ The current list is as follows:
 * **Minus Hit Ranged:** causes all ranged attacks against this Squad to have a -1 to Hit Modifier.
 * **Move After Shooting:** This Squad can move after its Shoot Stage.
 * **Move Back:** Whenever an enemy moves within 9 inches of this Squad, this Squad can then move up to D6 inches in any direction.
+* **Free Health Care:** Friendly Squads within 6 inches of this Squad get -1 Damage Resistance (➗), and this aura does not stack.
 * **Officer Order:** This Squad can receive orders from Officers at the beginning of the Starting Stage. The effect resets at the start of each round. The orders are:
 
 ### Squad Orders

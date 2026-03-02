@@ -1,10 +1,13 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 public static class CombatRolls
 {
+    public static Func<Squad, int>? DamageResistanceModifierProvider { get; set; }
+
     private static void LogAbilityTrigger(string abilityType, string abilityInnate, string context)
     {
         GD.Print($"[Ability Triggered] {abilityType} ability '{abilityInnate}' triggered ({context}).");
@@ -350,6 +353,32 @@ public static class CombatRolls
         return unsavedInjuries;
     }
 
+
+    public static int ResolveEffectiveDamageResistance(Squad squad)
+    {
+        if (squad == null)
+        {
+            return 7;
+        }
+
+        var resist = squad.DamageResistance;
+        var specialDef = squad.SquadAbilities.FirstOrDefault(ability => ability.Innate == "Special Def");
+        if (specialDef != null)
+        {
+            resist = specialDef.ResolveModifier();
+            LogAbilityTrigger("Squad", "Special Def", $"set damage resistance threshold to {resist}");
+        }
+
+        var auraModifier = DamageResistanceModifierProvider?.Invoke(squad) ?? 0;
+        if (auraModifier != 0)
+        {
+            resist += auraModifier;
+            LogAbilityTrigger("Squad", SquadAbilities.FreeHealthcare.Innate, $"adjusted damage resistance threshold by {auraModifier} to {resist}");
+        }
+
+        return resist;
+    }
+
     public static int AllocatePure(int mortalWounds, Squad squad)
     {
         if (mortalWounds <= 0 || squad == null)
@@ -362,13 +391,7 @@ public static class CombatRolls
         var unit = squad;
         unit.Composition.Sort((a, b) => a.Health.CompareTo(b.Health));
 
-        var resist = unit.DamageResistance;
-        var specialDef = unit.SquadAbilities.FirstOrDefault(ability => ability.Innate == "Special Def");
-        if (specialDef != null)
-        {
-            resist = specialDef.ResolveModifier();
-            LogAbilityTrigger("Squad", "Special Def", $"set damage resistance threshold to {resist}");
-        }
+        var resist = ResolveEffectiveDamageResistance(unit);
 
         var iterator = unit.Composition.GetEnumerator();
         while (remainingWounds > 0 && iterator.MoveNext())

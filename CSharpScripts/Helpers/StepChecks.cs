@@ -15,6 +15,9 @@ public static class StepChecks
     private static readonly SquadAbility ActiveDuty = new SquadAbility("", "activeDuty", 0, false);
 
     public static Action<Squad> SquadRegenerationHandler { get; set; }
+    public static Func<Squad, IEnumerable<Squad>> FriendlyAuraSquadProvider { get; set; }
+    public static Func<Squad, IEnumerable<Squad>> EnemyAuraSquadProvider { get; set; }
+    public static Func<Squad, Squad, float, bool> AuraRangeCheckProvider { get; set; }
 
     public static async Task RoundStartChecks(Player activePlayer, Player inactivePlayer, BattleHud hud, bool allowPlayerChoices = true)
     {
@@ -254,7 +257,7 @@ public static class StepChecks
         }
 
         AudioManager.Instance?.Play("demonlaugh");
-        activeSquad.ShellShock = ShellShockTest(activeSquad, inactiveSquad.SquadAbilities);
+        activeSquad.ShellShock = ShellShockTest(activeSquad, inactiveSquad);
         if (activeSquad.ShellShock)
         {
             hud.ShowToast($"{activeSquad.Name} became shell-shocked.");
@@ -570,24 +573,31 @@ public static class StepChecks
             });
     }
 
-    public static bool ShellShockTest(Squad activeSquad, List<SquadAbility> inActiveAbilities)
+    public static bool ShellShockTest(Squad activeSquad, Squad inactiveSquad)
     {
-        if (activeSquad == null || inActiveAbilities == null)
+        if (activeSquad == null)
         {
             return false;
         }
 
         var baseBravery = activeSquad.Bravery;
         var shellShockModifier = 0;
-        if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "Bad Juju"))
+
+        var hasBadJuju = HasFriendlyAura(activeSquad, "Bad Juju", 0f);
+        var hasHiveMind = HasFriendlyAura(activeSquad, "Hive", 0f);
+
+        if (hasBadJuju)
         {
             shellShockModifier += 1;
         }
-        if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "Hive"))
+
+        if (hasHiveMind)
         {
             shellShockModifier += DiceHelpers.SimpleRoll(6);
         }
-        if (inActiveAbilities.Any(ability => ability.Innate == "Grim"))
+
+        var hasGrimDebuff = HasEnemyDebuffAura(activeSquad, inactiveSquad, "Grim", 12f);
+        if (hasGrimDebuff)
         {
             shellShockModifier -= 1;
         }
@@ -603,13 +613,12 @@ public static class StepChecks
             AudioManager.Instance?.Play("failedbravery");
         }
 
-        // If the active squad has Bad Juju and DID NOT fail, trigger regeneration (preserve original behavior)
-        if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "Bad Juju") && !test)
+        if (hasBadJuju && !test)
         {
             TriggerSquadRegeneration(activeSquad);
         }
-        // apply D3 Pure damage to the active squad (use SimpleRoll(3) to represent D3).
-        if (test && inActiveAbilities.Any(ability => ability.Innate == "Bad Juju"))
+
+        if (test && HasEnemyDebuffAura(activeSquad, inactiveSquad, "Bad Juju", 12f))
         {
             CombatRolls.AllocatePure(DiceHelpers.SimpleRoll(3), activeSquad);
         }
@@ -617,6 +626,47 @@ public static class StepChecks
         return test;
     }
 
+
+    private static bool HasFriendlyAura(Squad targetSquad, string innate, float rangeInches)
+    {
+        if (targetSquad == null || string.IsNullOrWhiteSpace(innate))
+        {
+            return false;
+        }
+
+        if (FriendlyAuraSquadProvider != null && AuraRangeCheckProvider != null)
+        {
+            return CombatHelpers.HasFriendlyAura(
+                targetSquad,
+                FriendlyAuraSquadProvider(targetSquad),
+                innate,
+                rangeInches,
+                AuraRangeCheckProvider,
+                includeSelf: true);
+        }
+
+        return targetSquad.SquadAbilities?.Any(ability => ability.Innate == innate) == true;
+    }
+
+    private static bool HasEnemyDebuffAura(Squad targetSquad, Squad fallbackEnemy, string innate, float rangeInches)
+    {
+        if (targetSquad == null || string.IsNullOrWhiteSpace(innate))
+        {
+            return false;
+        }
+
+        if (EnemyAuraSquadProvider != null && AuraRangeCheckProvider != null)
+        {
+            return CombatHelpers.HasEnemyDebuffAura(
+                targetSquad,
+                EnemyAuraSquadProvider(targetSquad),
+                innate,
+                rangeInches,
+                AuraRangeCheckProvider);
+        }
+
+        return fallbackEnemy?.SquadAbilities?.Any(ability => ability.Innate == innate) == true;
+    }
 
     public static void TriggerSquadRegeneration(Squad squad)
     {

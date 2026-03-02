@@ -11,6 +11,45 @@ public static class CombatHelpers
     }
 
 
+
+    public static bool HasFriendlyAura(
+        Squad target,
+        IEnumerable<Squad> friendlySquads,
+        string auraInnate,
+        float auraRangeInches,
+        Func<Squad, Squad, float, bool> areSquadsWithinDistance,
+        bool includeSelf = true)
+    {
+        if (target == null || friendlySquads == null || string.IsNullOrWhiteSpace(auraInnate) || areSquadsWithinDistance == null)
+        {
+            return false;
+        }
+
+        return friendlySquads.Any(source =>
+            source != null
+            && source.SquadAbilities.Any(ability => ability.Innate == auraInnate)
+            && (includeSelf || !ReferenceEquals(source, target))
+            && areSquadsWithinDistance(source, target, auraRangeInches));
+    }
+
+    public static bool HasEnemyDebuffAura(
+        Squad target,
+        IEnumerable<Squad> enemySquads,
+        string auraInnate,
+        float auraRangeInches,
+        Func<Squad, Squad, float, bool> areSquadsWithinDistance)
+    {
+        if (target == null || enemySquads == null || string.IsNullOrWhiteSpace(auraInnate) || areSquadsWithinDistance == null)
+        {
+            return false;
+        }
+
+        return enemySquads.Any(source =>
+            source != null
+            && source.SquadAbilities.Any(ability => ability.Innate == auraInnate)
+            && areSquadsWithinDistance(source, target, auraRangeInches));
+    }
+
     public static Squad GetActiveSquad(int activeTeamId, Squad teamASquad, Squad teamBSquad)
     {
         return activeTeamId == 1 ? teamASquad : teamBSquad;
