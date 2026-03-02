@@ -31,7 +31,7 @@ public static class DiceRoller
             return;
         }
 
-        if (e.RerolledFlags[index])
+        if (e.RerolledFlags[index] || e.FateReplacedFlags[index])
         {
             return;
         }
@@ -55,11 +55,13 @@ public static class DiceRoller
         }
 
         var rerolledFlags = new bool[count];
+        var fateReplacedFlags = new bool[count];
         var rollEvent = new RollEvent(
             Guid.NewGuid(),
             sides,
             results,
             rerolledFlags,
+            fateReplacedFlags,
             ctx.OwnerTeamId > 0 ? ctx.OwnerTeamId : _presenter.ActivePlayerTeamId,
             ctx.Phase,
             ctx.Label,

@@ -35,6 +35,7 @@ public partial class DicePresenter : Node, IDicePresenter
             _currentRoll = rollEvent;
             _rerollUsedThisRoll = false;
             await _overlay.ShowRollAsync(rollEvent);
+            RefreshFateSixHud();
             InteractionMode = DiceInteractionMode.AwaitingPlayerAdvance;
             UpdateButtons();
             await WaitForAdvanceAsync();
@@ -100,23 +101,101 @@ public partial class DicePresenter : Node, IDicePresenter
     private void OnDieClicked(int index)
     {
         var orderManager = GetOrderManager();
-        if (_currentRoll == null || orderManager == null || InteractionMode != DiceInteractionMode.AwaitingRerollSelection)
+        var battle = GetBattle();
+        if (_currentRoll == null || orderManager == null || battle == null)
         {
             return;
         }
 
-        if (!orderManager.TryUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, index, out var reason))
+        if (InteractionMode == DiceInteractionMode.AwaitingRerollSelection)
         {
-            GetBattle()?.Hud?.ShowToast(reason);
+            if (!orderManager.TryUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, index, out var rerollReason))
+            {
+                battle.Hud?.ShowToast(rerollReason);
+                return;
+            }
+
+            DiceRoller.RerollDie(_currentRoll, index);
+            _overlay.UpdateDieFace(index);
+            _rerollUsedThisRoll = true;
+            InteractionMode = DiceInteractionMode.AwaitingPlayerAdvance;
+            _overlay.SetRerollSelectionState(false);
+            UpdateButtons();
             return;
         }
 
-        DiceRoller.RerollDie(_currentRoll, index);
+        if (InteractionMode != DiceInteractionMode.AwaitingPlayerAdvance)
+        {
+            return;
+        }
+
+        if (_currentRoll.OwnerTeamId != ActivePlayerTeamId)
+        {
+            return;
+        }
+
+        if (battle.IsTeamAI(ActivePlayerTeamId))
+        {
+            return;
+        }
+
+        var player = battle.GetPlayerByTeam(ActivePlayerTeamId);
+        if (player?.HasStrandedMiracle != true)
+        {
+            return;
+        }
+
+        if (player.FateSixPool <= 0)
+        {
+            battle.Hud?.ShowToast("No Fate Sixes remaining.");
+            return;
+        }
+
+        if (index < 0 || index >= _currentRoll.Results.Count)
+        {
+            return;
+        }
+
+        if (_currentRoll.RerolledFlags[index])
+        {
+            battle.Hud?.ShowToast("Rerolled dice cannot be fate-replaced.");
+            return;
+        }
+
+        if (_currentRoll.FateReplacedFlags[index])
+        {
+            battle.Hud?.ShowToast("This die was already fate-replaced.");
+            return;
+        }
+
+        if (!battle.TryConsumeFateSix(ActivePlayerTeamId))
+        {
+            battle.Hud?.ShowToast("No Fate Sixes remaining.");
+            return;
+        }
+
+        _currentRoll.Results[index] = 6;
+        _currentRoll.FateReplacedFlags[index] = true;
         _overlay.UpdateDieFace(index);
-        _rerollUsedThisRoll = true;
-        InteractionMode = DiceInteractionMode.AwaitingPlayerAdvance;
-        _overlay.SetRerollSelectionState(false);
-        UpdateButtons();
+        battle.Hud?.ShowToast("Fate Six used");
+        RefreshFateSixHud();
+    }
+
+    public void RefreshFateSixHud()
+    {
+        var battle = GetBattle();
+        if (battle == null || _overlay == null)
+        {
+            return;
+        }
+
+        var p1 = battle.TeamAPlayer;
+        var p2 = battle.TeamBPlayer;
+        _overlay.SetFateSixes(
+            battle.GetFateSixPool(1),
+            p1?.HasStrandedMiracle == true,
+            battle.GetFateSixPool(2),
+            p2?.HasStrandedMiracle == true);
     }
 
     private void UpdateButtons()
