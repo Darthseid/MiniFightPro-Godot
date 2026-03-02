@@ -3,12 +3,12 @@
 importer="import_gif_to_sprite_frames"
 type="SpriteFrames"
 uid="uid://cwe2bwcy36in6"
-path="res://.godot/imported/dieRoll.gif-610112bd011070c9bb7a77c6fa987b59.tres"
+path="res://.godot/imported/dieRoll.gif-05f3fdecea20004199da17bc00cf004e.tres"
 
 [deps]
 
-source_file="res://Assets/drawable/dieRoll.gif"
-dest_files=["res://.godot/imported/dieRoll.gif-610112bd011070c9bb7a77c6fa987b59.tres"]
+source_file="res://Assets/ModelIcons/dieRoll.gif"
+dest_files=["res://.godot/imported/dieRoll.gif-05f3fdecea20004199da17bc00cf004e.tres"]
 
 [params]
 

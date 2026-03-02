@@ -10,3 +10,6 @@ To do list for mini fight free godot:
 * Remove 40k terminology.
 * Translate into other languages.
 * Remove Bespoke functions.
+* Have PureDamage carry over to other models in the unit.
+* Apply oneShot, perilous, Benefit of Cover, Ignores Cover, and pure damage changes to MiniFightFree.
+* Fix Mists of Deimos.

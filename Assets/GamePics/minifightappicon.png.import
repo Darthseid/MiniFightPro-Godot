@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dvg1iq1vvhmcs"
-path="res://.godot/imported/minifightappicon.png-d702a7dd0df686322cee283370544aed.ctex"
+path="res://.godot/imported/minifightappicon.png-533857a7e74b83ceb6c4834db9d8603a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ModelIcons/minifightappicon.png"
-dest_files=["res://.godot/imported/minifightappicon.png-d702a7dd0df686322cee283370544aed.ctex"]
+source_file="res://Assets/GamePics/minifightappicon.png"
+dest_files=["res://.godot/imported/minifightappicon.png-533857a7e74b83ceb6c4834db9d8603a.ctex"]
 
 [params]
 
