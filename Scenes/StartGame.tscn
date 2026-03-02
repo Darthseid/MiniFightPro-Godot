@@ -45,6 +45,19 @@ text = "Select Player 2"
 unique_name_in_owner = true
 layout_mode = 2
 
+
+[node name="Label_TerrainCount" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = "Terrain pieces (0-12)"
+
+[node name="TerrainCountInput" type="SpinBox" parent="MainContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 12.0
+step = 1.0
+value = 4.0
+
 [node name="BtnBeginBattle" type="Button" parent="MainContainer" unique_id=2146286774]
 unique_name_in_owner = true
 layout_mode = 2

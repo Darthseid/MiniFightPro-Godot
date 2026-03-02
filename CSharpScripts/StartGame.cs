@@ -7,6 +7,7 @@ public partial class StartGame : Control
 {
     private OptionButton _unit1Dropdown;
     private OptionButton _unit2Dropdown;
+    private SpinBox _terrainCountInput;
     private Button _beginBattleButton;
     private Label _statusLabel;
     private TextureRect _proBanner;
@@ -28,6 +29,7 @@ public partial class StartGame : Control
 
         _unit1Dropdown = GetNode<OptionButton>("%Unit1Dropdown");
         _unit2Dropdown = GetNode<OptionButton>("%Unit2Dropdown");
+        _terrainCountInput = GetNode<SpinBox>("%TerrainCountInput");
         _beginBattleButton = GetNode<Button>("%BtnBeginBattle");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _proBanner = GetNode<TextureRect>("%ProBanner");
@@ -113,7 +115,8 @@ public partial class StartGame : Control
             return;
         }
 
-        battleRoot.SetupPlayers(player1, player2, _teamAIsAI, _teamBIsAI);
+        var terrainCount = (int)Mathf.Clamp((float)_terrainCountInput.Value, 0f, 12f);
+        battleRoot.SetupPlayers(player1, player2, _teamAIsAI, _teamBIsAI, terrainCount);
         GetTree().Root.AddChild(battleRoot);
         QueueFree();
     }

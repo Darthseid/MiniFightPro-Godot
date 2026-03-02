@@ -11,6 +11,45 @@ public static class CombatHelpers
     }
 
 
+
+    public static bool HasFriendlyAura(
+        Squad target,
+        IEnumerable<Squad> friendlySquads,
+        string auraInnate,
+        float auraRangeInches,
+        Func<Squad, Squad, float, bool> areSquadsWithinDistance,
+        bool includeSelf = true)
+    {
+        if (target == null || friendlySquads == null || string.IsNullOrWhiteSpace(auraInnate) || areSquadsWithinDistance == null)
+        {
+            return false;
+        }
+
+        return friendlySquads.Any(source =>
+            source != null
+            && source.SquadAbilities.Any(ability => ability.Innate == auraInnate)
+            && (includeSelf || !ReferenceEquals(source, target))
+            && areSquadsWithinDistance(source, target, auraRangeInches));
+    }
+
+    public static bool HasEnemyDebuffAura(
+        Squad target,
+        IEnumerable<Squad> enemySquads,
+        string auraInnate,
+        float auraRangeInches,
+        Func<Squad, Squad, float, bool> areSquadsWithinDistance)
+    {
+        if (target == null || enemySquads == null || string.IsNullOrWhiteSpace(auraInnate) || areSquadsWithinDistance == null)
+        {
+            return false;
+        }
+
+        return enemySquads.Any(source =>
+            source != null
+            && source.SquadAbilities.Any(ability => ability.Innate == auraInnate)
+            && areSquadsWithinDistance(source, target, auraRangeInches));
+    }
+
     public static Squad GetActiveSquad(int activeTeamId, Squad teamASquad, Squad teamBSquad)
     {
         return activeTeamId == 1 ? teamASquad : teamBSquad;
@@ -47,7 +86,7 @@ public static class CombatHelpers
         return weaponList.GroupBy(weapon => weapon.WeaponName).Select(group => group.First()).ToList();
     }
 
-    public static bool CheckValidShooting(Squad shooterSquad, MoveVars shooterMove, Weapon firearm, Squad targetSquad, float currentDistance)
+    public static bool CheckValidShooting(Squad shooterSquad, MoveVars shooterMove, Weapon firearm, Squad targetSquad, float currentDistance, bool hasLineOfSight = true)
     {
         var validShooting = currentDistance <= firearm.Range;
         var shotAbilities = firearm.Special;
@@ -71,6 +110,10 @@ public static class CombatHelpers
                 validShooting = false;
             }
         }
+        if (!hasLineOfSight && firearm.Special.All(ability => ability.Innate != WeaponAbilities.IndirectFire.Innate))
+        {
+            validShooting = false;
+        }
         if (targetSquad.SquadAbilities.Any(ability => ability.Innate == "12 inch or bust") && currentDistance > 12f)
         {
             LogAbilityTrigger("Squad", "12 inch or bust", "invalidated shooting beyond 12 inches");
@@ -91,7 +134,8 @@ public static class CombatHelpers
         Squad defenderSquad,
         bool coverType,
         bool isFight,
-        float currentDistance
+        float currentDistance,
+        int additionalHitModifier = 0
     )
     {
         var hitMod = 0;
@@ -195,6 +239,8 @@ public static class CombatHelpers
             woundMod -= 1;
             LogAbilityTrigger("Squad", "4s Please", "reduced wound modifier by 1");
         }
+        hitMod += additionalHitModifier;
+
         if (attackerSquad.SquadAbilities.Any(ability => ability.Innate == "Pow-1"))
         {
             hitMod = Math.Max(hitMod, 0);

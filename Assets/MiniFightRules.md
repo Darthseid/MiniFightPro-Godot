@@ -147,6 +147,7 @@ The current list is as follows:
 * **Minus Hit Ranged:** causes all ranged attacks against this Squad to have a -1 to Hit Modifier.
 * **Move After Shooting:** This Squad can move after its Shoot Stage.
 * **Move Back:** Whenever an enemy moves within 9 inches of this Squad, this Squad can then move up to D6 inches in any direction.
+* **Free Health Care:** Friendly Squads within 6 inches of this Squad get -1 Damage Resistance (➗), and this aura does not stack.
 * **Officer Order:** This Squad can receive orders from Officers at the beginning of the Starting Stage. The effect resets at the start of each round. The orders are:
 
 ### Squad Orders
@@ -215,6 +216,8 @@ There are multiple abilities in Miniature Fight that make weapons more powerful.
 ·        **Heavy:** If the Squad didn’t move this turn, this weapon has a +1 to Hit Modifier in the next Shoot Stage.
 
 ·        **Ignores Cover:** Squads do not benefit from cover when they are shot at by this weapon. Currently, there is no cover or terrain in Miniature Fight, but certain abilities give Squads a +1 🛡️ boost for being in cover.
+
+·        **Indirect Fire:** Can target enemies without line of sight. If fired without line of sight: -1 to hit and target gains cover.
 
 ·        **Obliterating:** Critical Injuries by this weapon cannot be saved against and automatically deal damage. Critical Injuries are unmodified die rolls of 6 by default.
 

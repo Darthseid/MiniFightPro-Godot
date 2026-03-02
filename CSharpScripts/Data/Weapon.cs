@@ -138,6 +138,7 @@ public static class WeaponAbilities
     public static readonly WeaponAbility PlusOneInjuries = new WeaponAbility("^", "+1 to Injury Rolls", 0, false);
     public static readonly WeaponAbility PlusOneInjuriesTemp = new WeaponAbility("Temp ^", "Temp +1 to Injury Rolls", 0, true);
     public static readonly WeaponAbility MultiProfile = new WeaponAbility("MultiProfile", "Multi-profile", 0, false);
+    public static readonly WeaponAbility IndirectFire = new WeaponAbility("INDIRECT_FIRE", "Indirect Fire", 0, false);
 
     public static readonly IReadOnlyList<WeaponAbility> VariableBaseAbilities = new List<WeaponAbility>
     {
@@ -214,6 +215,7 @@ public static class WeaponAbilities
         RerollInjuryOnes,
         OneWoundReroll,
         PlusOneInjuries,
-        MultiProfile
+        MultiProfile,
+        IndirectFire
     };
 }

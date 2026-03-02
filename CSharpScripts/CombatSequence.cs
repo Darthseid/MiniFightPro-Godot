@@ -37,6 +37,7 @@ public sealed class CombatSequence
         var activePlayer = _battle.ActiveTeamId == 1 ? _battle.TeamAPlayer : _battle.TeamBPlayer;
         var inactivePlayer = _battle.ActiveTeamId == 1 ? _battle.TeamBPlayer : _battle.TeamAPlayer;
 
+        _battle.ApplyTerrainCoverAtCommandPhaseStart();
         await StepChecks.RoundStartChecks(activePlayer, inactivePlayer, _battle.Hud, allowPlayerChoices: !activeTeamIsAI);
         await StepChecks.CommandPhaseChecks(activePlayer, inactivePlayer, null, null, _battle.Hud, allowPlayerChoices: !activeTeamIsAI);
         _battle.PostDamageCleanupAndVictoryCheck();
@@ -183,10 +184,10 @@ public sealed class CombatSequence
                 if (!wantsShoot) continue;
             }
 
-            var validShootingTargets = GetValidShootingTargets(enemyTeamId);
+            var validShootingTargets = GetValidShootingTargets(squad, enemyTeamId);
             if (validShootingTargets.Count == 0)
             {
-                _battle.Hud?.ShowToast($"{squad.Name}: No valid shooting targets (enemy engaged in fight range).");
+                _battle.Hud?.ShowToast($"{squad.Name}: No valid shooting targets.");
                 continue;
             }
 
@@ -199,6 +200,15 @@ public sealed class CombatSequence
                 );
 
             if (target == null) continue;
+
+            var hasLineOfSight = _battle.HasMajorityLineOfSight(squad, target);
+            var hasIndirectOption = _battle.SquadHasIndirectFireWeaponThatCanShootTarget(squad, target);
+            if (!hasLineOfSight && !hasIndirectOption)
+            {
+                _battle.Hud?.ShowToast("No line of sight: shooting invalid");
+                GD.Print("[Terrain] No line of sight: shooting invalid");
+                continue;
+            }
 
             _battle.SetActiveSquadForTeam(enemyTeamId, target);
 
@@ -219,7 +229,19 @@ public sealed class CombatSequence
 
             var prevActiveTeamId = _battle.ActiveTeamId;
             _battle.ActiveTeamId = activeTeamId;
-            await _battle.ResolveShootingPhase(selectedRangedProfile);
+            var appliedIndirectCover = false;
+            if (!hasLineOfSight && hasIndirectOption && target.SquadAbilities.All(a => a.Innate != SquadAbilities.CoverBenefitTemp.Innate))
+            {
+                target.SquadAbilities.Add(SquadAbilities.CoverBenefitTemp);
+                appliedIndirectCover = true;
+            }
+
+            await _battle.ResolveShootingPhase(selectedRangedProfile, hasLineOfSight);
+
+            if (appliedIndirectCover)
+            {
+                target.SquadAbilities.RemoveAll(a => a.IsTemporary && a.Innate == SquadAbilities.CoverBenefitTemp.Innate);
+            }
             _battle.ActiveTeamId = prevActiveTeamId;
             _battle.CheckVictory();
             if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
@@ -287,6 +309,18 @@ public sealed class CombatSequence
                     _battle.Hud?.ShowToast($"{squad.Name} cannot charge this turn.");
                 }
 
+                continue;
+            }
+
+            if (_battle.IsChargeBlockedByTerrain(squad, target))
+            {
+                if (!activeTeamIsAI)
+                {
+                    _battle.Hud?.ShowToast("Charge blocked by terrain");
+                    AudioManager.Instance?.Play("failedcharge");
+                }
+
+                GD.Print("[Terrain] Charge blocked by terrain");
                 continue;
             }
 
@@ -437,7 +471,7 @@ public sealed class CombatSequence
             .ToList();
     }
 
-    private List<Squad> GetValidShootingTargets(int enemyTeamId)
+    private List<Squad> GetValidShootingTargets(Squad attackerSquad, int enemyTeamId)
     {
         var enemySquads = _battle.GetAliveSquadsForTeam(enemyTeamId);
         var friendlySquads = _battle.GetAliveSquadsForTeam(_battle.ActiveTeamId);
@@ -446,6 +480,11 @@ public sealed class CombatSequence
             .Where(enemySquad =>
                 friendlySquads.All(friendlySquad =>
                     !IsInFightRange(enemySquad, friendlySquad)))
+            .Where(enemySquad =>
+            {
+                var hasLos = _battle.HasMajorityLineOfSight(attackerSquad, enemySquad);
+                return hasLos || _battle.SquadHasIndirectFireWeaponThatCanShootTarget(attackerSquad, enemySquad);
+            })
             .ToList();
     }
 

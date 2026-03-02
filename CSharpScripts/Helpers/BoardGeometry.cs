@@ -485,4 +485,25 @@ public static class BoardGeometry
         }
         return sum / actors.Count;
     }
+
+    public static bool SegmentIntersectsCircle(Vector2 start, Vector2 end, Vector2 center, float radius, float epsilon = 0.1f)
+    {
+        var ab = end - start;
+        var abLenSq = ab.LengthSquared();
+        if (abLenSq <= 0.0001f)
+        {
+            return start.DistanceTo(center) <= radius;
+        }
+
+        var t = Mathf.Clamp((center - start).Dot(ab) / abLenSq, 0f, 1f);
+        var closest = start + (ab * t);
+        var nearEndpoint = closest.DistanceTo(start) <= epsilon || closest.DistanceTo(end) <= epsilon;
+        if (nearEndpoint)
+        {
+            return false;
+        }
+
+        return closest.DistanceTo(center) <= radius;
+    }
+
 }

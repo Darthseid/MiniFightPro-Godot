@@ -413,8 +413,9 @@ public static class CombatEngine
         foreach (var batch in weaponBatches)
         {
             var weapon = batch.Weapon;
+            var hasLineOfSight = true;
             if (!isMelee &&
-                !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance))
+                !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance, hasLineOfSight))
             {
                 continue;
             }
@@ -563,7 +564,8 @@ public static class CombatEngine
         BattleField battleField,
         System.Action checkVictory,
         System.Action<Squad, Squad, int> handleExplosionProcess = null,
-        bool onlySixesHit = false
+        bool onlySixesHit = false,
+        bool hasLineOfSight = true
     )
     {
         if (attacker == null || defender == null)
@@ -624,7 +626,8 @@ public static class CombatEngine
         System.Action checkVictory,
         System.Action<Squad, Squad, int> handleExplosionProcess = null,
         string selectedWeaponFingerprint = null,
-        bool onlySixesHit = false
+        bool onlySixesHit = false,
+        bool hasLineOfSight = true
     )
     {
         if (attacker == null || defender == null)
@@ -651,7 +654,7 @@ public static class CombatEngine
         {
             var weapon = batch.Weapon;
             if (!isFight &&
-                !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance))
+                !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance, hasLineOfSight))
             {
                 continue;
             }
@@ -663,14 +666,21 @@ public static class CombatEngine
                 continue;
             }
             var weaponHitSoundKey = ResolveWeaponHitSoundKey(weapon);
+            var indirectShot = !isFight && !hasLineOfSight && weapon.Special.Any(ability => ability.Innate == WeaponAbilities.IndirectFire.Innate);
+            if (indirectShot)
+            {
+                GD.Print($"[Indirect Fire] {attackerSquad.Name} firing {weapon.WeaponName} indirectly at {defenderSquad.Name}.");
+            }
+
             var modifiers = CombatHelpers.ObtainModifiers(
                 weapon,
                 attackerSquad,
                 attackerMove,
                 defenderSquad,
-                false,
+                indirectShot,
                 isFight,
-                _currentDistance
+                _currentDistance,
+                indirectShot ? -1 : 0
             );
 
             var hitContext = new RollContext(
@@ -821,7 +831,8 @@ public static class CombatEngine
         BattleField battleField,
         System.Action checkVictory,
         System.Action<Squad, Squad, int> handleExplosionProcess = null,
-        bool onlySixesHit = false
+        bool onlySixesHit = false,
+        bool hasLineOfSight = true
     )
     {
         var attackerSquad = attackerTeamId == 1 ? teamASquad : teamBSquad;
@@ -848,7 +859,7 @@ public static class CombatEngine
                 continue;
             }
 
-            if (!isFight && !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance))
+            if (!isFight && !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance, hasLineOfSight))
             {
                 continue;
             }
@@ -860,7 +871,13 @@ public static class CombatEngine
             }
             var aliveBeforeWeapon = CountLivingActors(defenderActors);
             var weaponHitSoundKey = ResolveWeaponHitSoundKey(weapon);
-            var modifiers = CombatHelpers.ObtainModifiers(weapon, attackerSquad, attackerMove, defenderSquad, false, isFight, _currentDistance);
+            var indirectShot = !isFight && !hasLineOfSight && weapon.Special.Any(ability => ability.Innate == WeaponAbilities.IndirectFire.Innate);
+            if (indirectShot)
+            {
+                GD.Print($"[Indirect Fire] {attackerSquad.Name} firing {weapon.WeaponName} indirectly at {defenderSquad.Name}.");
+            }
+
+            var modifiers = CombatHelpers.ObtainModifiers(weapon, attackerSquad, attackerMove, defenderSquad, indirectShot, isFight, _currentDistance, indirectShot ? -1 : 0);
             var hitContext = new RollContext(
                 RollPhase.Hit,
                 $"To Hit ({weapon.WeaponName})",
