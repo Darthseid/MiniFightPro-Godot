@@ -680,7 +680,8 @@ public static class CombatEngine
                 defenderSquad?.Name,
                 weapon.WeaponName,
                 CombatEngine.GetWeaponFingerprint(weapon),
-                onlySixesHit
+                onlySixesHit,
+                attacker.TeamId
             );
             var (hits, hardHits) = await CombatRolls.HitSequenceAsync(
                 attacks,
@@ -721,7 +722,8 @@ public static class CombatEngine
                 defenderSquad?.Name,
                 weapon.WeaponName,
                 CombatEngine.GetWeaponFingerprint(weapon),
-                onlySixesHit
+                onlySixesHit,
+                attacker.TeamId
             );
             var (injuries, devastating) = await CombatRolls.WoundSequenceAsync(
                 hits,
@@ -740,7 +742,9 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                CombatEngine.GetWeaponFingerprint(weapon)
+                CombatEngine.GetWeaponFingerprint(weapon),
+                false,
+                attacker.TeamId == 1 ? 2 : 1
             );
             var dodge = defenderSquad.Dodge > 6 && defenderSquad.SquadAbilities.Any(a => a.Innate == SquadAbilities.SixPlusDodge.Innate) ? defenderSquad.Dodge - 1 : defenderSquad.Dodge;
             var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, dodge, saveContext);
@@ -864,7 +868,8 @@ public static class CombatEngine
                 defenderSquad?.Name,
                 weapon.WeaponName,
                 CombatEngine.GetWeaponFingerprint(weapon),
-                onlySixesHit
+                onlySixesHit,
+                attackerTeamId
             );
             var (hits, hardHits) = await CombatRolls.HitSequenceAsync(attacks, weapon.HitSkill, modifiers.HitMod, modifiers.HitReroll, modifiers.CritThreshold, weapon.Special, hitContext);
             hits += hardHits;
@@ -897,7 +902,8 @@ public static class CombatEngine
                 defenderSquad?.Name,
                 weapon.WeaponName,
                 CombatEngine.GetWeaponFingerprint(weapon),
-                onlySixesHit
+                onlySixesHit,
+                attackerTeamId
             );
             var (injuries, devastating) = await CombatRolls.WoundSequenceAsync(hits, weapon.Strength, defenderHardness, modifiers.WoundMod, modifiers.WoundReroll, weapon.Special, modifiers.AntiThreshold, woundContext);
             injuries += devastating;
@@ -907,7 +913,9 @@ public static class CombatEngine
                 attackerSquad?.Name,
                 defenderSquad?.Name,
                 weapon.WeaponName,
-                CombatEngine.GetWeaponFingerprint(weapon)
+                CombatEngine.GetWeaponFingerprint(weapon),
+                false,
+                attackerTeamId == 1 ? 2 : 1
             );
             var dodge = defenderSquad.Dodge > 6 && defenderSquad.SquadAbilities.Any(a => a.Innate == SquadAbilities.SixPlusDodge.Innate) ? defenderSquad.Dodge - 1 : defenderSquad.Dodge;
             var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, dodge, saveContext);

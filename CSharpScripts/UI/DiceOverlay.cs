@@ -1,52 +1,102 @@
 using Godot;
+using System;
 using System.Threading.Tasks;
 
 public partial class DiceOverlay : CanvasLayer
 {
     private const double RollAnimSeconds = 0.8;
-    private const double RevealSeconds = 2.0;
 
     private Label _headerLabel;
     private GridContainer _diceGrid;
     private AudioStreamPlayer _audioPlayer;
     private PackedScene _dieWidgetScene;
+    private Button _nextButton;
+    private Button _commandRerollButton;
+
+    private DieWidget[] _widgets = Array.Empty<DieWidget>();
+    private RollEvent? _currentRoll;
+
+    public event Action? NextPressed;
+    public event Action? CommandRerollPressed;
+    public event Action<int>? DieClicked;
 
     public override void _Ready()
     {
         _headerLabel = GetNode<Label>("Panel/Margin/VBox/HeaderLabel");
         _diceGrid = GetNode<GridContainer>("Panel/Margin/VBox/DiceGrid");
         _audioPlayer = GetNode<AudioStreamPlayer>("AudioStreamPlayer");
+        _nextButton = GetNode<Button>("Panel/Margin/VBox/Actions/BtnNextRoll");
+        _commandRerollButton = GetNode<Button>("Panel/Margin/VBox/Actions/BtnCommandReroll");
         _dieWidgetScene = GD.Load<PackedScene>("res://Scenes/UI/DieWidget.tscn");
+        _nextButton.Pressed += () => NextPressed?.Invoke();
+        _commandRerollButton.Pressed += () => CommandRerollPressed?.Invoke();
         Visible = false;
     }
 
     public async Task ShowRollAsync(RollEvent rollEvent)
     {
+        _currentRoll = rollEvent;
         foreach (Node child in _diceGrid.GetChildren())
         {
             child.QueueFree();
         }
 
-        _headerLabel.Text = $"{rollEvent.Label} - {rollEvent.Results.Length} dice";
-        var widgets = new DieWidget[rollEvent.Results.Length];
-        for (var i = 0; i < rollEvent.Results.Length; i++)
+        _headerLabel.Text = $"{rollEvent.Label} - {rollEvent.Results.Count} dice";
+        _widgets = new DieWidget[rollEvent.Results.Count];
+        for (var i = 0; i < rollEvent.Results.Count; i++)
         {
             var widget = _dieWidgetScene.Instantiate<DieWidget>();
+            widget.SetIndex(i);
+            var idx = i;
+            widget.DieClicked += _ => DieClicked?.Invoke(idx);
             _diceGrid.AddChild(widget);
             widget.StartRolling();
-            widgets[i] = widget;
+            _widgets[i] = widget;
         }
 
         Visible = true;
         _audioPlayer.Play();
         await ToSignal(GetTree().CreateTimer(RollAnimSeconds), SceneTreeTimer.SignalName.Timeout);
 
-        for (var i = 0; i < rollEvent.Results.Length; i++)
+        for (var i = 0; i < rollEvent.Results.Count; i++)
         {
-            widgets[i].RevealFace(rollEvent.Results[i]);
+            _widgets[i].RevealFace(rollEvent.Results[i]);
+        }
+    }
+
+    public void SetButtonsState(bool canAdvance, bool canReroll)
+    {
+        _nextButton.Disabled = !canAdvance;
+        _commandRerollButton.Disabled = !canReroll;
+    }
+
+    public void SetRerollSelectionState(bool isActive)
+    {
+        if (_currentRoll == null)
+        {
+            return;
         }
 
-        await ToSignal(GetTree().CreateTimer(RevealSeconds), SceneTreeTimer.SignalName.Timeout);
+        for (var i = 0; i < _widgets.Length; i++)
+        {
+            var canPick = isActive && !_currentRoll.RerolledFlags[i];
+            _widgets[i].SetInteractable(canPick, canPick);
+        }
+    }
+
+    public void UpdateDieFace(int index)
+    {
+        if (_currentRoll == null || index < 0 || index >= _widgets.Length)
+        {
+            return;
+        }
+
+        _widgets[index].RevealFace(_currentRoll.Results[index]);
+        _widgets[index].SetInteractable(false, false);
+    }
+
+    public void HideOverlay()
+    {
         Visible = false;
     }
 }

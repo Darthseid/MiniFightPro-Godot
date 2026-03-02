@@ -12,6 +12,16 @@ offset_right = 56.0
 offset_bottom = 56.0
 script = ExtResource("1_script")
 
+[node name="Highlight" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+modulate = Color(1, 0.9, 0.2, 0.35)
+
 [node name="RollingSprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(28, 28)
 sprite_frames = ExtResource("2_roll")
@@ -33,3 +43,13 @@ grow_vertical = 2
 texture = ExtResource("3_face")
 expand_mode = 1
 stretch_mode = 5
+
+[node name="HitArea" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true
+text = ""

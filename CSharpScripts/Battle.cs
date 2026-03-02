@@ -149,6 +149,7 @@ public partial class Battle : Node2D
         }
 
         DiceRoller.Initialize(_dicePresenter);
+        _dicePresenter.ActivePlayerTeamId = _activeTeamId;
     }
 
     private async Task InitializeBattleAsync()
@@ -427,6 +428,7 @@ public partial class Battle : Node2D
     internal async Task EnterPhaseWithCadenceAsync(BattlePhase phase, string? overrideToast = null)
     {
         EnterPhase(phase, announce: false);
+        _orderManager?.OnPhaseStarted();
         var toast = overrideToast ?? $"{phase.ToString().ToUpper()} PHASE";
         _battleHud?.ShowToast(toast, 2f);
         await DelaySecondsAsync(2f);
@@ -1305,6 +1307,8 @@ public partial class Battle : Node2D
         if (emergency)
         {
             passenger.ShellShock = true;
+            AudioManager.Instance?.Play("demonlaugh");
+            _battleHud?.ShowToast($"{passenger.Name} became shell-shocked.");
             ApplyRout(passenger, runCleanup: false);
         }
 
@@ -1534,7 +1538,18 @@ public partial class Battle : Node2D
 
     internal BattleHud Hud => _battleHud;
     internal BattleField Field => _battleField;
-    internal int ActiveTeamId { get => _activeTeamId; set => _activeTeamId = value; }
+    internal int ActiveTeamId
+    {
+        get => _activeTeamId;
+        set
+        {
+            _activeTeamId = value;
+            if (_dicePresenter != null)
+            {
+                _dicePresenter.ActivePlayerTeamId = value;
+            }
+        }
+    }
     internal int StartingTeamId => _startingTeamId;
     internal int CurrentTurn { get => _currentTurn; set => _currentTurn = value; }
     internal int Round { get => _round; set => _round = value; }

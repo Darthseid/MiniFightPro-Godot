@@ -8,6 +8,23 @@ public partial class DicePresenter : Node, IDicePresenter
 
     private readonly SemaphoreSlim _queueSemaphore = new(1, 1);
     private DiceOverlay _overlay;
+    private TaskCompletionSource<bool>? _advanceTcs;
+    private RollEvent? _currentRoll;
+    private bool _rerollUsedThisRoll;
+
+    public DiceInteractionMode InteractionMode { get; private set; } = DiceInteractionMode.None;
+    public int ActivePlayerTeamId { get; set; } = 1;
+    public int CurrentRollOwnerTeamId => _currentRoll?.OwnerTeamId ?? -1;
+
+    private Battle? GetBattle()
+    {
+        return GetParentOrNull<Battle>();
+    }
+
+    private OrderManager? GetOrderManager()
+    {
+        return GetBattle()?.OrderManager;
+    }
 
     public async Task PresentAsync(RollEvent rollEvent)
     {
@@ -15,12 +32,26 @@ public partial class DicePresenter : Node, IDicePresenter
         try
         {
             EnsureOverlay();
+            _currentRoll = rollEvent;
+            _rerollUsedThisRoll = false;
             await _overlay.ShowRollAsync(rollEvent);
+            InteractionMode = DiceInteractionMode.AwaitingPlayerAdvance;
+            UpdateButtons();
+            await WaitForAdvanceAsync();
+            _overlay.HideOverlay();
+            _currentRoll = null;
+            InteractionMode = DiceInteractionMode.None;
         }
         finally
         {
             _queueSemaphore.Release();
         }
+    }
+
+    public Task<bool> WaitForAdvanceAsync()
+    {
+        _advanceTcs = new TaskCompletionSource<bool>();
+        return _advanceTcs.Task;
     }
 
     private void EnsureOverlay()
@@ -31,6 +62,74 @@ public partial class DicePresenter : Node, IDicePresenter
         }
 
         _overlay = DiceOverlayScene.Instantiate<DiceOverlay>();
+        _overlay.NextPressed += OnNextPressed;
+        _overlay.CommandRerollPressed += OnCommandRerollPressed;
+        _overlay.DieClicked += OnDieClicked;
         AddChild(_overlay);
+    }
+
+    private void OnNextPressed()
+    {
+        if (InteractionMode != DiceInteractionMode.AwaitingPlayerAdvance)
+        {
+            return;
+        }
+
+        _advanceTcs?.TrySetResult(true);
+    }
+
+    private void OnCommandRerollPressed()
+    {
+        var orderManager = GetOrderManager();
+        if (_currentRoll == null || orderManager == null)
+        {
+            return;
+        }
+
+        if (!orderManager.CanUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, out var reason))
+        {
+            GetBattle()?.Hud?.ShowToast(reason);
+            return;
+        }
+
+        InteractionMode = DiceInteractionMode.AwaitingRerollSelection;
+        _overlay.SetRerollSelectionState(true);
+        UpdateButtons();
+    }
+
+    private void OnDieClicked(int index)
+    {
+        var orderManager = GetOrderManager();
+        if (_currentRoll == null || orderManager == null || InteractionMode != DiceInteractionMode.AwaitingRerollSelection)
+        {
+            return;
+        }
+
+        if (!orderManager.TryUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, index, out var reason))
+        {
+            GetBattle()?.Hud?.ShowToast(reason);
+            return;
+        }
+
+        DiceRoller.RerollDie(_currentRoll, index);
+        _overlay.UpdateDieFace(index);
+        _rerollUsedThisRoll = true;
+        InteractionMode = DiceInteractionMode.AwaitingPlayerAdvance;
+        _overlay.SetRerollSelectionState(false);
+        UpdateButtons();
+    }
+
+    private void UpdateButtons()
+    {
+        var canReroll = false;
+        var orderManager = GetOrderManager();
+        if (_currentRoll != null && orderManager != null && !_rerollUsedThisRoll)
+        {
+            canReroll = orderManager.CanUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, out _);
+        }
+
+        _overlay.SetButtonsState(
+            canAdvance: InteractionMode == DiceInteractionMode.AwaitingPlayerAdvance,
+            canReroll: InteractionMode == DiceInteractionMode.AwaitingPlayerAdvance && canReroll);
     }
 }

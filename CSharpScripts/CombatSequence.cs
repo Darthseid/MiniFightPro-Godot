@@ -73,7 +73,10 @@ public sealed class CombatSequence
     private async Task HandleMovementAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Movement);
+        _battle.OrderManager?.ResetPhaseUsage();
+        _battle.OrderManager?.OpenWindow(OrderWindowType.StartOfMovementPhase, _battle.ActiveTeamId);
         await WaitForOrdersAtPhaseStartAsync(BattlePhase.Movement, activeTeamIsAI);
+        _battle.OrderManager?.CloseWindow(OrderWindowType.StartOfMovementPhase);
         var activeTeamId = _battle.ActiveTeamId;
         var enemyTeamId = activeTeamId == 1 ? 2 : 1;
         await _battle.HandleTransportEmbarkDisembarkStepAsync(activeTeamId, activeTeamIsAI);
@@ -326,7 +329,7 @@ public sealed class CombatSequence
 
         var heroicEnemy = _battle.GetAliveSquadsForTeam(activeTeamId)
             .FirstOrDefault(enemy => _battle.GetAliveSquadsForTeam(inactiveTeamId)
-                .Any(friend => _battle.IsSquadInFightRange(friend, activeTeamId)));
+                .Any(friend => _battle.AreSquadsWithinDistance(friend, enemy, 1f)));
         _battle.OrderManager?.ConfigureHeroicInterventionEnemy(inactiveTeamId, heroicEnemy);
         if (!_battle.IsTeamAI(inactiveTeamId) && heroicEnemy != null)
         {
