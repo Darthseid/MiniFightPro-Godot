@@ -66,6 +66,34 @@ min_value = 0.0
 max_value = 999.0
 step = 1.0
 
+[node name="ImageLabel" type="Label" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+text = "Model Image"
+
+[node name="ModelImagePreview" type="TextureRect" parent="ScrollContainer/MainContainer" unique_id=113355009]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+stretch_mode = 5
+
+[node name="ChangeImageButtons" type="HBoxContainer" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+
+[node name="BtnChangeImage" type="Button" parent="ScrollContainer/MainContainer/ChangeImageButtons" unique_id=1876501450]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Change Image"
+
+[node name="BtnImportFolder" type="Button" parent="ScrollContainer/MainContainer/ChangeImageButtons" unique_id=1595603932]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select From Import Folder"
+
+[node name="MobileImportHint" type="Label" parent="ScrollContainer/MainContainer" unique_id=133094421]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+
 [node name="Label_Weapons" type="Label" parent="ScrollContainer/MainContainer" unique_id=2058555128]
 layout_mode = 2
 text = "Select Weapons"
@@ -91,3 +119,9 @@ text = "Discard"
 unique_name_in_owner = true
 layout_mode = 2
 text = "Save"
+
+
+[node name="ModelImageFileDialog" type="FileDialog" parent="." unique_id=1755015232]
+unique_name_in_owner = true
+file_mode = 0
+filters = PackedStringArray("*.png ; PNG Images", "*.jpg,*.jpeg ; JPEG Images", "*.webp ; WEBP Images")

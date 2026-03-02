@@ -190,7 +190,7 @@ public partial class Battle : Node2D
         for (int i = 0; i < _teamAPlayer.TheirSquads.Count; i++)
         {
             var squad = _teamAPlayer.TheirSquads[i];
-            var spawned = _battleField.SpawnSquad(squad, true, LoadSquadTexture(squad, true)).ToList();
+            var spawned = _battleField.SpawnSquad(squad, true).ToList();
             _teamAActors.AddRange(spawned);
             var offset = new Vector2(i * GameGlobals.Instance.FakeInchPx * 10f, 0f);
             foreach (var actor in spawned)
@@ -202,7 +202,7 @@ public partial class Battle : Node2D
         for (int i = 0; i < _teamBPlayer.TheirSquads.Count; i++)
         {
             var squad = _teamBPlayer.TheirSquads[i];
-            var spawned = _battleField.SpawnSquad(squad, false, LoadSquadTexture(squad, false)).ToList();
+            var spawned = _battleField.SpawnSquad(squad, false).ToList();
             _teamBActors.AddRange(spawned);
             var offset = new Vector2(-i * GameGlobals.Instance.FakeInchPx * 10f, 0f);
             foreach (var actor in spawned)
@@ -243,38 +243,6 @@ public partial class Battle : Node2D
 
         _sequence = new CombatSequence(this);
         _sequence.BeginTurn();
-    }
-
-    private Texture2D LoadSquadTexture(Squad squad, bool isTeamA)
-    {
-        var squadTypes = squad.SquadType ?? new List<string>();
-        string texturePath;
-
-        if (isTeamA)
-        {
-            texturePath = squadTypes.Contains("Aircraft") ? "res://Assets/ModelIcons/combatjet.png"
-                : squadTypes.Contains("Titanic") ? "res://Assets/ModelIcons/mecha.png"
-                : squadTypes.Contains("Fortification") || squadTypes.Contains("Building") ? "res://Assets/ModelIcons/fort.png"
-                : squadTypes.Contains("Character") ? "res://Assets/ModelIcons/vip.png"
-                : squadTypes.Contains("Mounted") ? "res://Assets/ModelIcons/biker.png"
-                : squadTypes.Contains("Monster") ? "res://Assets/ModelIcons/monsterbug.png"
-                : squadTypes.Contains("Vehicle") ? "res://Assets/ModelIcons/tank.png"
-                : squadTypes.Contains("Infantry") ? "res://Assets/ModelIcons/gunman.png"
-                : "res://Assets/ModelIcons/red-square.png";
-        }
-        else
-        {
-            texturePath = squadTypes.Contains("Aircraft") ? "res://Assets/ModelIcons/helicopter.png"
-                : squadTypes.Contains("Fortification") || squadTypes.Contains("Building") ? "res://Assets/ModelIcons/fort2.png"
-                : squadTypes.Contains("Character") ? "res://Assets/ModelIcons/vip2.png"
-                : squadTypes.Contains("Mounted") ? "res://Assets/ModelIcons/dinorider.png"
-                : squadTypes.Contains("Monster") ? "res://Assets/ModelIcons/monsterspike.png"
-                : squadTypes.Contains("Vehicle") ? "res://Assets/ModelIcons/tank2.png"
-                : squadTypes.Contains("Infantry") ? "res://Assets/ModelIcons/gunman2.png"
-                : "res://Assets/ModelIcons/red-circle.svg";
-        }
-
-        return GD.Load<Texture2D>(texturePath);
     }
 
     private void HandleActorSelected(BattleModelActor actor, Vector2 pointerGlobal)
@@ -505,8 +473,8 @@ public partial class Battle : Node2D
             _teamBSquad = _teamBPlayer.TheirSquads.First();
 
         _battleField.ClearExistingUnits();
-        _teamAActors = _battleField.SpawnSquad(_teamASquad, true, LoadSquadTexture(_teamASquad, true)).ToList();
-        _teamBActors = _battleField.SpawnSquad(_teamBSquad, false, LoadSquadTexture(_teamBSquad, false)).ToList();
+        _teamAActors = _battleField.SpawnSquad(_teamASquad, true).ToList();
+        _teamBActors = _battleField.SpawnSquad(_teamBSquad, false).ToList();
         foreach (var actor in _teamAActors.Concat(_teamBActors))
         {
             actor.Selected += HandleActorSelected;
