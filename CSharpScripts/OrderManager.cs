@@ -10,6 +10,7 @@ public sealed class OrderManager
     private readonly HashSet<OrderWindowType> _openWindows = new();
     private readonly Dictionary<int, HashSet<string>> _usedOrdersThisTurn = new();
     private readonly Dictionary<int, bool> _usedOrderThisPhase = new();
+    private readonly Dictionary<int, bool> _usedCommandRerollThisPhase = new();
     private readonly Dictionary<int, Squad?> _overwatchArmedSquad = new();
     private readonly HashSet<Squad> _fightPhasePrecisionTargets = new();
     private readonly HashSet<Squad> _goToGroundTargets = new();
@@ -24,6 +25,8 @@ public sealed class OrderManager
         _usedOrdersThisTurn[2] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         _usedOrderThisPhase[1] = false;
         _usedOrderThisPhase[2] = false;
+        _usedCommandRerollThisPhase[1] = false;
+        _usedCommandRerollThisPhase[2] = false;
         _overwatchArmedSquad[1] = null;
         _overwatchArmedSquad[2] = null;
         _mistsReserveTargetsByOwner[1] = new List<Squad>();
@@ -47,6 +50,8 @@ public sealed class OrderManager
         _usedOrdersThisTurn[2].Clear();
         _usedOrderThisPhase[1] = false;
         _usedOrderThisPhase[2] = false;
+        _usedCommandRerollThisPhase[1] = false;
+        _usedCommandRerollThisPhase[2] = false;
         _overwatchArmedSquad[1] = null;
         _overwatchArmedSquad[2] = null;
         RefreshHud();
@@ -56,6 +61,8 @@ public sealed class OrderManager
     {
         _usedOrderThisPhase[1] = false;
         _usedOrderThisPhase[2] = false;
+        _usedCommandRerollThisPhase[1] = false;
+        _usedCommandRerollThisPhase[2] = false;
     }
 
     public void OpenWindow(OrderWindowType windowType, int activeTeamId)
@@ -159,7 +166,16 @@ public sealed class OrderManager
         var targets = GetValidTargets(playerId, order);
         if (order.RequiresTarget && targets.Count == 0)
         {
-            reason = "No valid targets.";
+            if (order.TargetSide == OrderTargetSide.Friendly && !string.Equals(order.OrderId, "epic_bravery", StringComparison.OrdinalIgnoreCase)
+                && _battle.GetAliveSquadsForTeam(playerId).Any(s => s.ShellShock && order.MatchesTargetType(s)))
+            {
+                reason = "Cannot target shell-shocked unit with this order";
+            }
+            else
+            {
+                reason = "No valid targets.";
+            }
+
             return false;
         }
 
@@ -199,6 +215,15 @@ public sealed class OrderManager
         if (!order.MatchesTargetType(squad))
         {
             return false;
+        }
+
+        if (squad.ShellShock)
+        {
+            var friendlyTarget = _battle.GetAliveSquadsForTeam(playerId).Contains(squad);
+            if (friendlyTarget && !string.Equals(order.OrderId, "epic_bravery", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
         }
 
         if (order.TargetType == OrderTargetType.Shooters)
@@ -339,6 +364,13 @@ public sealed class OrderManager
             _mistsReserveTargetsByOwner[playerId].Add(target);
             return;
         }
+
+        if (string.Equals(order.OrderId, "epic_bravery", StringComparison.OrdinalIgnoreCase))
+        {
+            target.ShellShock = false;
+            _battle.Hud?.ShowToast($"{target.Name} is no longer shell-shocked.");
+            return;
+        }
     }
 
     public void SetCurrentShootingDefender(Squad? defender)
@@ -421,6 +453,70 @@ public sealed class OrderManager
         _battle.Hud?.ShowToast($"{declaredTarget.Name} fires Overwatch!");
         await _battle.ResolveOverwatchAsync(defenderTeamId, declaredTarget, chargingSquad);
         RefreshHud();
+    }
+
+
+    public bool CanUseCommandReroll(int playerId, RollEvent rollEvent, out string reason)
+    {
+        reason = string.Empty;
+        if (_battle.IsTeamAI(playerId))
+        {
+            reason = "AI does not use orders.";
+            return false;
+        }
+
+        if (rollEvent == null || rollEvent.OwnerTeamId != playerId)
+        {
+            reason = "Can only reroll your own dice.";
+            return false;
+        }
+
+        if (_usedCommandRerollThisPhase[playerId])
+        {
+            reason = "Command Reroll already used this phase.";
+            return false;
+        }
+
+        if (GetOrderPoints(playerId) < 1)
+        {
+            reason = "Not enough Order Points.";
+            return false;
+        }
+
+        if (rollEvent.RerolledFlags.All(v => v))
+        {
+            reason = "No rerollable dice.";
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool TryUseCommandReroll(int playerId, RollEvent rollEvent, int dieIndex, out string reason)
+    {
+        if (!CanUseCommandReroll(playerId, rollEvent, out reason))
+        {
+            return false;
+        }
+
+        if (dieIndex < 0 || dieIndex >= rollEvent.Results.Count)
+        {
+            reason = "Invalid die selection.";
+            return false;
+        }
+
+        if (rollEvent.RerolledFlags[dieIndex])
+        {
+            reason = "This die was already rerolled.";
+            return false;
+        }
+
+        SetOrderPoints(playerId, Math.Max(0, GetOrderPoints(playerId) - 1));
+        _usedCommandRerollThisPhase[playerId] = true;
+        _battle.Hud?.ShowToast("Command Reroll used.");
+        RefreshHud();
+        reason = string.Empty;
+        return true;
     }
 
     private int GetOrderPoints(int playerId)

@@ -255,6 +255,10 @@ public static class StepChecks
 
         AudioManager.Instance?.Play("demonlaugh");
         activeSquad.ShellShock = ShellShockTest(activeSquad, inactiveSquad.SquadAbilities);
+        if (activeSquad.ShellShock)
+        {
+            hud.ShowToast($"{activeSquad.Name} became shell-shocked.");
+        }
         inactiveSquad.SquadAbilities.RemoveAll(ability => ability.Innate == "Hive");
     }
 

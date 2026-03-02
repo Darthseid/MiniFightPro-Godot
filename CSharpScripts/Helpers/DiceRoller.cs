@@ -19,6 +19,28 @@ public static class DiceRoller
         _presenter = presenter;
     }
 
+    public static int RollRandom(int sides = 6)
+    {
+        return _rng.RandiRange(1, sides);
+    }
+
+    public static void RerollDie(RollEvent e, int index)
+    {
+        if (e == null || index < 0 || index >= e.Results.Count)
+        {
+            return;
+        }
+
+        if (e.RerolledFlags[index])
+        {
+            return;
+        }
+
+        var newValue = RollRandom(e.Sides);
+        e.Results[index] = newValue;
+        e.RerolledFlags[index] = true;
+    }
+
     public static async Task<RollEvent> PresentAndRollAsync(int sides, int count, RollContext ctx, bool isRerollBatch = false)
     {
         if (_presenter == null)
@@ -26,16 +48,19 @@ public static class DiceRoller
             throw new InvalidOperationException("DiceRoller is not initialized. Ensure DicePresenter is created and DiceRoller.Initialize(...) is called before combat.");
         }
 
-        var results = new int[count];
+        var results = new System.Collections.Generic.List<int>(count);
         for (var i = 0; i < count; i++)
         {
-            results[i] = _rng.RandiRange(1, sides);
+            results.Add(RollRandom(sides));
         }
 
+        var rerolledFlags = new bool[count];
         var rollEvent = new RollEvent(
             Guid.NewGuid(),
             sides,
             results,
+            rerolledFlags,
+            _presenter.ActivePlayerTeamId,
             ctx.Phase,
             ctx.Label,
             ctx.AttackerName,

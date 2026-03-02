@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 
 public partial class DieWidget : Control
@@ -15,11 +16,31 @@ public partial class DieWidget : Control
 
     private AnimatedSprite2D _rollingSprite;
     private TextureRect _faceTexture;
+    private Button _hitArea;
+    private Panel _highlight;
+    private int _index;
+
+    public event Action<int>? DieClicked;
 
     public override void _Ready()
     {
         _rollingSprite = GetNode<AnimatedSprite2D>("RollingSprite");
         _faceTexture = GetNode<TextureRect>("FaceTexture");
+        _hitArea = GetNode<Button>("HitArea");
+        _highlight = GetNode<Panel>("Highlight");
+        _hitArea.Pressed += () => DieClicked?.Invoke(_index);
+        SetInteractable(false, false);
+    }
+
+    public void SetIndex(int index)
+    {
+        _index = index;
+    }
+
+    public void SetInteractable(bool enabled, bool highlighted)
+    {
+        _hitArea.Disabled = !enabled;
+        _highlight.Visible = highlighted;
     }
 
     public void StartRolling()

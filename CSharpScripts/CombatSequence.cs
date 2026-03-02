@@ -73,7 +73,10 @@ public sealed class CombatSequence
     private async Task HandleMovementAsync(bool activeTeamIsAI)
     {
         await _battle.EnterPhaseWithCadenceAsync(BattlePhase.Movement);
+        _battle.OrderManager?.ResetPhaseUsage();
+        _battle.OrderManager?.OpenWindow(OrderWindowType.StartOfMovementPhase, _battle.ActiveTeamId);
         await WaitForOrdersAtPhaseStartAsync(BattlePhase.Movement, activeTeamIsAI);
+        _battle.OrderManager?.CloseWindow(OrderWindowType.StartOfMovementPhase);
         var activeTeamId = _battle.ActiveTeamId;
         var enemyTeamId = activeTeamId == 1 ? 2 : 1;
         await _battle.HandleTransportEmbarkDisembarkStepAsync(activeTeamId, activeTeamIsAI);

@@ -657,7 +657,8 @@ public partial class GameData : Node
         {
             allOrders.First(o => o.OrderId == "heroic_intervention"),
             allOrders.First(o => o.OrderId == "counter_offensive"),
-            allOrders.First(o => o.OrderId == "epic_challenge")
+            allOrders.First(o => o.OrderId == "epic_challenge"),
+            allOrders.First(o => o.OrderId == "epic_bravery")
         }.Select(o => new Order(o.OrderId, o.OrderCost, o.OrderName, o.AvailablePhase, o.TargetsEnemy, o.Description, o.WindowType, o.TargetSide, o.TargetType, o.RequiresTarget)).ToList();
 
         var presetPlayers = new List<Player>
