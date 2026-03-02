@@ -10,7 +10,8 @@ public enum OrderWindowType
     OpponentChargePhaseStart,
     OpponentShootingPhaseStart,
     OnTargetedByShooting,
-    OnChargeDeclared
+    OnChargeDeclared,
+    StartOfMovementPhase
 }
 
 public enum OrderTargetSide
@@ -182,6 +183,17 @@ public class Order
                 false,
                 "At beginning of opponent shooting phase, remove a friendly squad into strategic reserve. It returns at the start of your next shooting phase using teleport placement and cannot charge that turn.",
                 OrderWindowType.OpponentShootingPhaseStart,
+                OrderTargetSide.Friendly,
+                OrderTargetType.Any,
+                true),
+            new Order(
+                "epic_bravery",
+                2,
+                "Epic Bravery",
+                "Movement",
+                false,
+                "At beginning of active player movement phase, remove Shell Shock from a friendly squad.",
+                OrderWindowType.StartOfMovementPhase,
                 OrderTargetSide.Friendly,
                 OrderTargetType.Any,
                 true),
