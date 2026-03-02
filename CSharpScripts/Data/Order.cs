@@ -8,6 +8,8 @@ public enum OrderWindowType
     StartOfFightPhase,
     ChargePhase,
     OpponentChargePhaseStart,
+    OpponentShootingPhaseStart,
+    OnTargetedByShooting,
     OnChargeDeclared
 }
 
@@ -24,7 +26,9 @@ public enum OrderTargetType
     Any,
     Vehicle,
     Character,
-    Shooters
+    Shooters,
+    Infantry,
+    FightEligible
 }
 
 public class Order
@@ -96,6 +100,7 @@ public class Order
         {
             OrderTargetType.Vehicle => squad.SquadType?.Contains("Vehicle") == true,
             OrderTargetType.Character => squad.SquadType?.Contains("Character") == true,
+            OrderTargetType.Infantry => squad.SquadType?.Contains("Infantry") == true,
             _ => true
         };
     }
@@ -135,6 +140,50 @@ public class Order
                 OrderWindowType.ChargePhase,
                 OrderTargetSide.Friendly,
                 OrderTargetType.Vehicle,
+                true),
+            new Order(
+                "go_to_ground",
+                1,
+                "Go to Ground",
+                "Opponent Shooting",
+                false,
+                "When targeted in opponent shooting phase, a friendly Infantry squad gains temporary Cover Benefit and Six Plus Dodge until end of that phase.",
+                OrderWindowType.OnTargetedByShooting,
+                OrderTargetSide.Friendly,
+                OrderTargetType.Infantry,
+                true),
+            new Order(
+                "counter_offensive",
+                2,
+                "Counter-Offensive",
+                "Fight",
+                false,
+                "At start of fight phase, choose a friendly eligible squad; it gains temporary First Strike for this turn.",
+                OrderWindowType.StartOfFightPhase,
+                OrderTargetSide.Friendly,
+                OrderTargetType.FightEligible,
+                true),
+            new Order(
+                "heroic_intervention",
+                2,
+                "Heroic Intervention",
+                "Fight",
+                false,
+                "At the beginning of opponent fight phase, a friendly squad within 6\" of an enemy already engaging another friendly squad may immediately move into engagement.",
+                OrderWindowType.StartOfFightPhase,
+                OrderTargetSide.Friendly,
+                OrderTargetType.Any,
+                true),
+            new Order(
+                "mists_of_deimos",
+                3,
+                "Mists of Deimos",
+                "Opponent Shooting",
+                false,
+                "At beginning of opponent shooting phase, remove a friendly squad into strategic reserve. It returns at the start of your next shooting phase using teleport placement and cannot charge that turn.",
+                OrderWindowType.OpponentShootingPhaseStart,
+                OrderTargetSide.Friendly,
+                OrderTargetType.Any,
                 true),
             new Order(
                 "fire_overwatch",

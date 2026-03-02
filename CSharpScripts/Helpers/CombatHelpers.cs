@@ -131,6 +131,12 @@ public static class CombatHelpers
         var armorMod = firearm.ArmorPenetration;
         if (coverType && firearm.Special.All(ability => ability.Innate != "noCover"))
             armorMod += 1;
+        if (defenderSquad.Defense > 3 &&
+            defenderSquad.SquadAbilities.Any(ability => ability.Innate == SquadAbilities.CoverBenefit.Innate) &&
+            firearm.Special.All(ability => ability.Innate != WeaponAbilities.IgnoresCover.Innate))
+        {
+            armorMod += 1;
+        }
         armorMod = Math.Min(armorMod, 1);
         var unsteady = attackerMove.Move;
         if (!unsteady && firearm.Special.Any(ability => ability.Innate == "Hefty"))
@@ -195,6 +201,7 @@ public static class CombatHelpers
             woundMod = Math.Max(woundMod, 0);
             LogAbilityTrigger("Squad", "Pow-1", "prevented negative hit/wound modifiers");
         }
+
         return new DiceModifiers(hitMod, woundMod, hitReroll, woundReroll, armorMod, critThreshold, antiThreshold);
     }
 
