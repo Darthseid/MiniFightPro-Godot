@@ -115,6 +115,11 @@ public partial class Battle : Node2D
         SetupPlayers(playerOne, playerTwo, teamAIsAI, teamBIsAI, 0);
     }
 
+    public void SetupPlayers(Player playerOne, Player playerTwo, int terrainCount)
+    {
+        SetupPlayers(playerOne, playerTwo, playerOne.IsAI, playerTwo.IsAI, terrainCount);
+    }
+
     public void SetupPlayers(Player playerOne, Player playerTwo, bool teamAIsAI, bool teamBIsAI, int terrainCount)
     {
         _pendingPlayerOne = playerOne;

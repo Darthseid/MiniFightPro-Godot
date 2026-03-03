@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://b43qt5s3u3myk"]
 
 [ext_resource type="Script" uid="uid://b3fyw4qiwn5em" path="res://CSharpScripts/StartGame.cs" id="1_8t52n"]
-[ext_resource type="Texture2D" uid="uid://26yiw3s5e7mp" path="res://Assets/GamePics/banner_ad.png" id="2_3ncd4"]
 [ext_resource type="Script" uid="uid://ca7l51crigah6" path="res://GDScripts/btn_back.gd" id="2_7p22t"]
 
 [node name="StartGame" type="Control" unique_id=1413916367]
@@ -68,14 +67,6 @@ layout_mode = 2
 text = "Home"
 script = ExtResource("2_7p22t")
 
-[node name="ProBanner" type="TextureRect" parent="MainContainer" unique_id=1587468624]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-size_flags_vertical = 3
-texture = ExtResource("2_3ncd4")
-expand_mode = 1
-stretch_mode = 4
 
 [node name="StatusLabel" type="Label" parent="MainContainer" unique_id=575630061]
 unique_name_in_owner = true

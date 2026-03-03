@@ -94,16 +94,6 @@ text = "First attacker"
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="UseSeedCheck" type="CheckBox" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid" unique_id=417835417]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Use Seed"
-
-[node name="SeedInput" type="SpinBox" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid" unique_id=139984678]
-unique_name_in_owner = true
-layout_mode = 2
-max_value = 2147483647.0
-value = 42.0
 
 [node name="Buttons" type="HBoxContainer" parent="Margin/RootVBox/MainSplit/LeftPanel" unique_id=1263229103]
 layout_mode = 2
