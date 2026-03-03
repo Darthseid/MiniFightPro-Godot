@@ -86,7 +86,6 @@ min_value = 1.0
 max_value = 100000.0
 value = 1000.0
 
-
 [node name="Buttons" type="HBoxContainer" parent="Margin/RootVBox/MainSplit/LeftPanel" unique_id=1263229103]
 layout_mode = 2
 

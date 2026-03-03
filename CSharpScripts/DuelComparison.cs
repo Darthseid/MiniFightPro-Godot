@@ -43,7 +43,6 @@ public partial class DuelComparison : Control
         _loadingGif = GetNode<AnimatedSprite2D>("%LoadingGif");
         _loadingGif.Visible = false;
 
-
         PopulateSquadSelectors(data.SquadList);
 
         _runButton.Pressed += async () => await RunSimulationAsync();
