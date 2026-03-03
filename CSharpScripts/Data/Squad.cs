@@ -242,6 +242,7 @@ public static class SquadAbilities
     public static readonly SquadAbility SixPlusDodge = new SquadAbility("SixPlusDodge", "Six Plus Dodge", 1, false);
     public static readonly SquadAbility SixPlusDodgeTemp = new SquadAbility("SixPlusDodge", "Temp Six Plus Dodge", 1, true);
     public static readonly SquadAbility FreeHealthcare = new SquadAbility("FHC", "Free Healthcare", 1, false);
+    public static readonly SquadAbility GreatCombatLeader = new SquadAbility("GCL", "Great Combat Leader", 0, false);
     public static readonly SquadAbility TempFirstStrike = new SquadAbility("TempFirstStrike", "Temp First Strike", 0, true);
 
     public static readonly IReadOnlyList<SquadAbility> VariableBaseAbilities = new List<SquadAbility>
@@ -326,5 +327,6 @@ public static class SquadAbilities
         CoverBenefit,
         SixPlusDodge,
         FreeHealthcare,
+        GreatCombatLeader,
     };
 }

@@ -267,6 +267,7 @@ Orders are timed commands. Players spend **Order Points (OP)** to activate them.
 | Cover Benefit | Improved cover/defensive benefit in applicable contexts. |
 | Six Plus Dodge | Grants 6+ dodge style defensive roll. |
 | Free Healthcare | Friendly squads within 6" receive non-stacking -1 incoming damage support aura. |
+| Great Combat Leader | Friendly squads within 12" reroll hit rolls of 1 and injury rolls of 1 in shooting and melee. |
 
 # Player Abilities
 

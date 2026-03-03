@@ -208,20 +208,28 @@ public static class CombatHelpers
             woundReroll = 2;
             LogAbilityTrigger("Weapon", "RRI", "enabled wound reroll failed");
         }
+        var hasGreatCombatLeaderAura = CombatHelpers.HasFriendlyAura(
+            attackerSquad,
+            StepChecks.FriendlyAuraSquadProvider?.Invoke(attackerSquad),
+            SquadAbilities.GreatCombatLeader.Innate,
+            12f,
+            StepChecks.AuraRangeCheckProvider,
+            includeSelf: true);
+
         if (firearm.Special.Any(ability => ability.Innate == "@") || attackerSquad.SquadAbilities.Any(ability => ability.Innate == "Pow1"))
         {
             hitReroll = 2;
             LogAbilityTrigger("Weapon/Squad", "@/Pow1", "enabled hit reroll failed");
         }
-        if (firearm.Special.Any(ability => ability.Innate == "#") || attackerSquad.SquadAbilities.Any(ability => ability.Innate == "Pow2"))
+        if (firearm.Special.Any(ability => ability.Innate == "#") || attackerSquad.SquadAbilities.Any(ability => ability.Innate == "Pow2") || hasGreatCombatLeaderAura)
         {
-            hitReroll = 1;
-            LogAbilityTrigger("Weapon/Squad", "#/Pow2", "enabled hit reroll ones");
+            hitReroll = Math.Max(hitReroll, 1);
+            LogAbilityTrigger("Weapon/Squad", "#/Pow2/GCL", "enabled hit reroll ones");
         }
-        if (firearm.Special.Any(ability => ability.Innate == "$") || attackerSquad.SquadAbilities.Any(ability => ability.Innate == "Pow3"))
+        if (firearm.Special.Any(ability => ability.Innate == "$") || attackerSquad.SquadAbilities.Any(ability => ability.Innate == "Pow3") || hasGreatCombatLeaderAura)
         {
-            hitReroll = 1;
-            LogAbilityTrigger("Weapon/Squad", "$/Pow3", "enabled hit reroll ones");
+            woundReroll = Math.Max(woundReroll, 1);
+            LogAbilityTrigger("Weapon/Squad", "$/Pow3/GCL", "enabled injury reroll ones");
         }
         if (firearm.Special.Any(ability => ability.Innate == "^") || attackerSquad.SquadAbilities.Any(ability => ability.Innate == "Pow4"))
         {
