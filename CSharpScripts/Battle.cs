@@ -110,6 +110,11 @@ public partial class Battle : Node2D
         SetupPlayers(playerOne, playerTwo, TeamAIsAI, TeamBIsAI, 0);
     }
 
+    public void SetupPlayers(Player playerOne, Player playerTwo, int terrainCount)
+    {
+        SetupPlayers(playerOne, playerTwo, TeamAIsAI, TeamBIsAI, terrainCount);
+    }
+
     public void SetupPlayers(Player playerOne, Player playerTwo, bool teamAIsAI, bool teamBIsAI)
     {
         SetupPlayers(playerOne, playerTwo, teamAIsAI, teamBIsAI, 0);

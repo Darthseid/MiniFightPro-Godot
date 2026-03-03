@@ -10,11 +10,7 @@ public partial class StartGame : Control
     private SpinBox _terrainCountInput;
     private Button _beginBattleButton;
     private Label _statusLabel;
-    private TextureRect _proBanner;
-    private readonly string _proBannerUrl = "https://play.google.com/store/apps/details?id=org.mozilla.firefox&hl=en_US&pli=1";
     private readonly List<Player> _selectablePlayers = new List<Player>();
-    private bool _teamAIsAI; // TODO: wire to duel setup toggles when UI is available.
-    private bool _teamBIsAI; // TODO: wire to duel setup toggles when UI is available.
 
     public override void _Ready()
     {
@@ -32,13 +28,9 @@ public partial class StartGame : Control
         _terrainCountInput = GetNode<SpinBox>("%TerrainCountInput");
         _beginBattleButton = GetNode<Button>("%BtnBeginBattle");
         _statusLabel = GetNode<Label>("%StatusLabel");
-        _proBanner = GetNode<TextureRect>("%ProBanner");
 
-        _teamAIsAI = false;
-        _teamBIsAI = false;
         PopulatePlayers();
         _beginBattleButton.Pressed += OnBeginBattlePressed;
-        _proBanner.GuiInput += OnProBannerInput;
     }
 
     private void PopulatePlayers()
@@ -116,7 +108,7 @@ public partial class StartGame : Control
         }
 
         var terrainCount = (int)Mathf.Clamp((float)_terrainCountInput.Value, 0f, 12f);
-        battleRoot.SetupPlayers(player1, player2, _teamAIsAI, _teamBIsAI, terrainCount);
+        battleRoot.SetupPlayers(player1, player2, terrainCount);
         GetTree().Root.AddChild(battleRoot);
         QueueFree();
     }
@@ -133,11 +125,4 @@ public partial class StartGame : Control
         }
     }
 
-    private void OnProBannerInput(InputEvent @event)
-    {
-        if (@event is InputEventMouseButton mouseEvent && mouseEvent.Pressed)
-        {
-            OS.ShellOpen(_proBannerUrl);
-        }
-    }
 }

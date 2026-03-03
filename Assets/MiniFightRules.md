@@ -292,7 +292,6 @@ You can configure:
 - First attacker mode
 - Range
 - Trial count
-- Optional deterministic seed
 
 The simulator reports:
 - Win counts and win percentage trends
