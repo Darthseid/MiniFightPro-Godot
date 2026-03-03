@@ -13,8 +13,6 @@ public partial class DuelComparison : Control
     private OptionButton _firstAttackerSelect = null!;
     private SpinBox _rangeInput = null!;
     private SpinBox _trialsInput = null!;
-    private CheckBox _useSeed = null!;
-    private SpinBox _seedInput = null!;
     private Button _runButton = null!;
     private Button _backButton = null!;
     private Label _progressLabel = null!;
@@ -39,8 +37,6 @@ public partial class DuelComparison : Control
         _firstAttackerSelect = GetNode<OptionButton>("%FirstAttackerSelect");
         _rangeInput = GetNode<SpinBox>("%RangeInput");
         _trialsInput = GetNode<SpinBox>("%TrialsInput");
-        _useSeed = GetNode<CheckBox>("%UseSeedCheck");
-        _seedInput = GetNode<SpinBox>("%SeedInput");
         _runButton = GetNode<Button>("%BtnRun");
         _backButton = GetNode<Button>("%BtnBack");
         _progressLabel = GetNode<Label>("%ProgressLabel");
@@ -54,8 +50,6 @@ public partial class DuelComparison : Control
         _firstAttackerSelect.AddItem("Random per trial", (int)FirstAttackerMode.Random);
         _firstAttackerSelect.Select(0);
 
-        _seedInput.Editable = false;
-        _useSeed.Toggled += toggled => _seedInput.Editable = toggled;
 
         PopulateSquadSelectors(data.SquadList);
 
@@ -114,7 +108,7 @@ public partial class DuelComparison : Control
         };
 
         var trials = Math.Clamp((int)_trialsInput.Value, 1, 100000);
-        int? seed = _useSeed.ButtonPressed ? (int)_seedInput.Value : null;
+        var seed = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         _runButton.Disabled = true;
         _resultLabel.Text = string.Empty;
@@ -124,7 +118,7 @@ public partial class DuelComparison : Control
 
         try
         {
-            var rng = seed.HasValue ? new Random(seed.Value) : new Random();
+            var rng = new Random(seed);
             var simulator = new DuelSimulator();
 
             var aWins = 0;
