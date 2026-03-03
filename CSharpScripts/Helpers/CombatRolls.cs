@@ -354,7 +354,7 @@ public static class CombatRolls
     }
 
 
-    public static int ResolveEffectiveDamageResistance(Squad squad)
+    public static int ResolveEffectiveDamageResistance(Squad squad, List<WeaponAbility>? weaponSpecials = null)
     {
         if (squad == null)
         {
@@ -374,6 +374,14 @@ public static class CombatRolls
         {
             resist += auraModifier;
             LogAbilityTrigger("Squad", SquadAbilities.FreeHealthcare.Innate, $"adjusted damage resistance threshold by {auraModifier} to {resist}");
+        }
+
+        var hasPsiBlock = squad.SquadAbilities.Any(ability => ability.Innate == "BrainBlock");
+        var isPsychicAttack = weaponSpecials?.Any(ability => ability?.Innate == "Psi") == true;
+        if (hasPsiBlock && isPsychicAttack)
+        {
+            resist = 2;
+            LogAbilityTrigger("Squad", "BrainBlock", "set psychic damage resistance threshold to 2");
         }
 
         return resist;

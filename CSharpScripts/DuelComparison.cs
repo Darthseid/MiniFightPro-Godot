@@ -10,7 +10,6 @@ public partial class DuelComparison : Control
 {
     private OptionButton _squadASelect = null!;
     private OptionButton _squadBSelect = null!;
-    private OptionButton _firstAttackerSelect = null!;
     private SpinBox _rangeInput = null!;
     private SpinBox _trialsInput = null!;
     private Button _runButton = null!;
@@ -34,7 +33,6 @@ public partial class DuelComparison : Control
 
         _squadASelect = GetNode<OptionButton>("%SquadASelect");
         _squadBSelect = GetNode<OptionButton>("%SquadBSelect");
-        _firstAttackerSelect = GetNode<OptionButton>("%FirstAttackerSelect");
         _rangeInput = GetNode<SpinBox>("%RangeInput");
         _trialsInput = GetNode<SpinBox>("%TrialsInput");
         _runButton = GetNode<Button>("%BtnRun");
@@ -44,13 +42,6 @@ public partial class DuelComparison : Control
         _histogramSlideshow = GetNode<Control>("%HistogramSlideshow");
         _loadingGif = GetNode<AnimatedSprite2D>("%LoadingGif");
         _loadingGif.Visible = false;
-
-        _firstAttackerSelect.AddItem("Squad A attacks first", (int)FirstAttackerMode.SquadA);
-        _firstAttackerSelect.AddItem("Squad B attacks first", (int)FirstAttackerMode.SquadB);
-        _firstAttackerSelect.AddItem("Random per trial", (int)FirstAttackerMode.Random);
-        _firstAttackerSelect.Select(0);
-
-
         PopulateSquadSelectors(data.SquadList);
 
         _runButton.Pressed += async () => await RunSimulationAsync();
@@ -104,7 +95,7 @@ public partial class DuelComparison : Control
             RangeInches = (float)_rangeInput.Value,
             RoundCap = 20,
             NoDamageRoundLimit = 3,
-            FirstAttacker = (FirstAttackerMode)_firstAttackerSelect.GetSelectedId()
+            FirstAttacker = FirstAttackerMode.Random
         };
 
         var trials = Math.Clamp((int)_trialsInput.Value, 1, 100000);

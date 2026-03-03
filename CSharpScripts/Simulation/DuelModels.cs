@@ -14,7 +14,7 @@ public sealed class DuelConfig
     public float RangeInches { get; set; } = 12f;
     public int RoundCap { get; set; } = 20;
     public int NoDamageRoundLimit { get; set; } = 3;
-    public FirstAttackerMode FirstAttacker { get; set; } = FirstAttackerMode.SquadA;
+    public FirstAttackerMode FirstAttacker { get; set; } = FirstAttackerMode.Random;
 }
 
 public sealed class DuelResult

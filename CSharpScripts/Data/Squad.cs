@@ -178,8 +178,8 @@ public static class SquadAbilities
     public static readonly SquadAbility TempFightAfterMeleeDeath = new SquadAbility("Hit@End", "Temp Fight After Melee Death", 2, true);
     public static readonly SquadAbility SelfRessurection = new SquadAbility("2nd Life", "Ressurect", 1, false);
     public static readonly SquadAbility SelfRessurectionTemp = new SquadAbility("2nd Life", "Temp Ressurect", 1, true);
-    public static readonly SquadAbility PsiDefense = new SquadAbility("BrainBlock", "Psionic Defense", 0, false);
-    public static readonly SquadAbility PsiDefenseTemp = new SquadAbility("BrainBlock", "Temp Psionic Defense", 0, true);
+    public static readonly SquadAbility PsiDefense = new SquadAbility("BrainBlock", "Psionic Defense", 2, false);
+    public static readonly SquadAbility PsiDefenseTemp = new SquadAbility("BrainBlock", "Temp Psionic Defense", 2, true);
     public static readonly SquadAbility PureDefense = new SquadAbility("Special Def", "Pure Damage defense", 2, false);
     public static readonly SquadAbility PureDefenseTemp = new SquadAbility("Special Def", "Temp pure Damage defense", 2, true);
     public static readonly SquadAbility Teleport = new SquadAbility("Tele", "Teleport", 2, false);

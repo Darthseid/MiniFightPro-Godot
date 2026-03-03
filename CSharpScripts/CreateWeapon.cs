@@ -74,12 +74,12 @@ public partial class CreateWeapon : Control
             return;
         }
 
-        if (_hsIn.Value < 0 || _hsIn.Value > 9 ||
+        if (_hsIn.Value < 1 || _hsIn.Value > 6 ||
             _strIn.Value < 0 || _strIn.Value > 99 ||
             _apIn.Value < -9 || _apIn.Value > 0 ||
             _rangeIn.Value < 0 || _rangeIn.Value > 999)
         {
-            OS.Alert("Values are out of bounds!", "Validation Error");
+            OS.Alert("Values are out of bounds! Hit Skill must be between 1 and 6.", "Validation Error");
             return;
         }
 
