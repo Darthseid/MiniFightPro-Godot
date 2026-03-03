@@ -138,10 +138,10 @@ public static class StepChecks
 
         var cleanedSquadAbilities = unit.SquadAbilities.Where(ability => !ability.IsTemporary).ToList();
         (unit.Composition ?? new List<Model>())
-            .SelectMany(model => model.Tools)
+            .SelectMany(model => model.Tools ?? new List<Weapon>())
             .DistinctBy(weapon => weapon.WeaponName)
             .ToList()
-            .ForEach(weapon => weapon.Special.RemoveAll(ability => ability.IsTemporary));
+            .ForEach(weapon => (weapon.Special ?? new List<WeaponAbility>()).RemoveAll(ability => ability.IsTemporary));
         return cleanedSquadAbilities;
     }
 

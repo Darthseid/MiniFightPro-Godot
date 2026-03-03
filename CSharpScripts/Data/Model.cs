@@ -42,7 +42,7 @@ public class Model
             Tools.Select(tool => tool.DeepCopy()).ToList()
         );
 
-        copied.ModelId = string.IsNullOrWhiteSpace(ModelId) ? Guid.NewGuid().ToString("N") : ModelId;
+        copied.ModelId = Guid.NewGuid().ToString("N");
         copied.DefaultImagePath = string.IsNullOrWhiteSpace(DefaultImagePath) ? ModelImageService.DefaultPresetImagePath : DefaultImagePath;
         copied.CustomImagePath = CustomImagePath ?? string.Empty;
 
