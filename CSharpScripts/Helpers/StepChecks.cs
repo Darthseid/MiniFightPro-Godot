@@ -31,10 +31,8 @@ public static class StepChecks
 
         var activeLead = activePlayer.TheirSquads?.FirstOrDefault();
         var inactiveLead = inactivePlayer.TheirSquads?.FirstOrDefault();
-        if (activeLead != null && inactiveLead != null)
-        {
-            await RoundStartChecks(activeLead, inactiveLead, hud, allowPlayerChoices);
-        }
+
+        await RoundStartChecks(activeLead, activePlayer, inactiveLead, inactivePlayer, hud, allowPlayerChoices);
     }
 
     public static async Task CommandPhaseChecks(Player activePlayer, Player inactivePlayer, Squad activeSquad, Squad inactiveSquad, BattleHud hud, bool allowPlayerChoices = true)
@@ -118,14 +116,6 @@ public static class StepChecks
             if (player.PlayerAbilities.Contains(PlayerAbilities.WarriorBless) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.warriorBless.Name))
                 squad.SquadAbilities.Add(SquadAbilities.warriorBless);
 
-            if (player.PlayerAbilities.Contains(PlayerAbilities.Martial) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.MartialStance.Name))
-                squad.SquadAbilities.Add(SquadAbilities.MartialStance);
-
-            if (player.PlayerAbilities.Contains(PlayerAbilities.Subroutines) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.SubRoutine.Name))
-                squad.SquadAbilities.Add(SquadAbilities.SubRoutine);
-
-            if (player.PlayerAbilities.Contains(PlayerAbilities.OfficerOrder) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.OfficerOrder.Name))
-                squad.SquadAbilities.Add(SquadAbilities.OfficerOrder);
         }
     }
 
@@ -246,13 +236,23 @@ public static class StepChecks
 
     public static async Task RoundStartChecks(Squad teamASquad, Squad teamBSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
+        await RoundStartChecks(teamASquad, null, teamBSquad, null, hud, allowPlayerChoices);
+    }
+
+    private static async Task RoundStartChecks(Squad teamASquad, Player teamAPlayer, Squad teamBSquad, Player teamBPlayer, BattleHud hud, bool allowPlayerChoices)
+    {
         if (hud == null)
         {
             return;
         }
 
-        var squads = new[] { teamASquad, teamBSquad };
-        foreach (var squad in squads)
+        var squadPlayerPairs = new[]
+        {
+            (Squad: teamASquad, Player: teamAPlayer),
+            (Squad: teamBSquad, Player: teamBPlayer)
+        };
+
+        foreach (var (squad, player) in squadPlayerPairs)
         {
             if (squad == null)
             {
@@ -261,7 +261,7 @@ public static class StepChecks
 
             if (allowPlayerChoices && squad.SquadAbilities.Any(ability => ability.Innate == "Rampage"))
             {
-                await Berserking(squad, hud);
+                await Berserking(squad, hud, player);
             }
 
             if (allowPlayerChoices && squad.SquadAbilities.Any(ability => ability.Innate == "Angry God"))
@@ -569,7 +569,7 @@ public static class StepChecks
             valid[idx].Apply();
     }
 
-    public static async Task Berserking(Squad activeDude, BattleHud hud)
+    public static async Task Berserking(Squad activeDude, BattleHud hud, Player owner = null)
     {
         if (activeDude == null || hud == null)
             return;
@@ -604,6 +604,14 @@ public static class StepChecks
                 var a = DiceHelpers.DamageParser(w.Attacks);
                 w.Attacks = (a + 1).ToString();
             });
+
+        if (owner?.PlayerAbilities != null && owner.PlayerAbilities.Remove(PlayerAbilities.Berserk))
+        {
+            foreach (var squad in owner.TheirSquads ?? Enumerable.Empty<Squad>())
+            {
+                squad?.SquadAbilities?.RemoveAll(ability => ability?.Innate == SquadAbilities.berserking.Innate);
+            }
+        }
     }
 
     public static bool ShellShockTest(Squad activeSquad, Squad inactiveSquad)

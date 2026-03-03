@@ -135,17 +135,26 @@ public sealed class TransportController
             }
         }
 
-        await _redeployMoveAsync(teamId, squad);
-        var placedActors = _getActorsForSquad(squad);
-        var closestEnemyDistanceInches = BoardGeometry.ClosestDistanceInches(placedActors, enemyActors);
-        if (enemyActors.Count > 0 && closestEnemyDistanceInches <= 9f)
+        while (true)
         {
-            _showToast("Reserve redeploy must end more than 9\" away from enemies.");
-            SetSquadStrategicReserveVisual(squad, true);
-            return false;
-        }
+            await _redeployMoveAsync(teamId, squad);
+            var placedActors = _getActorsForSquad(squad);
+            var closestEnemyDistanceInches = BoardGeometry.ClosestDistanceInches(placedActors, enemyActors);
+            if (enemyActors.Count == 0 || closestEnemyDistanceInches > 9f)
+            {
+                return true;
+            }
 
-        return true;
+            _showToast("Reserve redeploy must end more than 9\" away from enemies.");
+            var reattempt = await _confirmAsync("Invalid placement. Reattempt redeploy placement?");
+            if (!reattempt)
+            {
+                SetSquadStrategicReserveVisual(squad, true);
+                return false;
+            }
+
+            SetSquadStrategicReserveVisual(squad, false);
+        }
     }
 
     public bool TryEmbarkSquad(Squad transport, Squad passenger)
