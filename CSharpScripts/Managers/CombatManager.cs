@@ -122,7 +122,7 @@ public sealed class CombatManager
         var manyExplosions = 0;
         for (int i = 0; i < demiseCheck; i++)
         {
-            if (DiceHelpers.SimpleRoll(6) == 1)
+            if (Dice.Roll(6) == 1)
             {
                 manyExplosions++;
             }
@@ -159,7 +159,7 @@ public sealed class CombatManager
             manyExplosions = 0;
             for (int i = 0; i < newExplosions; i++)
             {
-                if (DiceHelpers.SimpleRoll(6) == 1)
+                if (Dice.Roll(6) == 1)
                 {
                     manyExplosions++;
                 }

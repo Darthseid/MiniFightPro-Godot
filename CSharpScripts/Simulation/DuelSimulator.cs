@@ -304,14 +304,14 @@ public sealed class DuelSimulator
                 break;
             }
 
-            var baseDamage = DiceHelpers.DamageParser(weapon.Damage);
+            var baseDamage = Dice.ParseExpression(weapon.Damage);
             var finalDamage = CombatHelpers.DamageMods(baseDamage, defender.WorkingSquad.SquadAbilities, weapon.Special, range <= weapon.Range / 2f);
 
             var resist = CombatRolls.ResolveEffectiveDamageResistance(defender.WorkingSquad);
 
             for (var p = 0; p < finalDamage && target.Health > 0; p++)
             {
-                var negated = DiceHelpers.SimpleRoll(6) >= resist;
+                var negated = Dice.Roll(6) >= resist;
                 if (!negated)
                 {
                     target.Health -= 1;
@@ -342,7 +342,7 @@ public sealed class DuelSimulator
         var triggers = 0;
         for (var i = 0; i < deadCount; i++)
         {
-            if (DiceHelpers.SimpleRoll(6) == 1)
+            if (Dice.Roll(6) == 1)
             {
                 triggers++;
             }
@@ -402,7 +402,7 @@ public sealed class DuelSimulator
                 continue;
             }
 
-            if (DiceHelpers.SimpleRoll(6) != 1)
+            if (Dice.Roll(6) != 1)
             {
                 continue;
             }

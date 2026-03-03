@@ -1,243 +1,316 @@
-!\[Logo](minifightappicon.png)
+![Logo](minifightappicon.png)
 
 MINIATURE FIGHT RULES AND HELP
 
 # Squad Creation
 
-Squad Creation is the customization place for Miniature Fight. This is where you create and customize Squads, Miniatures, Weapons, and their abilities. There are already multiple presets available that you can edit.
+Squad Creation is the customization place for Miniature Fight. This is where you create and customize Squads, Miniatures, Weapons, and their abilities.
 
-Miniature Fight uses six-sided dice to resolve events. If a value or effect says D6, it means a random number between 1 \& 6 (inclusive) is generated. If a value or effect says D3, it means a random number between 1 \& 3 (inclusive) is generated.
+Miniature Fight uses six-sided dice conventions in rules text:
+- **D6** means roll one six-sided die.
+- **D3** means roll one three-result die (1-3).
 
-Each Squad has a name, Type, **🏃**\*\*,\*\* **🪨**\*\*,\*\* **❤️**\*\*,\*\* **🏳️**\*\*,\*\* **🛡️**\*\*,**➗**, \&\*\* **🔮**\*\*.\*\* 
+Each Squad has a name, Type, **🏃**, **🪨**, **❤️**, **🏳️**, **🛡️**, **➗**, and **🔮**.
 
-·       **🏃** **is the Move Variable. It represents how far the Squad can normally move. Format is (0.0)**
+- **🏃 Move**: how far the Squad normally moves (inches).
+- **🪨 Hardness**: toughness used against Injury rolls.
+- **🏳️ Bravery**: used for shellshock and bravery-based tests.
+- **🛡️ Defense**: armor save value.
+- **🔮 Dodge**: dodge save value.
+- **➗ Damage Resistance**: resistance roll used against allocated damage.
 
-·       **🪨** **is the Hardness variable. It represents how tough the Squad is. This is generally a number between 1-12.**
+Each Miniature has **❤️ Health**, a LowHealth threshold (usually causes a hit penalty when reached), and weapons.
 
-·       **🏳️** **is the Bravery Variable. This represents the ability to pass Bravery Tests or Shellshock tests. This is generally a number between 5-9.**
+**Squad Types** include Infantry, Character, Mounted, Monster, Building, Vehicle, Aircraft, Fortification, Fly, and Transport.
 
-·       **🛡️** **is the Defense Variable. It represents the ability to block injury hits. It is always a number between 2-7.**
+Each Weapon has a Name, **🏹 Range**, **🤺 Attacks**, **🔫 Hit Skill**, **💪 Strength**, **🕳️ Armor Penetration**, and **🩸 Damage**.
 
-·       **🔮** is the Dodge Variable. It represents the ability to dodge any injury hit. It is always a number between 2-7.
+- **🏹 Range** under 1" is treated as melee.
+- **🤺 Attacks** can be an integer or a D3/D6 expression.
+- **🩸 Damage** can be an integer or a D3/D6 expression.
 
-·       **➗** is Damage Resistance. It works on all forms of damage. It is always a number between 2-7.
+## Dice Conventions
 
-Each Squad has multiple abilities that you can give it. And of course, a Squad would be nothing without their Miniatures. Each Miniature in Miniature Fight has a name, **❤️**, LowHealth, and weapons. **❤️** **is Health. When a mini’s** **❤️** **runs out, they are dead. Format is (0). LowHealth is a threshold for generally larger miniatures. When a mini’s** **❤️** **is less than or equal to LowHealth, they have a -1 Hit Modifier. Weapons are what the miniatures use to fight.**
+For attack counts, damage, and variable modifiers, accepted expressions are:
+- Integer constants (`1`, `2`, `7`)
+- `D6`, `D3`
+- Multiples and optional constants, such as `2D6+3`, `3D3`, `D6+2`, `2D3-1`
 
-**Squad Types determine the size and purpose of a Squad. The valid Squad Types are Infantry, Character, Mounted, Monster, Building, \& Vehicle.**
-
-**Each Weapon in Miniature Fight has a Name,** **🏹**\*\*,\*\* **🤺**\*\*,\*\* **🔫**\*\*,\*\* **💪**\*\*,\*\* **🕳️**\*\*, \&\*\* **🩸**\*\*.\*\*
-
-·       **🏹** **is the attack range of the weapon. Weapons with an attack range less than 1.0 are considered melee weapons. The format is (0.0).**
-
-·       **🤺** **is the number of attacks a weapon has. Format is (0).** **🤺** **can also be D3, D6, or a multiplier of D3 or D6 with integer addition. (e.g. 2D3+4).**
-
-·       **🔫** **is the Accuracy of a weapon. This matters for the Hit Sequence. This is always a number between 2-6.**
-
-·       **💪** **is the Strength of a weapon. This is generally a number between 1-18.**
-
-·       **🕳️** **is the armor penetration of a weapon. This is always a number between 0 \& -5.**
-
-·       **🩸** **is the Damage a weapon deals. Format is (0).** **🩸** **can also be D3, D6, or a multiplier of D3 or D6 with integer addition. (e.g. 2D3+4).**
-
-Weapons in Miniature Fight can also have multiple abilities.
-
-Once you have created your Squads, Miniatures, and Weapons, make sure to save them so you can use them in the game!
+Use only **D6** and **D3** as base die types in rules content. Do not use other die families (for example D8), fractions, or mixed custom notation.
 
 # Start Game
 
-Press Start Game, select a Squad for the first team, and then select a Squad for the 2nd team. Press Play and both Squads will be loaded into the game.
+Press Start Game, choose one Squad for each team, then press Play.
 
-At the beginning of the match, pre-game checks and decisions will be made. You can adjust the starting distance of both Squads to your liking. When you’re finished, you can press Begin game. Once pressed, Miniature Fight will randomly pick a starting Squad and the game will begin!
+The Active Player is the player whose turn is currently being resolved.
 
-The Active Player is whomever turn it is. The Inactive Player is the other player.
+## Continue Arrow and Phase Progression
 
-The Stages in Miniature Fight are Starting Stage, Move Stage, Shoot Stage, Engagement Stage, Melee Stage, and End Stage.
+The **Continue →** button advances phase flow whenever the game is waiting for player confirmation. If Continue is not pressed, the game waits.
 
-·       Starting Stage is when the beginning of turn/round checks are made. This is also when the Shellshock test is taken. If a Squad is missing over half of the minis it started with, or it is a single-model Squad that is missing over half of its health, it is considered Understrength. Understrength Squads take a Shellshock Test at the beginning of its Starting Stage. If the Shellshock Test fails, it is considered Shell-shocked. Shell-shocked Squads risk losing Minis whenever they Retreat.
+A turn progresses through:
+- Terrain Setup (if enabled)
+- Squad Deployment
+- Starting
+- Movement
+- Shooting
+- Engagement (charge)
+- Melee
+- End Turn
 
-o   For the Shellshock Test, two dice (D6) are rolled. If the sum of the two dice is equal to or above the **🏳️** **of the** **Squad being tested (after modifiers), the test is passed. Otherwise, it will fail.**
+## Ruler Tool
 
-·       Movement Stage is when Squads move. Squads can elect to either make a Standard Move, or Rush.
+Use the built-in ruler/measure tool to check distances between squads, models, and terrain during a match. This is intended for movement distances, shooting range checks, engagement/fight-range checks, and aura ranges.
 
-o   During a Standard Move, a Squad moves equal to its **🏃** plus modifiers.
+# Core Battle Rules
 
-o   During a Rush, a Squad moves equal to its **🏃** and D6 inches plus modifiers. Squads in Fight Range cannot Rush. If a Squad rushes, they generally cannot charge or shoot.
+## Fight Range and 1" Movement Rule
 
-o   Squads that try to move while they’re in Fight Range (within 1 inch of an enemy Squad) are Retreating. Squads that Retreat normally cannot shoot or charge.
+- **Fight Range is 1 inch.**
+- During normal movement, models cannot end within 1" of enemy models.
+- Moving out of Fight Range is a **Retreat**.
+- Entering within 1" of enemy models is only done through valid charging/engagement movement.
 
-o   Aircraft have different rules for movement. They can move up to 100 inches in any direction, but they must move a minimum of 20 inches if able.
+## Movement: Standard, Rush, Retreat, Aircraft, Teleport
 
-·       Shoot Stage is when Squads shoot. Each model shoots at the enemy Squad. Each model shoots all weapons they have that are within range of the enemy Squad.
+- **Standard Move:** up to the squad's movement allowance.
+- **Rush (Advance):** adds **D6** movement. A squad that rushed cannot normally shoot or charge later that turn.
+- **Charge After Rush:** bypasses the normal no-charge-after-rush restriction.
+- **Retreat (Fall Back):** used when leaving Fight Range; squads that retreat cannot normally shoot or charge that turn.
+- **Retreat + Shell-shocked:** can trigger mini losses (rout check).
 
-o   The Check Valid Shooting Step of the Shooting Phase determines whether a weapon is eligible to shoot at the enemy Squad. Squads except for Monsters and Vehicles cannot fire non-pistol weapons while it is within Fight Range of an enemy Squad. Blast weapons can never be fired within Fight Range.
+### Aircraft movement
 
-o   The Modifier step introduces additive modifiers, subtractive modifiers, and rerolls to weapons that shoot. The Hit Modifier has a minimum limit of -1 and a maximum limit of +1. The Injury Modifier has a minimum limit of -1 and a maximum limit of +1. The **🛡️**has a maximum limit of +1. If a Monster or Vehicle fires a weapon in Fight Range, there is a -1 to Hit Modifier.
+- Aircraft cannot declare charges.
+- Aircraft movement is treated as a special move profile and must satisfy the minimum move rule when enforced: **at least 20"**.
+- Aircraft are valid charge targets only for attackers with **Fly**.
+- Aircraft movement is not blocked by terrain in the same way non-Fly charges/moves are handled.
 
-o    The Hit sequence determines based on the number of shots; how many attacks hit the target. For each attack D6 is rolled and modifiers are included. For each die roll greater than or equal to the **🔫**\*\*, a hit is scored against the target. Failed dice may be rerolled based on the weapon/Squad ability.\*\*
+### Teleport movement
 
-o   The Injury sequence determines based on the number of hits; how many hits count as injury hits. For each hit, D6 is rolled, and modifiers are included. For each die roll greater than or equal to the **penetration threshold, a injury hit is scored against the target. Failed dice may be rerolled based on the weapon/Squad ability. The penetration threshold is as follows:**
+- Squads with **Teleport** can make teleport-style movement.
+- Teleport placement can ignore normal movement cap in teleport cases.
+- Teleport must end **more than 9"** away from enemy squads.
 
-### Penetration Check
+## Shooting Restrictions
 
-|Target to Meet or Exceed|Result|
-|-|-|
-|💪 ≥ 🪨 × 2|2|
-|💪 > 🪨|3|
-|💪 = 🪨|4|
-|💪 < 🪨|5|
-|💪 ≤ 🪨 × 2|6|
+- Non-melee weapons require valid range.
+- A squad that rushed cannot shoot unless the weapon has **Skirmish** or another enabling rule.
+- A squad that retreated cannot shoot unless it has **Shoot Retreat**.
+- Non-Monster/Vehicle squads in Fight Range can only shoot with **Pistol** weapons.
+- Monsters/Vehicles can shoot in Fight Range with a hit penalty.
+- **Blast** weapons can never be fired while the attacker is in Fight Range.
 
-o   The Defense Sequence determines based on the number of injury hits; how many injury hits count as Serious Wounds. For each injury hit, D6 is rolled and modifiers are included. This is based on the **🛡️** **-** **🕳️**\*\*.\*\* For each die roll less than the modified Defense Variable, a Serious Wound is scored against the Squad. If the target Squad has a **🔮** that is less than the **🛡️** **-** **🕳️**\*\*,\*\* **🔮** **is** **used instead.** **🔮** **is almost never modified.**
+## Terrain
 
-o   For each Serious Wound, the Squad suffers **🩸** **from the weapon.** **🩸** **reduces a miniature’s** **❤️\*\*\*\*. A mini with 0 or less** **❤️\*\*\*\*dies and is removed from the game.**
+Terrain is set before normal play:
+- Players choose terrain count and place pieces during Terrain Setup.
+- Terrain can be repositioned before it is locked.
+- Press Continue to lock terrain and proceed.
 
-§  If a Squad has **➗** **less than 7, D6 is rolled for each** **🩸** **from a Serious Wound. For each die roll that meets or exceeds the** ➗\*\*, that damage is resisted and does not reduce\*\* **❤️\*\*\*\*.**
+Terrain rules:
+- Terrain pieces have a fixed radius (4").
+- Terrain blocks movement and charge paths for non-Fly movement checks.
+- Terrain blocks line of sight.
+- Squads within 3" of a terrain piece gain cover benefits.
+- Once locked, terrain no longer moves.
+- The default terrain visual is the ruins texture (`Ruins.png` in the terrain scene).
 
-§  Low-health miniatures receive damage first before their undamaged allies in their Squad do.
+## Aircraft and Fortification Restrictions
 
-·       Engagement Stage is when Squads within 12” of each other can charge into Fight Range (1”). A Charge Test is equal to 2D6 + Modifiers. If it is passed, the charging Squad is moved next to the target Squad and fights first.
+- **Aircraft:** cannot charge; can only be charged by units with **Fly**.
+- **Fortifications / 0 Move squads:** cannot charge, but can be charged by valid enemy squads.
 
-·       Melee Stage only occurs if both Squads are within Fight Range of each other. If so, Melee Order is determined as follows:
+## Shellshock Tests
 
-### Initiative Order
+A squad is **Understrength** if it has lost over half its starting models (or equivalent single-model health threshold logic).
 
-|Condition|Result|
-|-|-|
-|Active Player charged \& Inactive Player does not have **First Strike**|Active Player fights first|
-|Active Player has **First Strike** \& Inactive Player does not|Active Player fights first|
-|Inactive Player has a **Last Strike** ability|Active Player fights first|
-|All other scenarios|Inactive Player fights first|
+Understrength squads test at start-of-turn:
+- Roll **2D6**.
+- Pass if total (after modifiers) is at least the squad's **🏳️ Bravery**.
+- Fail = squad becomes or remains **Shell-shocked**.
 
+Shell-shocked effects:
+- Retreat can cause rout losses.
+- Rush/Retreat success contexts are harder (bravery pressure and penalties apply through current rule hooks).
+- Some abilities interact with this test (for example **Reroll Bravery**, **Demonic Grief**, **Alien Terror**, **Hive Mind**, **Grim**).
+- **Epic Bravery** order removes Shell Shock from a friendly squad.
 
+## Perilous Tests
 
-o   The player who fights first uses all their melee weapons on their opponent. If their opponent survives, they then use all their melee weapons on the player who fought first.
+After a model fires a weapon with **Perilous**:
+- Roll **1D6** through the dice overlay.
+- On a **1**, perilous backlash is applied.
 
-o   The Hit Sequence, Injury Sequence, Defense Sequence, and Damage Sequence used during the Melee Stage are identical to the one used for the Shoot Stage, but different modifiers can be in play.
+Current perilous resolution:
+- Infantry bearer: the firing model is destroyed.
+- Non-Infantry bearer: takes 3 pure self-damage.
 
-o   If a model has multiple melee weapons, it uses them all.
+Perilous rolls are normal interactive dice events, so they support:
+- **Command Reroll** (if legal and available)
+- **Fate Six** replacement (if legal and available)
 
-Some abilities deal Pure Damage. Pure Damage bypasses the attack sequence and immediately damages the affected Squads. Unlike regular damage, Excess pure damage is dealt to other models in the Squad.
+# Orders and Order Points
 
-To win the game, a Squad must destroy all miniatures in the enemy Squad. If both Squads are dead, it is considered a draw.
+Orders are timed commands. Players spend **Order Points (OP)** to activate them.
 
-Remember the golden rule of Games. If an ability contradicts the game rules, the ability takes precedence.
+- Each player gains Order Points over the battle flow (starting at 0 and gaining during turn progression).
+- Each player can use only **one order per phase window**.
+- Orders are limited by timing windows and target restrictions.
+- A player can also spend **1 OP** for a **Command Reroll**.
 
-# Squad Abilities
+## Command Reroll (Order Reroll)
 
-There are multiple abilities Squads can have in Miniature Fight. These abilities can enhance a Squad and make them harder to defeat.
+- Spend **1 OP** to reroll one die in the current roll event.
+- Only your own dice can be rerolled.
+- Only one Command Reroll per player per phase.
+- A die cannot be rerolled if it was already rerolled.
+- A die cannot be rerolled if it was replaced by Fate Six.
+- Only reroll-eligible dice can be selected.
 
-The current list is as follows:
+## Default Orders
 
-* **Aircraft:** This Squad is considered an aircraft and has Aircraft Movement rules.
-* **Alien Terror:** At the beginning of a round, you can force the enemy to take a Shellshock Test. Then this ability is removed.
-* **Charge After Rush:** This Squad can charge even if it rushed this turn.
-* **Charge Bonus:** This Squad receives a +X modifier to its Charge rolls.
-* **Close to Shoot:** Enemy Squads further than 12 inches away from this Squad cannot shoot at it.
-* **Demonic Grief:** This Squad has a +1 modifier to the Shellshock Test. Whenever this Squad passes a Shellshock Test, Reanimate is triggered. Enemy Squads have a -1 Modifier to the Shellshock Test. Whenever an enemy Squad becomes Shellshocked, they suffer D3 Pure Damage.
-* **Fight After Melee Death:** When a model in this Squad dies, it can still fight an enemy Squad that it is within Fight Range of this turn.
-* **Fight Stances:** This Squad can choose different Melee Stances at the beginning of the Melee Stage. You can choose to give all melee weapons this stage Bonus Hits, all melee weapons Hard Hits, or to have a -1 to Hit Modifier applied for attacks against this Squad. The effect resets when the Melee Stage ends.
-* **First Strike:** This Squad generally fights first in a Melee Stage.
-* **Flying:** This Squad is considered a flying Squad for rules purposes.
-* **Grim:** Enemy Squads within 12” of this Squad have a -1 modifier in the Shellshock Test. After Round 2, this Squad has a +1 Penetrating Modifier when shooting at Shellshocked enemies. Shellshocked enemies have a -1 Hit Modifier towards shooting this Squad.
-* **Guaranteed Rush:** This Squad always rushs 6 inches when advancing.
-* **Hive Mind:** This Squad has a D6 Modifier for Shellshock Tests.
-* **Minus Hit:** causes all attacks against this Squad to have a -1 to Hit Modifier.
-* **Minus Hit Melee:** causes all ranged attacks against this Squad to have a -1 to Hit Modifier.
-* **Minus Hit Ranged:** causes all ranged attacks against this Squad to have a -1 to Hit Modifier.
-* **Move After Shooting:** This Squad can move after its Shoot Stage.
-* **Move Back:** Whenever an enemy moves within 9 inches of this Squad, this Squad can then move up to D6 inches in any direction.
-* **Free Health Care:** Friendly Squads within 6 inches of this Squad get -1 Damage Resistance (➗), and this aura does not stack.
-* **Officer Order:** This Squad can receive orders from Officers at the beginning of the Starting Stage. The effect resets at the start of each round. The orders are:
-
-### Squad Orders
-
-|Order Name|Effect|
-|-|-|
-|**Double Time!**|This Squad has a +3” modifier for Moving.|
-|**Crush Them!**|This Squad has a +1 Hit Modifier when Fighting.|
-|**Aim.**|This Squad has a +1 Hit Modifier when Shooting.|
-|**Volley Fire**|All rapid-fire weapons in this Squad gain +1 additional attack.|
-|**Get in Cover!**|This Squad has a +1 🛡️ Modifier.|
-|**Honorable**|This Squad has a +1 Modifier for Shellshock Tests.|
-
-
-
-**Psionic Defense:** This Squad has damage resistance against Psychic Attacks.
-
-* **Psychic:** This Squad counts as a psychic.
-* **Pure Defense:** This Squad has damage resistance against Pure Damage.
-* **Reanimate:** This model can reanimate D3 times. For each reanimate, a model in this Squad is healed 1 ❤️. If all models in this Squad are fully healed, instead a dead model in this Squad is resurrected at 1 ❤️.
-* **Reduce Damage by Half:** All weapon Damage allocated to this Squad is halved (to a minimum of 1).
-* **Reduce Damage by X:** All weapon Damage allocated to this Squad is reduced by X amount (to a minimum of 1)
-* **Resist First Damage:** The first Serious Wound assigned to this Squad deals 0 damage.
-* **Reroll Bravery:** If this Squad fails its first Shellshock Test, it can reroll its results.
-* **Rush Boost:** This Squad has a +X Modifier when Rushing.
-* **Satanic:** This Squad can make pacts that give their weapons bonuses. You can choose to give all weapons this Stage either Bonus Hits 1 or Hard Hits. They then take a Bravery Test. Bravery Tests are identical to Shellshock Tests but have different results in failure. If this Bravery Test fails, the Squad suffers D3 Pure Damage.
-* **Self-Resurrection:** The First time this Squad dies, return a model from it back to the battlefield at full health. That model resurrects outside of Fight Range.
-* **Sentry:** Whenever this Squad is charged, it can Fire Overwatch. Firing Overwatch is just like the Shoot Stage, except only die rolls of 6s generally count as a hit.
-* **Shoot \& Shock:** Enemy Squads shot at by this Squad take a Shellshock test at the end of the Shooting Phase.
-* **Stampede:** When this Squad charges, the Squad charged receives D3 Pure Damage.
-* **Subroutine:** This Squad can choose different Subroutines during the Shoot Stage. You can either choose to have all weapons this Stage gain the Assault ability or Heavy ability. This effect only lasts until the end of the Shoot Stage.
-* **Teleport:** At the end of the Move Stage, this Squad can teleport across the battlefield. This Squad must be a minimum of 9” away from enemies.
-* **Warrior Bless:** This Squad can choose different Warrior Blessings at the Start of the Round. 8D6 is rolled. Each ability has an Activation cost. Afterwards, Dice is discarded. The abilities last until the end of the Round. The following abilities can be chosen:
-
-### Special Abilities
-
-|Ability|Activation Cost|
-|-|-|
-|2” Move Modifier|Two dice that match|
-|-1 ➗.|Two dice that match|
-|Fight After Melee Death|Three dice that match **or** double 4+|
-|Bonus Hits 1 for Melee|Two dice that are 3+|
-|Hard Hits for Melee|Two dice that are 5+|
-|Charge After Rush|Double 6 **or** triple 4+|
-
-
-
-**Weaken Strong Attack:** When this Squad is hit by an attack, if the 💪 of that attack is greater than the 🪨 of this Squad, that attack has a -1 to Penetrating modifier.
+| Name | Cost / Window / Target / Effect |
+|---|---|
+| Epic Challenge | **1 OP**; Start of Melee; friendly Character; grants temporary Precision to melee weapons for that melee phase. |
+| Tank Shock | **1 OP**; Engagement phase; friendly Vehicle; grants temporary Stampede until end of turn. |
+| Go to Ground | **1 OP**; when targeted in opponent Shooting; friendly Infantry; gains temporary Cover Benefit and Six Plus Dodge for that phase. |
+| Counter-Offensive | **2 OP**; Start of Melee; friendly fight-eligible squad; gains temporary First Strike for the turn. |
+| Heroic Intervention | **2 OP**; opponent melee timing; eligible friendly squad within 6" can move into engagement against a valid enemy already tied up. |
+| Mists of Deimos | **3 OP**; Start of opponent Shooting; remove friendly squad into reserve, return next shooting via teleport-style placement, cannot charge that turn after return. |
+| Epic Bravery | **2 OP**; Start of Movement; friendly squad; removes Shell Shock. |
+| Fire Overwatch | **1 OP**; Start of opponent Engagement; friendly shooter squad is armed to fire Overwatch when charged. |
 
 # Weapon Abilities
 
-There are multiple abilities in Miniature Fight that make weapons more powerful. Here is the list:
+| Name | Effect |
+|---|---|
+| Bonus Hits X | Critical hits generate additional hit rolls equal to X. |
+| Precision | Allocates successful injuries to less common/priority defenders first. |
+| Hard Hits | Critical hits auto-penetrate. |
+| Pike | Charge-synergy melee profile (used as a temporary melee pressure effect). |
+| Conversion | At ranges over 12", critical threshold improves (typically 4+). |
+| Devastating Injuries | Critical injuries are especially lethal and bypass normal save flow. |
+| Perilous | After firing, roll 1D6; on 1, attacker suffers perilous backlash. |
+| Hefty | If the attacker did not move, gains +1 to hit. |
+| Ignores Cover | Target does not gain cover/AP mitigation from cover for that attack. |
+| Fusion X | Within half range, adds X damage. |
+| One Shot | Weapon is expended after firing (attacks set to 0 for matching profile). |
+| Pistol | Can be fired in Fight Range where non-pistol weapons are restricted. |
+| Rapid Fire X | Within half range, gains X additional attacks. |
+| Skirmish | Weapon can be fired after rushing. |
+| Anti-Infantry X | Critical injury threshold improves against Infantry targets (X+). |
+| Anti-Monster X | Critical injury threshold improves against Monster targets (X+). |
+| Anti-Vehicle X | Critical injury threshold improves against Vehicle targets (X+). |
+| Anti-Fly X | Critical injury threshold improves against Fly targets (X+). |
+| Anti-Character X | Critical injury threshold improves against Character targets (X+). |
+| Anti-Psychic X | Critical injury threshold improves against Psychic targets (X+). |
+| Blast | Gains extra attacks based on target size; cannot fire in Fight Range. |
+| Reroll Injuries | Reroll failed injury rolls. |
+| Psychic | Marks attack as psychic (interacts with Psionic Defense). |
+| One Hit Reroll | One failed hit die can be rerolled. |
+| Reroll Hits | Reroll failed hit rolls. |
+| Reroll Hit Ones | Reroll unmodified hit rolls of 1. |
+| Reroll Injury Ones | Reroll unmodified injury rolls of 1. |
+| One Injury Reroll | One failed injury die can be rerolled. |
+| Plus One Injuries | +1 to injury rolls. |
+| Multi-Profile | Weapon profile can be selected from grouped variants before resolving attack. |
+| Indirect Fire | Can shoot without line of sight; if fired without LOS, applies -1 hit and target gets cover benefits. |
 
-·        **Anti-Type:** This weapon has a greater chance of dealing critical Injuries against enemies of a certain type. A roll of X or more counts as a critical Injury.
+# Squad Abilities
 
-·        **Assault:** This weapon can be used after Rushing.
+| Name | Effect |
+|---|---|
+| -1 to Hit Ranged | Enemy ranged attacks against this squad take -1 to hit. |
+| -1 to Hit Melee | Enemy melee attacks against this squad take -1 to hit. |
+| Explode on Death X | On destruction, can deal pure explosion damage in area. |
+| -1 to Hit (All) | Universal -1 to be hit. |
+| Aircraft | Uses aircraft movement/charge restrictions. |
+| Alien Terror | Enemy can be forced into shellshock-style pressure tests. |
+| Demonic Grief | Bravery/shellshock aura interaction with regeneration/punishment hooks. |
+| Close Up To Shoot (Camouflaged) | Enemy cannot target this squad with shooting beyond 12". |
+| First Strike | Fights first in melee ordering. |
+| Temp First Strike | Temporary first-strike version from orders/effects. |
+| Shoot Retreat | Can shoot after retreating. |
+| Charge After Rush | Can charge after rushing. |
+| Fight After Melee Death | Can still fight on death in melee timing. |
+| Self Resurrection | One-time return after squad/model death condition. |
+| Psi Defense | Negates/mitigates incoming Psychic-tagged damage. |
+| Pure Defense | Resistance against pure damage sources. |
+| Teleport | Enables teleport-style movement; must end >9" from enemies. |
+| Shoot Shellshock | Shooting this squad performs can force enemy shellshock tests. |
+| Reanimator | Regeneration at command/start checks (heal/resurrect flow). |
+| Adv Boost 1 | +1 rush boost. |
+| Adv Boost 6 | +6 rush boost. |
+| Stampede | On successful charge, inflicts extra pure impact damage. |
+| Plus One To Charge | Adds +1 to charge result/check. |
+| Satanic | Can choose temporary weapon buffs with bravery-risk backlash. |
+| ReRoll Bravery | First failed shellshock/bravery-style test can be rerolled. |
+| Infect | Infection-tagged debuff ability (profile-defined modifier effect). |
+| Resist First Damage | First serious incoming wound can be ignored. |
+| Weaken Strong Attack | If attacker strength exceeds your hardness, reduce injury pressure. |
+| Reduce Damage By 1 | Incoming damage reduced by 1 (minimum 1). |
+| Reduce Damage By Half | Incoming damage halved (rounded up/minimum behavior from code path). |
+| Reduce Damage To 1 | Incoming damage becomes 1. |
+| Move After Shooting | Gains post-shoot move behavior. |
+| Move Back | Reactive move-after-enemy behavior hook. |
+| Squad Reroll Hits | Squad-wide failed hit rerolls. |
+| Squad Reroll Hit Ones | Squad-wide reroll hit rolls of 1. |
+| Squad Reroll Injury Ones | Squad-wide reroll injury rolls of 1. |
+| Squad Plus One Injuries | Squad-wide +1 injury modifier. |
+| Squad Reroll Injuries | Squad-wide failed injury rerolls. |
+| Stop Rerolls | Enemy rerolls against this squad are disabled. |
+| No Modifiers | Negative hit/injury modifiers are ignored. |
+| Martial Stance | Choose melee stance options (defensive or offensive temporary effects). |
+| Sub Routine | Choose shooting subroutine (temporary Skirmish or Hefty style buff). |
+| Firing Deck | Transport can fire embarked squad ranged weapons. |
+| Cover Benefit | Improved cover/defensive benefit in applicable contexts. |
+| Six Plus Dodge | Grants 6+ dodge style defensive roll. |
+| Free Healthcare | Friendly squads within 6" receive non-stacking -1 incoming damage support aura. |
 
-·        **Blast:** This weapon deals an additional attack roll for every 5 models in the Squad. Blast weapons can’t be used in Fight Range.
+# Player Abilities
 
-·        **Bonus Hits (x):** Each critical hit by this weapon deals an additional X bonus hits. Critical Hits are unmodified die rolls of 6 by default.
+| Name | Effect |
+|---|---|
+| Hive Mind | Applies Hive Mind squad aura/interaction package across the player's force. |
+| Alien Terror | Gives access to alien-terror pressure playstyle interactions. |
+| Grim | Applies enemy bravery pressure aura (shellshock modifier interaction). |
+| Warrior Bless | Enables start-of-round blessing roll package and temporary buffs. |
+| Martial | Grants Martial Stances to squads. |
+| Berserk | Grants Berserk package to squads at round start. |
+| Grief | Grants Demonic Grief package to squads. |
+| Subroutines | Grants Subroutine package to squads. |
+| Officer Order | Grants officer-order style command options to squads. |
+| Stranded Miracle | Enables Fate Six pool usage (replace one die with a 6, subject to replacement/reroll rules). |
 
-·        **Conversion:** When shooting at enemy Squads more than 12 inches away, this weapon has Critical Hits on 4, 5, and 6. Critical Hits automatically hit.
+# Simulator / Duel Comparison Scene
 
-·        **Hard Hits:** Critical Hits by this weapon automatically penetrate the target Squad.
+The Duel Comparison simulator is a standalone scene for repeated 1v1 squad simulations without playing a full match.
 
-·        **Heavy:** If the Squad didn’t move this turn, this weapon has a +1 to Hit Modifier in the next Shoot Stage.
+You can configure:
+- Squad A and Squad B
+- First attacker mode
+- Range
+- Trial count
+- Optional deterministic seed
 
-·        **Ignores Cover:** Squads do not benefit from cover when they are shot at by this weapon. Currently, there is no cover or terrain in Miniature Fight, but certain abilities give Squads a +1 🛡️ boost for being in cover.
+The simulator reports:
+- Win counts and win percentage trends
+- Draws
+- Average rounds
+- Average winner remaining HP
+- Penetrating injury rate
+- Average damage per trial
+- Histogram slides for rounds, remaining HP, penetration rate, and damage
 
-·        **Indirect Fire:** Can target enemies without line of sight. If fired without line of sight: -1 to hit and target gains cover.
+Use it to compare builds and estimate matchup performance quickly.
 
-·        **Obliterating:** Critical Injuries by this weapon cannot be saved against and automatically deal damage. Critical Injuries are unmodified die rolls of 6 by default.
+# Other Important Mechanics
 
-·        **One Hit Reroll:** Up to one die generated by this weapon in the Hit Sequence is rerolled if it fails.
-
-·        **One Injury Reroll:** Up to one die generated by this weapon in the Injury Sequence is rerolled if it fails.
-
-·        **Perilous:** After shooting with this weapon, D6 is rolled. On a 1, the model who shot the weapon is slain. If the model who shot it was an Infantry or Vehicle Squad, they suffer 3 Pure Damage instead.
-
-·        **Pike:** Whenever this Squad charges, its melee weapons have a +1 to Injury Modifier this turn.
-
-·        **Pistol:** This weapon can be fired even within Fight Range. If this weapon is used, non-Pistol weapons cannot be used in this phase.
-
-·        **Rapid (X):** When shooting at a target within half-range, this weapon makes X additional attacks.
-
-·        **Reroll Hit:** Whenever this weapon attacks, reroll all failed hit rolls.
-
-·        **Reroll Hit Ones:** Whenever this weapon attacks, reroll all unmodified hit rolls of 1.
-
-·        **Reroll Injury:** Whenever this weapon attacks, all failed Injury rolls.
-
-·        **Reroll Injury Ones:** Whenever this weapon attacks, reroll all unmodified Injury rolls of 1.
-
+- **Go to Ground** grants temporary Cover Benefit + Six Plus Dodge when targeted by shooting.
+- **Fire Overwatch** arms a squad to shoot reactively on charge declaration.
+- **Bravery** governs shellshock and bravery-dependent tests.
+- **Hardness** determines injury thresholds versus weapon strength.
+- **Cover Benefit** and terrain cover can stack into shooting-defense context checks as allowed.
+- **Order windows** strictly control when an order can be activated.
+- **One order per phase window** and **one command reroll per phase** are enforced.

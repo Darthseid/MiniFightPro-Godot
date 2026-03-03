@@ -46,9 +46,9 @@ public static class CombatRolls
 
             var diceRoll = rollChecker switch
             {
-                1 => DiceHelpers.ReRollOnes(),
-                2 => DiceHelpers.ReRollFailed(hitSkill),
-                _ => DiceHelpers.SimpleRoll(6)
+                1 => Dice.RerollOnes(),
+                2 => Dice.RerollFailed(hitSkill),
+                _ => Dice.Roll(6)
             };
 
             var criticalHit = diceRoll == critThreshold;
@@ -108,9 +108,9 @@ public static class CombatRolls
 
             var diceRoll = rollChecker switch
             {
-                1 => DiceHelpers.ReRollOnes(),
-                2 => DiceHelpers.ReRollFailed(injuryThreshold),
-                _ => DiceHelpers.SimpleRoll(6)
+                1 => Dice.RerollOnes(),
+                2 => Dice.RerollFailed(injuryThreshold),
+                _ => Dice.Roll(6)
             };
 
             if (diceRoll == 1)
@@ -141,7 +141,7 @@ public static class CombatRolls
         var unsavedInjuries = 0;
         for (int i = 0; i < injuries; i++)
         {
-            var diceRoll = DiceHelpers.SimpleRoll(6);
+            var diceRoll = Dice.Roll(6);
             if (diceRoll + armorPenetration < finalSave)
             {
                 unsavedInjuries++;
@@ -399,7 +399,7 @@ public static class CombatRolls
             var model = iterator.Current;
             while (remainingWounds > 0 && model.Health > 0)
             {
-                var resistCheck = DiceHelpers.SimpleRoll(6);
+                var resistCheck = Dice.Roll(6);
                 var woundNegated = resistCheck >= resist;
                 if (!woundNegated)
                 {

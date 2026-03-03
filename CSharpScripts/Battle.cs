@@ -1451,7 +1451,7 @@ public partial class Battle : Node2D
     {
         var actors = GetActorsForSquad(squad);
         var toRemove = actors
-            .Where(actor => actor?.BoundModel != null && DiceHelpers.SimpleRoll(6) < 3)
+            .Where(actor => actor?.BoundModel != null && Dice.Roll(6) < 3)
             .ToList();
 
         foreach (var actor in toRemove)

@@ -187,7 +187,7 @@ public static class StepChecks
                         .ToList()
                         .ForEach(weapon =>
                         {
-                            var currentAttacks = DiceHelpers.DamageParser(weapon.Attacks);
+                            var currentAttacks = Dice.ParseExpression(weapon.Attacks);
                             weapon.Attacks = (currentAttacks + 1).ToString();
                         });
                     activeSquad.SquadAbilities.Add(ActiveShootBoost);
@@ -344,7 +344,7 @@ public static class StepChecks
                 .ToList()
                 .ForEach(weapon =>
                 {
-                    var attacks = DiceHelpers.DamageParser(weapon.Attacks) - 1;
+                    var attacks = Dice.ParseExpression(weapon.Attacks) - 1;
                     weapon.Attacks = attacks.ToString();
                 });
             activeDude.SquadAbilities.RemoveAll(ability => ability.Name == ActiveShootBoost.Name);
@@ -371,7 +371,7 @@ public static class StepChecks
         // Roll 8d6
         var rolls = new List<int>(8);
         for (int i = 0; i < 8; i++)
-            rolls.Add(DiceHelpers.SimpleRoll(6));
+            rolls.Add(Dice.Roll(6));
 
         // Local helpers
         static int CountOf(List<int> list, int face) => list.Count(v => v == face);
@@ -568,7 +568,7 @@ public static class StepChecks
             .ForEach(w =>
             {
                 w.Strength += 1;
-                var a = DiceHelpers.DamageParser(w.Attacks);
+                var a = Dice.ParseExpression(w.Attacks);
                 w.Attacks = (a + 1).ToString();
             });
     }
@@ -593,7 +593,7 @@ public static class StepChecks
 
         if (hasHiveMind)
         {
-            shellShockModifier += DiceHelpers.SimpleRoll(6);
+            shellShockModifier += Dice.Roll(6);
         }
 
         var hasGrimDebuff = HasEnemyDebuffAura(activeSquad, inactiveSquad, "Grim", 12f);
@@ -602,10 +602,10 @@ public static class StepChecks
             shellShockModifier -= 1;
         }
 
-        var test = DiceHelpers.Roll2d6() + shellShockModifier < baseBravery;
+        var test = Dice.Roll2D6() + shellShockModifier < baseBravery;
         if (test && activeSquad.SquadAbilities.Any(ability => ability.Innate == "TryAgain"))
         {
-            test = DiceHelpers.Roll2d6() + shellShockModifier < baseBravery;
+            test = Dice.Roll2D6() + shellShockModifier < baseBravery;
         }
 
         if (test)
@@ -620,7 +620,7 @@ public static class StepChecks
 
         if (test && HasEnemyDebuffAura(activeSquad, inactiveSquad, "Bad Juju", 12f))
         {
-            CombatRolls.AllocatePure(DiceHelpers.SimpleRoll(3), activeSquad);
+            CombatRolls.AllocatePure(Dice.Roll(3), activeSquad);
         }
 
         return test;
@@ -692,7 +692,7 @@ public static class StepChecks
             return;
         }
 
-        var remainingWounds = DiceHelpers.SimpleRoll(3);
+        var remainingWounds = Dice.Roll(3);
         remainingWounds = HealSquadModels(squad, remainingWounds);
 
         while (remainingWounds > 0 && squad.Composition.Count < squad.StartingModelSize)
@@ -808,11 +808,11 @@ public static class StepChecks
             return false;
         }
 
-        var selfHarm = DiceHelpers.Roll2d6() < activeSquad.Bravery;
+        var selfHarm = Dice.Roll2D6() < activeSquad.Bravery;
         if (selfHarm)
         {
             AudioManager.Instance?.Play("perilous");
-            CombatRolls.AllocatePure(DiceHelpers.SimpleRoll(3), activeSquad);
+            CombatRolls.AllocatePure(Dice.Roll(3), activeSquad);
         }
 
         return selfHarm;

@@ -102,33 +102,12 @@ public sealed class TerrainManager
 
     public bool IsTerrainBlockingMovement(IEnumerable<(Vector2 start, Vector2 end)> segments, float pxPerInch)
     {
-        foreach (var segment in segments)
-        {
-            foreach (var terrain in ActiveTerrain.Where(t => t.IsPlaced && t.BlocksMovement))
-            {
-                var radiusPx = terrain.Radius * pxPerInch;
-                if (BoardGeometry.SegmentIntersectsCircle(segment.start, segment.end, terrain.Position, radiusPx))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return GeometryUtils.SegmentsBlockedByTerrain(segments, ActiveTerrain, pxPerInch);
     }
 
     public bool HasLineOfSight(Vector2 from, Vector2 to, float pxPerInch)
     {
-        foreach (var terrain in ActiveTerrain.Where(t => t.IsPlaced && t.BlocksLineOfSight))
-        {
-            var radiusPx = terrain.Radius * pxPerInch;
-            if (BoardGeometry.SegmentIntersectsCircle(from, to, terrain.Position, radiusPx, 4f))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return GeometryUtils.HasLineOfSight(from, to, ActiveTerrain, pxPerInch);
     }
 
     public bool HasMajorityLineOfSight(IEnumerable<Vector2> attackerPoints, Vector2 targetCenter, float pxPerInch)
@@ -139,8 +118,7 @@ public sealed class TerrainManager
             return false;
         }
 
-        var canSee = points.Count(point => HasLineOfSight(point, targetCenter, pxPerInch));
-        return canSee > points.Count / 2;
+        return GeometryUtils.HasMajorityLineOfSight(points, targetCenter, ActiveTerrain, pxPerInch);
     }
 
     public bool IsSquadInTerrainCover(IEnumerable<Vector2> squadPoints, float pxPerInch)

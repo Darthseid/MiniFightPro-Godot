@@ -32,8 +32,8 @@ public static class SimpleAIController
                         continue;
                     }
 
-                    var attacks = DiceHelpers.DamageParser(weapon.Attacks);
-                    var damage = DiceHelpers.DamageParser(weapon.Damage);
+                    var attacks = Dice.ParseExpression(weapon.Attacks);
+                    var damage = Dice.ParseExpression(weapon.Damage);
                     total += attacks * weapon.Strength * damage;
                 }
             }

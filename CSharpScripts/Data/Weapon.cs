@@ -80,7 +80,7 @@ public class WeaponAbility
     {
         return string.IsNullOrWhiteSpace(ModifierExpression)
             ? Modifier
-            : DiceHelpers.DamageParser(ModifierExpression);
+            : Dice.ParseExpression(ModifierExpression);
     }
 }
 
@@ -173,7 +173,7 @@ public static class WeaponAbilities
 
     public static WeaponAbility CreateVariableAbility(WeaponAbility baseAbility, string modifierInput)
     {
-        var parsedModifier = DiceHelpers.DamageParser(modifierInput);
+        var parsedModifier = Dice.ParseExpression(modifierInput);
         return new WeaponAbility(
             baseAbility.Innate,
             $"{GetVariableBaseDisplayName(baseAbility.Name)} {modifierInput}",
