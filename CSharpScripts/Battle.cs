@@ -408,6 +408,12 @@ public partial class Battle : Node2D
             else
             {
                 FinishMovementPhase(true);
+                if (_movementManager.RequiresMovementRetry)
+                {
+                    _battleHud?.ShowToast("Invalid move. Try moving this squad again.");
+                    return;
+                }
+
                 _movementManager.ResolveAwaitingMovement(true);
             }
         }

@@ -16,6 +16,7 @@ public sealed class MovementManager
     private bool _enforceAircraftMinMove;
     private bool _movementUpdatesMoveVars = true;
     private bool _movementAllowsTeleport;
+    private bool _requiresMovementRetry;
     private bool _awaitingMovement;
     private TaskCompletionSource<bool>? _movementTcs;
 
@@ -29,6 +30,7 @@ public sealed class MovementManager
     public float MovementEnemyBufferInches => _movementEnemyBufferInches;
     public bool MovementIgnoresMaxLimit => _movementIgnoresMaxLimit;
     public bool MovementAllowsTeleport => _movementAllowsTeleport;
+    public bool RequiresMovementRetry => _requiresMovementRetry;
     public bool IsAwaitingMovement => _awaitingMovement;
 
     public void SetMovementUpdatesMoveVars(bool updates)
@@ -48,6 +50,7 @@ public sealed class MovementManager
         _movementIgnoresMaxLimit = ignoreMaxDistance;
         _movementEnemyBufferInches = enemyBufferInches;
         _enforceAircraftMinMove = enforceAircraftMinMove;
+        _requiresMovementRetry = false;
 
         _movementAllowsTeleport = activeSquad?.SquadAbilities?.Any(ability => ability?.Innate == "Tele") == true;
         if (_movementAllowsTeleport)
@@ -123,6 +126,7 @@ public sealed class MovementManager
         {
             RevertTrackedActors(activeActors);
             didMove = false;
+            _requiresMovementRetry = true;
             showToast($"Aircraft must move at least 20\" ({movedInches:0.0}\").");
             log($"[Rules] Blocked aircraft move under 20\" (attempted {movedInches:0.0}\").");
         }
