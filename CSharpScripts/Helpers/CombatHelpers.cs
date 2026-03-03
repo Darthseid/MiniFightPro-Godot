@@ -256,8 +256,7 @@ public static class CombatHelpers
         if (targetSquadAbilities.Any(ability => ability.Innate == "BrainBlock") &&
             specials.Any(ability => ability.Innate == "Psi"))
         {
-            LogAbilityTrigger("Squad", "BrainBlock", "negated incoming psychic weapon damage");
-            return 0;
+            LogAbilityTrigger("Squad", "BrainBlock", "applies psychic damage resistance instead of negating damage");
         }
 
         var newDamage = damage;

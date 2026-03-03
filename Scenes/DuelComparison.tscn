@@ -86,24 +86,6 @@ min_value = 1.0
 max_value = 100000.0
 value = 1000.0
 
-[node name="FirstLabel" type="Label" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid" unique_id=384796034]
-layout_mode = 2
-text = "First attacker"
-
-[node name="FirstAttackerSelect" type="OptionButton" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid" unique_id=2006576294]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="UseSeedCheck" type="CheckBox" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid" unique_id=417835417]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Use Seed"
-
-[node name="SeedInput" type="SpinBox" parent="Margin/RootVBox/MainSplit/LeftPanel/Grid" unique_id=139984678]
-unique_name_in_owner = true
-layout_mode = 2
-max_value = 2147483647.0
-value = 42.0
 
 [node name="Buttons" type="HBoxContainer" parent="Margin/RootVBox/MainSplit/LeftPanel" unique_id=1263229103]
 layout_mode = 2
