@@ -66,6 +66,33 @@ public static class StepChecks
                 await CommandPhaseChecks(squad, enemyReference, hud, allowPlayerChoices);
             }
         }
+
+        foreach (var squad in squadsToCheck.Where(s => s != null && IsUnderStrengthForShellShock(s)))
+        {
+            squad.ShellShock = ShellShockTest(squad, enemyReference);
+            if (squad.ShellShock)
+            {
+                hud?.ShowToast($"{squad.Name} became shell-shocked.");
+            }
+        }
+    }
+
+    private static bool IsUnderStrengthForShellShock(Squad squad)
+    {
+        if (squad?.Composition == null || squad.Composition.Count == 0)
+        {
+            return false;
+        }
+
+        if (squad.Composition.Count == 1)
+        {
+            var currentHealth = squad.Composition.Sum(model => model?.Health ?? 0);
+            var maxHealth = squad.Composition.Sum(model => model?.StartingHealth ?? 0);
+            return maxHealth > 0 && currentHealth <= maxHealth / 2;
+        }
+
+        var currentModelCount = squad.Composition.Count(model => model != null && model.Health > 0);
+        return currentModelCount <= squad.StartingModelSize;
     }
 
     private static void ApplyPlayerWideAbilities(Player player)

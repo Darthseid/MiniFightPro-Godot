@@ -106,64 +106,112 @@ public static class BoardGeometry
     {
         if (battleField == null || movers == null || movers.Count == 0 || enemies == null || enemies.Count == 0)
             return false;
-        var proposed = new Dictionary<BattleModelActor, Vector2>(movers.Count);     
+
+        var liveMovers = movers.Where(m => m != null && m.BoundModel != null && m.BoundModel.Health > 0).ToList();
+        var liveEnemies = enemies.Where(e => e != null && e.BoundModel != null && e.BoundModel.Health > 0).ToList();
+        if (liveMovers.Count == 0 || liveEnemies.Count == 0)
+            return false;
+
+        var proposed = new Dictionary<BattleModelActor, Vector2>(liveMovers.Count);
         var rng = new RandomNumberGenerator();
         rng.Randomize();
 
-        foreach (var mover in movers)
-        {
-            if (mover == null)
-                continue;
+        const float friendlyMinSeparationInches = 1f / 5f;
+        var minFriendlyEdgeDistancePx = friendlyMinSeparationInches * GameGlobals.Instance.FakeInchPx;
 
-            var closestEnemy = enemies
-                .Where(e => e != null && e.BoundModel != null && e.BoundModel.Health > 0)
+        foreach (var mover in liveMovers)
+        {
+            var closestEnemy = liveEnemies
                 .OrderBy(e => e.GlobalPosition.DistanceTo(mover.GlobalPosition))
                 .FirstOrDefault();
             if (closestEnemy == null)
                 continue;
+
             var enemyPos = closestEnemy.GlobalPosition;
             var moverPos = mover.GlobalPosition;
-
-            
-            var front = (moverPos - enemyPos); // "Front" is defined by the approach direction: from enemy -> mover
+            var front = (moverPos - enemyPos);
             if (front.LengthSquared() < 0.0001f)
             {
-                // If overlapping positions, pick any stable direction
                 front = Vector2.Right;
             }
             else
             {
                 front = front.Normalized();
-            }   // Pick an angle offset relative to "front" to allow front/side/back placements.  
-            float roll = rng.Randf();
-            float angleOffset; // Adjust weights + cone widths to taste.
-            if (roll < 0.50f)
-            {     
-                angleOffset = rng.RandfRange(-Mathf.Pi / 3f, Mathf.Pi / 3f);  // 50%: front cone (±60°)
             }
-            else if (roll < 0.80f)
-            {
-               
-                float spread = 0.40f; // radians (~23°)
-                float sideBase = Mathf.Pi / 2f + rng.RandfRange(-spread, spread);  // 30%: sides (around ±90° with a small spread)
-                angleOffset = (rng.Randf() < 0.5f) ? sideBase : -sideBase;
-            }
-            else
-            {              
-                angleOffset = Mathf.Pi + rng.RandfRange(-Mathf.Pi / 3f, Mathf.Pi / 3f);  // 20%: back cone (180° ±60°)
-            }
-            var dir = front.Rotated(angleOffset);
-            float minR = (closestEnemy.BaseSizePx + mover.BaseSizePx) / 4f;
-            float maxR = minR + GameGlobals.Instance.FakeInchPx - (1 / 5f * GameGlobals.Instance.FakeInchPx);
-            float t = rng.Randf();     // Uniform area sample in annulus [minR, maxR]
-            float r = Mathf.Sqrt(t * (maxR * maxR - minR * minR) + (minR * minR));
-            var target = enemyPos + dir * r;
-            proposed[mover] = target;
-        }
-        if (proposed.Count == 0)
-            return false;
 
-        if (!battleField.ArePositionsValid(proposed, enemies))
+            Vector2? foundTarget = null;
+            const int maxPlacementAttempts = 20;
+            for (var attempt = 0; attempt < maxPlacementAttempts; attempt++)
+            {
+                float roll = rng.Randf();
+                float angleOffset;
+                if (roll < 0.50f)
+                {
+                    angleOffset = rng.RandfRange(-Mathf.Pi / 3f, Mathf.Pi / 3f);
+                }
+                else if (roll < 0.80f)
+                {
+                    float spread = 0.40f;
+                    float sideBase = Mathf.Pi / 2f + rng.RandfRange(-spread, spread);
+                    angleOffset = (rng.Randf() < 0.5f) ? sideBase : -sideBase;
+                }
+                else
+                {
+                    angleOffset = Mathf.Pi + rng.RandfRange(-Mathf.Pi / 3f, Mathf.Pi / 3f);
+                }
+
+                var dir = front.Rotated(angleOffset);
+                float minR = (closestEnemy.BaseSizePx + mover.BaseSizePx) / 4f;
+                float maxR = minR + GameGlobals.Instance.FakeInchPx - (friendlyMinSeparationInches * GameGlobals.Instance.FakeInchPx);
+                float t = rng.Randf();
+                float r = Mathf.Sqrt(t * (maxR * maxR - minR * minR) + (minR * minR));
+                var candidate = enemyPos + dir * r;
+
+                var hasFriendlyConflict = proposed.Any(pair =>
+                {
+                    var edgeDistance = candidate.DistanceTo(pair.Value) - ((mover.BaseSizePx + pair.Key.BaseSizePx) * 0.25f);
+                    return edgeDistance < minFriendlyEdgeDistancePx;
+                });
+
+                if (!hasFriendlyConflict)
+                {
+                    foundTarget = candidate;
+                    break;
+                }
+            }
+
+            if (foundTarget == null)
+            {
+                // Fallback after 20 failed attempts: ignore friendly 0.2" spacing for this mover.
+                float roll = rng.Randf();
+                float angleOffset;
+                if (roll < 0.50f)
+                {
+                    angleOffset = rng.RandfRange(-Mathf.Pi / 3f, Mathf.Pi / 3f);
+                }
+                else if (roll < 0.80f)
+                {
+                    float spread = 0.40f;
+                    float sideBase = Mathf.Pi / 2f + rng.RandfRange(-spread, spread);
+                    angleOffset = (rng.Randf() < 0.5f) ? sideBase : -sideBase;
+                }
+                else
+                {
+                    angleOffset = Mathf.Pi + rng.RandfRange(-Mathf.Pi / 3f, Mathf.Pi / 3f);
+                }
+
+                var dir = front.Rotated(angleOffset);
+                float minR = (closestEnemy.BaseSizePx + mover.BaseSizePx) / 4f;
+                float maxR = minR + GameGlobals.Instance.FakeInchPx - (friendlyMinSeparationInches * GameGlobals.Instance.FakeInchPx);
+                float t = rng.Randf();
+                float r = Mathf.Sqrt(t * (maxR * maxR - minR * minR) + (minR * minR));
+                foundTarget = enemyPos + dir * r;
+            }
+
+            proposed[mover] = foundTarget.Value;
+        }
+
+        if (proposed.Count == 0)
             return false;
 
         const float chargeMoveDuration = 0.4f;
@@ -172,7 +220,7 @@ public static class BoardGeometry
             var mover = pair.Key;
             var target = pair.Value;
             var delta = target - mover.GlobalPosition;
-            var tween = mover.CreateTween(); //Tween means an animation that interpolates properties over time. In this case, we're creating a tween to animate the movement of the "mover" actor from its current position to the "target" position.
+            var tween = mover.CreateTween();
             tween.SetTrans(Tween.TransitionType.Sine);
             tween.SetEase(Tween.EaseType.InOut);
             tween.TweenProperty(mover, "global_position", target, chargeMoveDuration);
