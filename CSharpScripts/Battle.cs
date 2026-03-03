@@ -1387,7 +1387,15 @@ public partial class Battle : Node2D
 
     internal async Task<bool> RedeployStrategicReserveSquadAsync(int teamId, Squad squad)
     {
-        return await _transportController.RedeployStrategicReserveSquadAsync(teamId, squad);
+        var previousActiveSquad = teamId == 1 ? _teamASquad : _teamBSquad;
+        try
+        {
+            return await _transportController.RedeployStrategicReserveSquadAsync(teamId, squad);
+        }
+        finally
+        {
+            SetActiveSquadForTeam(teamId, previousActiveSquad);
+        }
     }
     internal List<Squad> GetAliveSquadsForTeam(int teamId)
     {

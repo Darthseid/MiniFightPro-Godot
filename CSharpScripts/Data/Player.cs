@@ -76,11 +76,8 @@ public static class PlayerAbilities
         AlienTerror,
         Grim,
         WarriorBless,
-        Martial,
         Berserk,
         Grief,
-        Subroutines,
-        OfficerOrder,
         StrandedMiracle
     };
 }
