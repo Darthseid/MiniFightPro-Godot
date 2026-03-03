@@ -307,7 +307,7 @@ public sealed class DuelSimulator
             var baseDamage = DiceHelpers.DamageParser(weapon.Damage);
             var finalDamage = CombatHelpers.DamageMods(baseDamage, defender.WorkingSquad.SquadAbilities, weapon.Special, range <= weapon.Range / 2f);
 
-            var resist = CombatRolls.ResolveEffectiveDamageResistance(defender.WorkingSquad);
+            var resist = CombatRolls.ResolveEffectiveDamageResistance(defender.WorkingSquad, weapon.Special);
 
             for (var p = 0; p < finalDamage && target.Health > 0; p++)
             {

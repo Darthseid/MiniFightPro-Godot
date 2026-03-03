@@ -69,7 +69,9 @@ text = "Hit Skill"
 [node name="HitSkillInput" type="SpinBox" parent="ScrollContainer/MainContainer/StatGrid" unique_id=1311174526]
 unique_name_in_owner = true
 layout_mode = 2
-max_value = 9.0
+min_value = 1.0
+max_value = 6.0
+value = 1.0
 
 [node name="Label_Str" type="Label" parent="ScrollContainer/MainContainer/StatGrid" unique_id=1517122637]
 layout_mode = 2

@@ -314,6 +314,16 @@ public partial class CreateSquad : Control
             return;
         }
 
+        if (hardness < 1 ||
+            defense < 1 || defense > 7 ||
+            dodge < 1 || dodge > 7 ||
+            damageResistance < 1 || damageResistance > 7 ||
+            bravery < 1)
+        {
+            OS.Alert("Hardness/Bravery must be at least 1. Defense, Dodge, and Damage Resistance must be 1-7.", "Validation Error");
+            return;
+        }
+
         var data = GameData.Instance;
 
         var selectedModelNames = new List<string>();
