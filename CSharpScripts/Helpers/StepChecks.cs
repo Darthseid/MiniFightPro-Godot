@@ -180,10 +180,16 @@ public static class StepChecks
                 "Volley Fire! (+1 to Rapid Fire attacks)",
                 "Duck & Cover! (+1 defense, max 3+)",
                 "Remain Steadfast! (-1 bravery)",
-                "Roll Out! (+3 movement)"
+                "Roll Out! (+3 movement)",
+                "Skip"
             };
             AudioManager.Instance?.Play("bugle");
             var choice = await hud.ChooseOptionAsync($"Choose an order for {activeSquad.Name}", options);
+            if (choice < 0 || choice == options.Length - 1)
+            {
+                return;
+            }
+
             switch (choice)
             {
                 case 0:
@@ -784,8 +790,13 @@ public static class StepChecks
         if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Innate == "SubRoutine") && hud != null)
         {
             AudioManager.Instance?.Play("subroutine");
-            var options = new[] { "Skirmish Ability", "Hefty Ability" };
+            var options = new[] { "Skirmish Ability", "Hefty Ability", "Skip" };
             var choice = await hud.ChooseOptionAsync("Choose a Subroutine for your guns!", options);
+            if (choice < 0 || choice == options.Length - 1)
+            {
+                return didSelfDamage;
+            }
+
             if (choice == 0)
             {
                 activeSquad.Composition
@@ -856,9 +867,11 @@ public static class StepChecks
         if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Innate == "martialStance") && hud != null)
         {
             AudioManager.Instance?.Play("stance");
-            var options = new[] { "-1 to Hit", "Bonus Hits 1", "Hard Hits" };
+            var options = new[] { "-1 to Hit", "Bonus Hits 1", "Hard Hits", "Skip" };
             var choice = await hud.ChooseOptionAsync($"Martial Stance for {activeSquad.Name}", options);
-            switch (choice)
+            if (choice >= 0 && choice != options.Length - 1)
+            {
+                switch (choice)
             {
                 case 0:
                     activeSquad.SquadAbilities.Add(SquadAbilities.TempMinusHitBrawl);
@@ -877,6 +890,7 @@ public static class StepChecks
                         .ToList()
                         .ForEach(weapon => weapon.Special.Add(WeaponAbilities.HardHitsTemp));
                     break;
+                }
             }
         }
 

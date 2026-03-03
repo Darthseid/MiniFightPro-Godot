@@ -41,6 +41,9 @@ public partial class BattleHud : Control
         _player1OrdersList = GetNodeOrNull<VBoxContainer>("%Player1OrdersList");
         _player2OrdersList = GetNodeOrNull<VBoxContainer>("%Player2OrdersList");
 
+        ConfigurePromptDialog(_actionDialog);
+        ConfigurePromptDialog(_optionDialog);
+
         var nextButton = GetNodeOrNull<Button>("%BtnNextPhase");
         if (nextButton != null)
         {
@@ -69,6 +72,18 @@ public partial class BattleHud : Control
 
         if (_toastTimer != null)
             _toastTimer.Timeout += OnToastTimeout;
+    }
+
+
+    private static void ConfigurePromptDialog(ConfirmationDialog? dialog)
+    {
+        if (dialog == null)
+        {
+            return;
+        }
+
+        dialog.Set("dialog_close_on_escape", false);
+        dialog.Set("uncloseable", true);
     }
 
     private void ToggleOrderPanel(string path)
@@ -206,6 +221,7 @@ public partial class BattleHud : Control
         {
             _actionDialog.Confirmed -= OnConfirmed;
             _actionDialog.Canceled -= OnCanceled;
+            _actionDialog.CloseRequested -= OnCanceled;
         }
 
         void OnConfirmed()
@@ -227,6 +243,7 @@ public partial class BattleHud : Control
 
         _actionDialog.Confirmed += OnConfirmed;
         _actionDialog.Canceled += OnCanceled;
+        _actionDialog.CloseRequested += OnCanceled;
 
         _actionDialog.PopupCentered();
         _actionDialog.GetOkButton().GrabFocus();
@@ -247,6 +264,7 @@ public partial class BattleHud : Control
         {
             _optionDialog.Confirmed -= OnConfirmed;
             _optionDialog.Canceled -= OnCanceled;
+            _optionDialog.CloseRequested -= OnCanceled;
         }
 
         void OnConfirmed()
@@ -269,8 +287,10 @@ public partial class BattleHud : Control
         }
         _optionList.SelectMode = ItemList.SelectModeEnum.Single;
         _optionDialog.Title = title;
+        _optionDialog.GetCancelButton().Text = "Skip";
         _optionDialog.Confirmed += OnConfirmed;
         _optionDialog.Canceled += OnCanceled;
+        _optionDialog.CloseRequested += OnCanceled;
         _optionDialog.PopupCentered();
 
         return tcs.Task;
