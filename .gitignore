@@ -9,6 +9,7 @@
 .vs
 .godot
 addons/
+android/
 
 # OS junk
 .DS_Store

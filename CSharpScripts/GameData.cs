@@ -473,175 +473,174 @@ public partial class GameData : Node
         _presetDataLoaded = true;
     }
 
-
-    private static string ResolvePresetWeaponHitSfxKey(Weapon weapon)
-    {
-        if (weapon == null)
-        {
-            return string.Empty;
-        }
-
-        var name = weapon.WeaponName ?? string.Empty;
-        if (name.Contains("flame", StringComparison.OrdinalIgnoreCase)) return "Flamethrower.mp3";
-        if (name.Contains("plasma", StringComparison.OrdinalIgnoreCase)) return "Plasma Rifle.mp3";
-        if (name.Contains("fusion", StringComparison.OrdinalIgnoreCase)) return "energy.mp3";
-        if (name.Contains("gauss", StringComparison.OrdinalIgnoreCase)) return "lightning.mp3";
-        if (name.Contains("laser", StringComparison.OrdinalIgnoreCase)) return "laser.mp3";
-        if (name.Contains("frag", StringComparison.OrdinalIgnoreCase) || name.Contains("grenade", StringComparison.OrdinalIgnoreCase)) return "grenade.mp3";
-        if (name.Contains("cannon", StringComparison.OrdinalIgnoreCase) || name.Contains("kannon", StringComparison.OrdinalIgnoreCase)) return "cannon.mp3";
-        if (name.Contains("blaster", StringComparison.OrdinalIgnoreCase)) return "Machine Gun.mp3";
-        if (name.Contains("shooter", StringComparison.OrdinalIgnoreCase)) return "SMG.mp3";
-        if (name.Contains("pistol", StringComparison.OrdinalIgnoreCase)) return "PistolShot.mp3";
-        if (name.Contains("maul", StringComparison.OrdinalIgnoreCase) || name.Contains("smash", StringComparison.OrdinalIgnoreCase)) return "Shotgun.mp3";
-
-        return weapon.IsMelee ? "punch.mp3" : "rifleshot.mp3";
-    }
-
-    private static void ApplyPresetWeaponHitSfx(List<Weapon> weapons)
-    {
-        if (weapons == null)
-        {
-            return;
-        }
-
-        foreach (var weapon in weapons)
-        {
-            if (weapon == null)
-            {
-                continue;
-            }
-
-            weapon.HitSfxKey = ResolvePresetWeaponHitSfxKey(weapon);
-        }
-    }
-
     public void PopulatePresetData()
     {
         var presetWeapons = new List<Weapon>
         {
-            new Weapon("Laser Gun", 24f, "1", 4, 3, 0, "1", new List<WeaponAbility> { WeaponAbilities.Rapid1 }),
-            new Weapon("Frag Gun", 24f, "1", 3, 4, 0, "1", new List<WeaponAbility> { WeaponAbilities.Rapid1 }),
-            new Weapon("Bayonet", 1f, "1", 4, 3, 0, "1", new List<WeaponAbility>()),
-            new Weapon("Armored Fist", 1f, "1", 3, 4, 0, "1", new List<WeaponAbility>()),
-            new Weapon("Flamethrower", 12f, "D6", 1, 4, 0, "1", new List<WeaponAbility> { WeaponAbilities.IgnoresCover }),
-            new Weapon("Battle Cannon", 48f, "D6+3", 4, 10, -1, "3", new List<WeaponAbility> { WeaponAbilities.Blast }),
-            new Weapon("Multi-Fusion", 18f, "2", 4, 9, -4, "D6", new List<WeaponAbility> { WeaponAbilities.Fusion1 }),
-            new Weapon("Laser Cannon", 48f, "1", 4, 12, -3, "D6+1", new List<WeaponAbility>()),
-            new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1", new List<WeaponAbility>()),
-            new Weapon("Disc Handgun", 12f, "1", 2, 4, -1, "1", new List<WeaponAbility> { WeaponAbilities.Skirmish, WeaponAbilities.Pistol }),
-            new Weapon("Psi Pole", 0f, "2", 2, 3, 0, "D3", new List<WeaponAbility> { WeaponAbilities.AntiInfantry2 }),
-            new Weapon("3s Plasma Pistol", 12f, "1", 3, 8, -3, "2", new List<WeaponAbility> { WeaponAbilities.Perilous }),
-            new Weapon("4s Plasma Pistol", 12f, "1", 4, 8, -3, "2", new List<WeaponAbility> { WeaponAbilities.Perilous }),
-            new Weapon("Gauss Killer", 48f, "1", 4, 14, -3, "6", new List<WeaponAbility> { WeaponAbilities.HardHits }),
-            new Weapon("Disc Handgun", 12f, "1", 2, 4, -1, "1", new List<WeaponAbility> { WeaponAbilities.Skirmish, WeaponAbilities.Pistol }),
-            new Weapon("Psi Pole", 0f, "2", 2, 3, 0, "D3", new List<WeaponAbility> { WeaponAbilities.AntiInfantry2 }),
-            new Weapon("Twin Kannon", 36f, "D3", 4, 12, -2, "D6", new List<WeaponAbility> { WeaponAbilities.Blast, WeaponAbilities.Perilous, WeaponAbilities.InjuryReroll }),
-            new Weapon("Twin Shooter", 36f, "4", 4, 6, -1, "1", new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "2"), WeaponAbilities.BonusHits1, WeaponAbilities.InjuryReroll }),
-            new Weapon("Apoc Release", 200f, "20", 3, 8, -2, "2", new List<WeaponAbility> { WeaponAbilities.Blast }),
-            new Weapon("Defense Lasers", 48f, "1", 3, 12, -3, "D6+1", new List<WeaponAbility>()),
-            new Weapon("Maul Gun", 36f, "6", 3, 6, -2, "2", new List<WeaponAbility>()),
-            new Weapon("Smash Gun", 48f, "D3", 4, 9, -3, "4", new List<WeaponAbility> { WeaponAbilities.Blast }),
-            new Weapon("Multi-Blaster", 100f, "30", 3, 9, -2, "3", new List<WeaponAbility> { WeaponAbilities.BonusHits1 }),
-            new Weapon("Mecha Feet", 1f, "6", 4, 12, -2, "4", new List<WeaponAbility>()),
-            new Weapon("Tornado Fragger", 18f, "3", 2, 4, -1, "2", new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "3"), WeaponAbilities.InjuryReroll }),
-            new Weapon("Bike Pike", 1f, "5", 2, 7, -2, "2", new List<WeaponAbility> { WeaponAbilities.Pike })
+            new Weapon("Laser Gun", 24f, "1", 4, 3, 0, "1", new List<WeaponAbility> { WeaponAbilities.Rapid1 }, "laser.mp3"),
+            new Weapon("Frag Gun", 24f, "1", 3, 4, 0, "1", new List<WeaponAbility> { WeaponAbilities.Rapid1 }, "rifleshot.mp3"),
+            new Weapon("Bayonet", 1f, "1", 4, 3, 0, "1", new List<WeaponAbility>(), "punch.mp3"),
+            new Weapon("Armored Fist", 1f, "1", 3, 4, 0, "1", new List<WeaponAbility>(), "punch.mp3"),
+            new Weapon("Flamethrower", 12f, "D6", 1, 4, 0, "1", new List<WeaponAbility> { WeaponAbilities.IgnoresCover }, "Flamethrower.mp3"),
+            new Weapon("Battle Cannon", 48f, "D6+3", 4, 10, -1, "3", new List<WeaponAbility> { WeaponAbilities.Blast }, "rocketlauncher.mp3"),
+            new Weapon("Multi-Fusion", 18f, "2", 4, 9, -4, "D6", new List<WeaponAbility> { WeaponAbilities.Fusion1 }, "Plasma Rifle.mp3"),
+            new Weapon("Laser Cannon", 48f, "1", 4, 12, -3, "D6+1", new List<WeaponAbility>(), "Splaser.mp3"),
+            new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1", new List<WeaponAbility>(), "swordinjury.mp3"),
+            new Weapon("Disc Handgun", 12f, "1", 2, 4, -1, "1", new List<WeaponAbility> { WeaponAbilities.Skirmish, WeaponAbilities.Pistol }, "PistolShot.mp3"),
+            new Weapon("Psi Pole", 0f, "2", 2, 3, 0, "D3", new List<WeaponAbility> { WeaponAbilities.AntiInfantry2 }, "plasmablade.mp3"),
+            new Weapon("3s Plasma Pistol", 12f, "1", 3, 8, -3, "2", new List<WeaponAbility> { WeaponAbilities.Perilous }, "Plasma Rifle.mp3"),
+            new Weapon("4s Plasma Pistol", 12f, "1", 4, 8, -3, "2", new List<WeaponAbility> { WeaponAbilities.Perilous }, "Plasma Rifle.mp3"),
+            new Weapon("Gauss Killer", 48f, "1", 4, 14, -3, "6", new List<WeaponAbility> { WeaponAbilities.HardHits }, "lightning.mp3"),
+            new Weapon("Double Shootshoot", 36f, "D3", 4, 12, -2, "D6", new List<WeaponAbility> { WeaponAbilities.Blast, WeaponAbilities.Perilous, WeaponAbilities.InjuryReroll }, "cannon.mp3"),
+            new Weapon("Duo Shooter", 36f, "4", 4, 6, -1, "1", new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "2"), WeaponAbilities.BonusHits1, WeaponAbilities.InjuryReroll }, "Machine Gun.mp3"),
+            new Weapon("Apoc Release", 200f, "20", 3, 8, -2, "2", new List<WeaponAbility> { WeaponAbilities.Blast }, "rocketlauncher.mp3"),
+            new Weapon("Defense Lasers", 48f, "1", 3, 12, -3, "D6+1", new List<WeaponAbility>(), "laser.mp3"),
+            new Weapon("Maul Gun", 36f, "6", 3, 6, -2, "2", new List<WeaponAbility>(), "shotgun.mp3"),
+            new Weapon("Smash Gun", 48f, "D3", 4, 9, -3, "4", new List<WeaponAbility> { WeaponAbilities.Blast }, "shotgun.mp3"),
+            new Weapon("Multi-Blaster", 100f, "30", 3, 9, -2, "3", new List<WeaponAbility> { WeaponAbilities.BonusHits1 }, "laser.mp3"),
+            new Weapon("Mecha Feet", 1f, "6", 4, 12, -2, "4", new List<WeaponAbility>(), "punch.mp3"),
+            new Weapon("Tornado Fragger", 18f, "3", 2, 4, -1, "2", new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "3"), WeaponAbilities.InjuryReroll }, "rifleshot.mp3"),
+            new Weapon("Bike Pike", 1f, "5", 2, 7, -2, "2", new List<WeaponAbility> { WeaponAbilities.Pike }, "swordinjury.mp3")
         };
 
         var planeWeapons = new List<Weapon>
-        {
-            new Weapon("Smash Gun", 48f, "D3", 4, 9, -3, "4", new List<WeaponAbility> { WeaponAbilities.Blast }),
-            new Weapon("Twin Kannon", 36f, "D3", 4, 12, -2, "D6", new List<WeaponAbility> { WeaponAbilities.Blast, WeaponAbilities.Perilous, WeaponAbilities.InjuryReroll }),
-            new Weapon("Twin Shooter", 36f, "4", 4, 6, -1, "1", new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "2"), WeaponAbilities.BonusHits1, WeaponAbilities.InjuryReroll })
-        };
+{
+    new Weapon("Smash Gun", 48f, "D3", 4, 9, -3, "4",
+        new List<WeaponAbility> { WeaponAbilities.Blast }, "shotgun.mp3"),
+
+    new Weapon("Double Shootshoot", 36f, "D3", 4, 12, -2, "D6",
+        new List<WeaponAbility> { WeaponAbilities.Blast, WeaponAbilities.Perilous, WeaponAbilities.InjuryReroll }, "cannon.mp3"),
+
+    new Weapon("Duo Shooter", 36f, "4", 4, 6, -1, "1",
+        new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "2"), WeaponAbilities.BonusHits1, WeaponAbilities.InjuryReroll }, "Machine Gun.mp3")
+};
 
         var guardWeapons = new List<Weapon>
-        {
-            new Weapon("Laser Gun", 24f, "1", 4, 3, 0, "1", new List<WeaponAbility> { WeaponAbilities.Rapid1 }),
-            new Weapon("Bayonet", 1f, "1", 4, 3, 0, "1", new List<WeaponAbility>())
-        };
+{
+    new Weapon("Laser Gun", 24f, "1", 4, 3, 0, "1",
+        new List<WeaponAbility> { WeaponAbilities.Rapid1 }, "laser.mp3"),
+
+    new Weapon("Bayonet", 1f, "1", 4, 3, 0, "1",
+        new List<WeaponAbility>(), "punch.mp3")
+};
 
         var marineWeapons = new List<Weapon>
-        {
-            new Weapon("Frag Gun", 24f, "1", 3, 4, 0, "1", new List<WeaponAbility> { WeaponAbilities.Rapid1 }),
-            new Weapon("Armored Fist", 1f, "1", 3, 4, 0, "1", new List<WeaponAbility>())
-        };
+{
+    new Weapon("Frag Gun", 24f, "1", 3, 4, 0, "1",
+        new List<WeaponAbility> { WeaponAbilities.Rapid1 }, "rifleshot.mp3"),
+
+    new Weapon("Armored Fist", 1f, "1", 3, 4, 0, "1",
+        new List<WeaponAbility>(), "punch.mp3")
+};
 
         var jetBikeWeapons = new List<Weapon>
-        {
-            new Weapon("Tornado Fragger", 18f, "3", 2, 4, -1, "2", new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "3"), WeaponAbilities.InjuryReroll }),
-            new Weapon("Bike Pike", 1f, "5", 2, 7, -2, "2", new List<WeaponAbility> { WeaponAbilities.Pike })
-        };
+{
+    new Weapon("Tornado Fragger", 18f, "3", 2, 4, -1, "2",
+        new List<WeaponAbility> { WeaponAbilities.CreateVariableAbility(WeaponAbilities.Rapid1, "3"), WeaponAbilities.InjuryReroll },
+        "rifleshot.mp3"),
+
+    new Weapon("Bike Pike", 1f, "5", 2, 7, -2, "2",
+        new List<WeaponAbility> { WeaponAbilities.Pike }, "swordinjury.mp3")
+};
 
         var flameMarineWeapons = new List<Weapon>
-        {
-            new Weapon("Flamethrower", 12f, "D6", 1, 4, 0, "1", new List<WeaponAbility> { WeaponAbilities.IgnoresCover }),
-            new Weapon("Armored Fist", 1f, "1", 3, 4, 0, "1", new List<WeaponAbility>())
-        };
+{
+    new Weapon("Flamethrower", 12f, "D6", 1, 4, 0, "1",
+        new List<WeaponAbility> { WeaponAbilities.IgnoresCover }, "Flamethrower.mp3"),
+
+    new Weapon("Armored Fist", 1f, "1", 3, 4, 0, "1",
+        new List<WeaponAbility>(), "punch.mp3")
+};
 
         var sergeantWeapons = new List<Weapon>
-        {
-            new Weapon("3s Plasma Pistol", 12f, "1", 3, 8, -3, "2", new List<WeaponAbility> { WeaponAbilities.Perilous }),
-            new Weapon("Power Gauntlet", 1f, "1", 3, 8, -2, "2", new List<WeaponAbility>())
-        };
+{
+    new Weapon("3s Plasma Pistol", 12f, "1", 3, 8, -3, "2",
+        new List<WeaponAbility> { WeaponAbilities.Perilous }, "Plasma Rifle.mp3"),
+
+    new Weapon("Power Gauntlet", 1f, "1", 3, 8, -2, "2",
+        new List<WeaponAbility>(), "punch.mp3")
+};
 
         var guardSargeWeapons = new List<Weapon>
-        {
-            new Weapon("4s Plasma Pistol", 12f, "1", 4, 8, -3, "2", new List<WeaponAbility> { WeaponAbilities.Perilous }),
-            new Weapon("Power Spear", 1f, "2", 4, 4, -2, "1", new List<WeaponAbility>())
-        };
+{
+    new Weapon("4s Plasma Pistol", 12f, "1", 4, 8, -3, "2",
+        new List<WeaponAbility> { WeaponAbilities.Perilous }, "Plasma Rifle.mp3"),
+
+    new Weapon("Power Spear", 1f, "2", 4, 4, -2, "1",
+        new List<WeaponAbility>(), "swordinjury.mp3")
+};
 
         var tankWeapons = new List<Weapon>
-        {
-            new Weapon("Battle Cannon", 48f, "D6+3", 4, 10, -1, "3", new List<WeaponAbility> { WeaponAbilities.Blast }),
-            new Weapon("Multi-Fusion", 18f, "2", 4, 9, -4, "D6", new List<WeaponAbility> { WeaponAbilities.Fusion1 }),
-            new Weapon("Laser Cannon", 48f, "1", 4, 12, -3, "D6+1", new List<WeaponAbility>()),
-            new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1", new List<WeaponAbility>())
-        };
+{
+    new Weapon("Battle Cannon", 48f, "D6+3", 4, 10, -1, "3",
+        new List<WeaponAbility> { WeaponAbilities.Blast }, "rocketlauncher.mp3"),
+
+    new Weapon("Multi-Fusion", 18f, "2", 4, 9, -4, "D6",
+        new List<WeaponAbility> { WeaponAbilities.Fusion1 }, "Plasma Rifle.mp3"),
+
+    new Weapon("Laser Cannon", 48f, "1", 4, 12, -3, "D6+1",
+        new List<WeaponAbility>(), "Splaser.mp3"),
+
+    new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1",
+        new List<WeaponAbility>(), "swordinjury.mp3")
+};
 
         var varnoxWeapons = new List<Weapon>
-        {
-            new Weapon("Varnox Battle Cannon", 48f, "D6+1", 4, 10, -1, "3", new List<WeaponAbility> { WeaponAbilities.Blast }),
-            new Weapon("Twin Autocannon", 48f, "2", 4, 9, -1, "3", new List<WeaponAbility>()),
-            new Weapon("Twin Hot-shot Volley Gun", 24f, "6", 4, 5, -1, "1", new List<WeaponAbility>()),
-            new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1", new List<WeaponAbility>())
-        };
+{
+    new Weapon("Varnox Battle Cannon", 48f, "D6+1", 4, 10, -1, "3",
+        new List<WeaponAbility> { WeaponAbilities.Blast }, "cannon.mp3"),
+
+    new Weapon("Twin Autocannon", 48f, "2", 4, 9, -1, "3",
+        new List<WeaponAbility>(), "Machine Gun.mp3"),
+
+    new Weapon("Twin Hot-shot Volley Gun", 24f, "6", 4, 5, -1, "1",
+        new List<WeaponAbility>(), "laser.mp3"),
+
+    new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1",
+        new List<WeaponAbility>(), "swordinjury.mp3")
+};
 
         var clairvoyantWeapons = new List<Weapon>
-        {
-            new Weapon("Disc Pistol", 12f, "1", 2, 4, -1, "1", new List<WeaponAbility> { WeaponAbilities.Skirmish, WeaponAbilities.Pistol }),
-            new Weapon("Psi Pole", 0f, "2", 2, 3, 0, "D3", new List<WeaponAbility> { WeaponAbilities.AntiInfantry2 })
-        };
+{
+    new Weapon("Disc Handgun", 12f, "1", 2, 4, -1, "1",
+        new List<WeaponAbility> { WeaponAbilities.Skirmish, WeaponAbilities.Pistol }, "PistolShot.mp3"),
+
+    new Weapon("Psi Pole", 0f, "2", 2, 3, 0, "D3",
+        new List<WeaponAbility> { WeaponAbilities.AntiInfantry2 }, "plasmablade.mp3")
+};
 
         var pylonWeapon = new List<Weapon>
-        {
-            new Weapon("Gauss Killer", 48f, "1", 4, 14, -3, "6", new List<WeaponAbility> { WeaponAbilities.HardHits })
-        };
+{
+    new Weapon("Gauss Killer", 48f, "1", 4, 14, -3, "6",
+        new List<WeaponAbility> { WeaponAbilities.HardHits }, "lightning.mp3")
+};
 
         var hugeMechaWeapons = new List<Weapon>
-        {
-            new Weapon("Apoc Release", 200f, "20", 3, 8, -2, "2", new List<WeaponAbility> { WeaponAbilities.Blast }),
-            new Weapon("Defense Lasers", 48f, "1", 3, 12, -3, "D6+1", new List<WeaponAbility>()),
-            new Weapon("Maul Gun", 36f, "6", 3, 6, -2, "2", new List<WeaponAbility>()),
-            new Weapon("Apoc Release", 200f, "20", 3, 8, -2, "2", new List<WeaponAbility> { WeaponAbilities.Blast }),
-            new Weapon("Defense Lasers", 48f, "1", 3, 12, -3, "D6+1", new List<WeaponAbility>()),
-            new Weapon("Maul Gun", 36f, "6", 3, 6, -2, "2", new List<WeaponAbility>()),
-            new Weapon("Multi-Blaster", 100f, "30", 3, 9, -2, "3", new List<WeaponAbility> { WeaponAbilities.BonusHits1 }),
-            new Weapon("Mecha Feet", 1f, "6", 4, 12, -2, "4", new List<WeaponAbility>())
-        };
+{
+    new Weapon("Apoc Release", 200f, "20", 3, 8, -2, "2",
+        new List<WeaponAbility> { WeaponAbilities.Blast }, "rocketlauncher.mp3"),
 
-        ApplyPresetWeaponHitSfx(presetWeapons);
-        ApplyPresetWeaponHitSfx(planeWeapons);
-        ApplyPresetWeaponHitSfx(guardWeapons);
-        ApplyPresetWeaponHitSfx(marineWeapons);
-        ApplyPresetWeaponHitSfx(jetBikeWeapons);
-        ApplyPresetWeaponHitSfx(flameMarineWeapons);
-        ApplyPresetWeaponHitSfx(guardSargeWeapons);
-        ApplyPresetWeaponHitSfx(sergeantWeapons);
-        ApplyPresetWeaponHitSfx(tankWeapons);
-        ApplyPresetWeaponHitSfx(varnoxWeapons);
-        ApplyPresetWeaponHitSfx(clairvoyantWeapons);
-        ApplyPresetWeaponHitSfx(pylonWeapon);
-        ApplyPresetWeaponHitSfx(hugeMechaWeapons);
+    new Weapon("Defense Lasers", 48f, "1", 3, 12, -3, "D6+1",
+        new List<WeaponAbility>(), "laser.mp3"),
+
+    new Weapon("Maul Gun", 36f, "6", 3, 6, -2, "2",
+        new List<WeaponAbility>(), "shotgun.mp3"),
+
+    new Weapon("Apoc Release", 200f, "20", 3, 8, -2, "2",
+        new List<WeaponAbility> { WeaponAbilities.Blast }, "rocketlauncher.mp3"),
+
+    new Weapon("Defense Lasers", 48f, "1", 3, 12, -3, "D6+1",
+        new List<WeaponAbility>(), "laser.mp3"),
+
+    new Weapon("Maul Gun", 36f, "6", 3, 6, -2, "2",
+        new List<WeaponAbility>(), "shotgun.mp3"),
+
+    new Weapon("Multi-Blaster", 100f, "30", 3, 9, -2, "3",
+        new List<WeaponAbility> { WeaponAbilities.BonusHits1 }, "laser.mp3"),
+
+    new Weapon("Mecha Feet", 1f, "6", 4, 12, -2, "4",
+        new List<WeaponAbility>(), "punch.mp3")
+};
 
         presetWeapons.AddRange(varnoxWeapons.Select(weapon => weapon.DeepCopy()));
 

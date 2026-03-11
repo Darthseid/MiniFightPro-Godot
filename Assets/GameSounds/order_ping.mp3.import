@@ -3,12 +3,12 @@
 importer="mp3"
 type="AudioStreamMP3"
 uid="uid://bcaqfsqonnb13"
-path="res://.godot/imported/order_ping.mp3-12568dadaa930ae56fe89ae40b92cf7e.mp3str"
+path="res://.godot/imported/order_ping.mp3-bc837b2b009289e21c5f7d12a6e1effb.mp3str"
 
 [deps]
 
 source_file="res://Assets/GameSounds/order_ping.mp3"
-dest_files=["res://.godot/imported/order_ping.mp3-12568dadaa930ae56fe89ae40b92cf7e.mp3str"]
+dest_files=["res://.godot/imported/order_ping.mp3-bc837b2b009289e21c5f7d12a6e1effb.mp3str"]
 
 [params]
 
