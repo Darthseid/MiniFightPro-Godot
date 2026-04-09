@@ -4,7 +4,6 @@ using System;
 public partial class SquadListItem : Button
 {
     public int Index;
-    private const float LongPressSeconds = 0.65f;
     private Timer _longPressTimer;
     private bool _longPressTriggered = false;
 
@@ -16,7 +15,7 @@ public partial class SquadListItem : Button
         _longPressTimer = new Timer
         {
             OneShot = true,
-            WaitTime = LongPressSeconds
+            WaitTime = GameGlobals.LongPressSeconds
         };
         AddChild(_longPressTimer);
         _longPressTimer.Timeout += OnLongPressTimeout;

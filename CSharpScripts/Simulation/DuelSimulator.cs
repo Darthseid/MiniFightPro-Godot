@@ -294,10 +294,19 @@ public sealed class DuelSimulator
                 break;
             }
 
-            var target = defender.WorkingSquad.Composition
-                .Where(m => m.Health > 0)
-                .OrderBy(m => m.Health)
-                .FirstOrDefault();
+            Model? target = null;
+            foreach (var model in defender.WorkingSquad.Composition)
+            {
+                if (model.Health <= 0)
+                {
+                    continue;
+                }
+
+                if (target == null || model.Health < target.Health)
+                {
+                    target = model;
+                }
+            }
 
             if (target == null)
             {
