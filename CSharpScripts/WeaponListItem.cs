@@ -4,7 +4,6 @@ using System;
 public partial class WeaponListItem : Button
 {
     public int Index; // Which weapon in the list does this button represent?
-    private const float LongPressSeconds = 0.65f; //Change this to be a global value.
     private Timer _longPressTimer;
     private bool _longPressTriggered = false;
 
@@ -16,7 +15,7 @@ public partial class WeaponListItem : Button
         _longPressTimer = new Timer
         {
             OneShot = true,
-            WaitTime = LongPressSeconds
+            WaitTime = GameGlobals.LongPressSeconds
         };
         AddChild(_longPressTimer);
         _longPressTimer.Timeout += OnLongPressTimeout;

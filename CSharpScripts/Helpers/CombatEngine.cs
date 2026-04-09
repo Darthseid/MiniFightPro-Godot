@@ -315,10 +315,24 @@ public static class CombatEngine
             .GroupBy(actor => actor.BoundModel?.Name ?? actor.Name)
             .ToDictionary(group => group.Key, group => group.Count());
 
-        return living
-            .OrderBy(actor => nameCounts[actor.BoundModel?.Name ?? actor.Name])
-            .ThenBy(actor => actor.BoundModel?.Name ?? actor.Name)
-            .FirstOrDefault();
+        BattleModelActor selected = null;
+        var selectedCount = int.MaxValue;
+        string selectedName = null;
+
+        foreach (var actor in living)
+        {
+            var actorName = actor.BoundModel?.Name ?? actor.Name;
+            var count = nameCounts[actorName];
+
+            if (count < selectedCount || (count == selectedCount && string.CompareOrdinal(actorName, selectedName) < 0))
+            {
+                selected = actor;
+                selectedCount = count;
+                selectedName = actorName;
+            }
+        }
+
+        return selected;
     }
 
     private static BattleModelActor SelectFurthestFromSquadCenter(List<BattleModelActor> defenders)
@@ -333,9 +347,20 @@ public static class CombatEngine
 
         center /= living.Count;
 
-        return living
-            .OrderByDescending(actor => actor.GlobalPosition.DistanceSquaredTo(center))
-            .FirstOrDefault();
+        BattleModelActor furthest = null;
+        var furthestDistance = float.MinValue;
+
+        foreach (var actor in living)
+        {
+            var distance = actor.GlobalPosition.DistanceSquaredTo(center);
+            if (distance > furthestDistance)
+            {
+                furthestDistance = distance;
+                furthest = actor;
+            }
+        }
+
+        return furthest;
     }
 
     private static BattleModelActor SelectDamageRecipient(

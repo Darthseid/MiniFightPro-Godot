@@ -2,6 +2,8 @@ using Godot;
 
 public partial class GameGlobals : Node
 {
+    public const float LongPressSeconds = 0.5f;
+
     public static GameGlobals Instance { get; private set; } = null!;
 
     public float FakeInchPx { get; private set; }
