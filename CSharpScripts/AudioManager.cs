@@ -3,23 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-/// <summary>
-/// Polyphonic SFX AudioManager with per-key voice pools.
-/// - Register(key, player): registers a template player (stream, bus, volume, pitch, etc.)
-/// - Play(key): plays using an available pooled voice (won't cut off overlapping sounds)
-/// </summary>
 public partial class AudioManager : Node
 {
     public const string SfxBusName = "SFX";
-
-    // How many simultaneous instances per sound key.
     [Export] public int DefaultVoicesPerKey { get; set; } = 8;
 
-    // If all voices are busy, should we stop one and reuse it?
     [Export] public bool StealOldestVoiceWhenFull { get; set; } = true;
 
-    // If true, we duplicate the template AudioStreamPlayer node when creating voices.
-    // If false, we create new AudioStreamPlayer nodes and copy settings manually.
     [Export] public bool DuplicateTemplateNode { get; set; } = true;
 
     private sealed class VoicePool
@@ -38,14 +28,10 @@ public partial class AudioManager : Node
     public static AudioManager? Instance { get; private set; }
 
     public override void _EnterTree()
-    {
-        Instance = this;
-    }
+        { Instance = this; }
 
     public override void _Ready()
-    {
-        ReloadWeaponHitSfx();
-    }
+        { ReloadWeaponHitSfx(); }
 
     public override void _ExitTree()
     {
@@ -76,7 +62,7 @@ public partial class AudioManager : Node
         _ = PlayStaggeredJitterAsync(key, count, intervalSeconds);
     }
 
-    private async System.Threading.Tasks.Task PlayStaggeredJitterAsync(string key, int count, float intervalSeconds)
+    private async System.Threading.Tasks.Task PlayStaggeredJitterAsync(string key, int count, float intervalSeconds) //This method is so that multiple shooting sounds are staggered instead of simultaneous.
     {
         float jitterSeconds = intervalSeconds * (float)GD.RandRange(0.75, 1.25);
         for (int i = 0; i < count; i++)
@@ -91,9 +77,7 @@ public partial class AudioManager : Node
     {
         if (!_pools.TryGetValue(key, out var pool) || pool.Template == null)
             return;
-
         voiceCount = Mathf.Max(1, voiceCount);
-
         while (pool.Voices.Count < voiceCount)
         {
             var voice = CreateVoiceFromTemplate(pool.Template);
@@ -112,30 +96,22 @@ public partial class AudioManager : Node
             PlayFromPool(pool);
             return;
         }
-
         PlayWeaponHit(key);
     }
 
     public void PlayWeaponHit(string key)
     {
         if (!IsSfxEnabled())
-        {
             return;
-        }
-
         var stream = ResolveWeaponHitStream(key);
         if (stream == null)
-        {
             return;
-        }
-
         var player = new AudioStreamPlayer
         {
             Stream = stream,
             Bus = SfxBusName,
             Autoplay = false
         };
-
         AddChild(player);
         player.Finished += () => player.QueueFree();
         player.Play();
@@ -163,20 +139,13 @@ public partial class AudioManager : Node
         {
             var fileName = dir.GetNext();
             if (string.IsNullOrEmpty(fileName))
-            {
                 break;
-            }
 
             if (dir.CurrentIsDir() || !fileName.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
-            {
                 continue;
-            }
-
             var stream = GD.Load<AudioStream>($"{WeaponSoundsPath}/{fileName}");
             if (stream != null)
-            {
                 WeaponHitSfx[fileName] = stream;
-            }
         }
         dir.ListDirEnd();
     }
@@ -185,47 +154,33 @@ public partial class AudioManager : Node
     {
         var normalized = NormalizeWeaponHitKey(key);
         if (!string.IsNullOrEmpty(normalized) && WeaponHitSfx.TryGetValue(normalized, out var stream))
-        {
             return stream;
-        }
-
         if (WeaponHitSfx.TryGetValue(DefaultWeaponHitSfxKey, out var fallback))
-        {
             return fallback;
-        }
-
         return null;
     }
 
     public string NormalizeWeaponHitKey(string key)
     {
         if (string.IsNullOrWhiteSpace(key))
-        {
             return string.Empty;
-        }
 
         var trimmed = key.Trim();
         if (WeaponHitSfx.ContainsKey(trimmed))
-        {
             return trimmed;
-        }
 
         var withExt = trimmed.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase)
             ? trimmed
             : $"{trimmed}.mp3";
 
         if (WeaponHitSfx.ContainsKey(withExt))
-        {
             return withExt;
-        }
 
         var noExt = Path.GetFileNameWithoutExtension(trimmed);
         foreach (var candidate in WeaponHitSfx.Keys)
         {
             if (Path.GetFileNameWithoutExtension(candidate).Equals(noExt, StringComparison.OrdinalIgnoreCase))
-            {
                 return candidate;
-            }
         }
 
         return string.Empty;
@@ -245,9 +200,7 @@ public partial class AudioManager : Node
         }
 
         if (!StealOldestVoiceWhenFull || pool.Voices.Count == 0)
-        {
             return;
-        }
 
         int idx = pool.NextStealIndex % pool.Voices.Count;
         pool.NextStealIndex = (pool.NextStealIndex + 1) % pool.Voices.Count;
@@ -263,17 +216,13 @@ public partial class AudioManager : Node
         AudioStreamPlayer voice;
 
         if (DuplicateTemplateNode)
-        {
             voice = (AudioStreamPlayer)template.Duplicate();
-        }
         else
         {
             voice = new AudioStreamPlayer();
             SyncVoiceFromTemplate(voice, template);
         }
-
         voice.ProcessMode = ProcessModeEnum.Disabled;
-
         return voice;
     }
 

@@ -66,12 +66,9 @@ public partial class BattleField : Node2D
             foreach (var child in sfxRoot.GetChildren())
             {
                 if (child is AudioStreamPlayer player)
-                {
                     _audioManager.Register(player.Name, player);
-                }
             }
         }
-
         SetProcessInput(true);
     }
 
@@ -79,16 +76,12 @@ public partial class BattleField : Node2D
     private void FitBackgroundToViewport()
     {
         if (_battleBackground?.Texture == null)
-        {
             return;
-        }
 
         var viewportSize = GetViewportRect().Size;
         var textureSize = _battleBackground.Texture.GetSize();
         if (textureSize.X <= 0 || textureSize.Y <= 0)
-        {
             return;
-        }
 
         _battleBackground.Position = viewportSize * 0.5f;
         var scale = Mathf.Max(viewportSize.X / textureSize.X, viewportSize.Y / textureSize.Y);
@@ -97,23 +90,17 @@ public partial class BattleField : Node2D
 
 
     private static bool IsActorUsable(BattleModelActor? actor)
-    {
-        return actor != null && GodotObject.IsInstanceValid(actor) && actor.IsInsideTree() && actor.BoundModel != null;
-    }
+        { return actor != null && GodotObject.IsInstanceValid(actor) && actor.IsInsideTree() && actor.BoundModel != null; }
 
     private static void WarnInvalidActor(string context)
-    {
-        GD.PushWarning($"[BattleField] Skipping invalid BattleModelActor during {context}. Stale actor reference detected.");
-    }
+        { GD.PushWarning($"[BattleField] Skipping invalid BattleModelActor during {context}. Stale actor reference detected."); }
 
     private static void PruneInvalidActors(List<BattleModelActor> actors, string context)
     {
         for (var i = actors.Count - 1; i >= 0; i--)
         {
             if (IsActorUsable(actors[i]))
-            {
                 continue;
-            }
 
             WarnInvalidActor(context);
             actors.RemoveAt(i);
@@ -140,17 +127,13 @@ public partial class BattleField : Node2D
         PruneInvalidActorPositions(_lastValidPositions, context);
 
         if (_isDragging && _draggingActors.Count == 0)
-        {
             EndDragSquad();
-        }
     }
 
     public void UnregisterActor(BattleModelActor? actor)
     {
         if (actor == null)
-        {
             return;
-        }
 
         _teamAActors.Remove(actor);
         _teamBActors.Remove(actor);
@@ -160,9 +143,7 @@ public partial class BattleField : Node2D
         _lastValidPositions.Remove(actor);
 
         if (_isDragging && _draggingActors.Count == 0)
-        {
             EndDragSquad();
-        }
     }
 
     public void MoveSquadBy(IReadOnlyList<BattleModelActor> actors, Vector2 delta)
@@ -185,15 +166,11 @@ public partial class BattleField : Node2D
         }
 
         if (proposed.Count == 0)
-        {
             return;
-        }
 
         var firstActor = proposed.Keys.FirstOrDefault();
         if (firstActor == null)
-        {
             return;
-        }
 
         var enemies = GetEnemiesForTeam(firstActor.TeamId);
         if (!ArePositionsValid(proposed, enemies))
@@ -204,7 +181,6 @@ public partial class BattleField : Node2D
             pair.Key.GlobalPosition = pair.Value;
             BoardGeometry.FaceDelta(pair.Key, delta);
         }
-
         DragUpdated?.Invoke(); // reuse your existing HUD update system
     }
 
@@ -212,13 +188,9 @@ public partial class BattleField : Node2D
     public void ClearExistingUnits()
     {
         foreach (var actor in _teamAActors)
-        {
             actor.QueueFree();
-        }
         foreach (var actor in _teamBActors)
-        {
             actor.QueueFree();
-        }
 
         _teamAActors.Clear();
         _teamBActors.Clear();
@@ -238,37 +210,27 @@ public partial class BattleField : Node2D
             return Array.Empty<BattleModelActor>();
         Vector2 viewportSize = GetViewportRect().Size;
 
-
         int count = theSquad.Composition.Count;
         if (count == 0)
             return Array.Empty<BattleModelActor>();
 
-        // --- Columns = ceil(sqrt(count)) ---
-        int columns = Mathf.CeilToInt(Mathf.Sqrt(count));
+        int columns = Mathf.CeilToInt(Mathf.Sqrt(count)); // simple heuristic for a roughly square formation.
         if (columns < 1) columns = 1;
-
         int rows = Mathf.CeilToInt(count / (float)columns);
 
-        // --- Base size based on squad types (ported from Kotlin) ---
         float baseMultiplier = GetBaseSizeMultiplier(theSquad.SquadType); // e.g. 4.0f, 4.3f, etc.
         float baseSize = baseMultiplier * GameGlobals.Instance.FakeInchPx;
 
         if (theSquad.SquadType != null && theSquad.SquadType.Contains("Titanic"))
             baseSize *= 2f;
 
-        // --- Spacing based on base size (ported from Kotlin margins) ---
-        float spacingX = baseSize + (GameGlobals.Instance.FakeInchPx); // keep the “+10px” feel proportional
-        float spacingY = baseSize + (GameGlobals.Instance.FakeInchPx * 1.5f ); // keep the “+20px” feel proportional
+        float spacingX = baseSize + (GameGlobals.Instance.FakeInchPx); 
+        float spacingY = baseSize + (GameGlobals.Instance.FakeInchPx * 1.5f ); 
+        float padding = 4f * GameGlobals.Instance.FakeInchPx; // ensure formation isn't flush against edge of viewport
 
-        float padding = 4f * GameGlobals.Instance.FakeInchPx; // <-- 4 fake inches from screen edges as requested
-
-        // Center formation width/height calculations
         float formationWidth = (columns - 1) * spacingX;
         float formationHeight = (rows - 1) * spacingY;
 
-        // Compute start positions:
-        // - Team A: spawn 4 fake inches from top-left
-        // - Team B: spawn 4 fake inches from bottom-right
         float startX = isTeamA
             ? padding
             : viewportSize.X - formationWidth - padding;
@@ -276,11 +238,10 @@ public partial class BattleField : Node2D
             ? padding
             : viewportSize.Y - formationHeight - padding;
 
-        // Clamp to ensure formation stays inside viewport (in case formation is large)
         float maxStartX = Mathf.Max(padding, viewportSize.X - formationWidth - padding);
         float maxStartY = Mathf.Max(padding, viewportSize.Y - formationHeight - padding);
         startX = Mathf.Clamp(startX, padding, maxStartX);
-        startY = Mathf.Clamp(startY, padding, maxStartY);
+        startY = Mathf.Clamp(startY, padding, maxStartY);  // Clamp to ensure formation stays inside viewport (in case formation is large)
 
         var actors = new List<BattleModelActor>(count);
 
@@ -291,46 +252,32 @@ public partial class BattleField : Node2D
 
             int row = i / columns;
             int col = i % columns;
-
             container.AddChild(actor);
-
             actor.Position = new Vector2(startX + col * spacingX, startY + row * spacingY);
 
-            // Bind logical model + team (you already do this)
             var model = theSquad.Composition[i];
-            actor.Bind(model, isTeamA ? 1 : 2);
+            actor.Bind(model, isTeamA ? 1 : 2); //This connects the actor to the underlying model data and assigns it to a team.
             actor.SetTexture(ModelImageService.LoadTextureForModel(model));
-
-            // Let the actor size itself (sprite scale / collision / hp label offset)
             actor.SetBaseSize(baseSize);
-
             actors.Add(actor);
         }
-
         if (isTeamA) _teamAActors.AddRange(actors);
         else _teamBActors.AddRange(actors);
-
         return actors;
     }
 
     public BattleModelActor? SpawnModelActor(Model model, int teamId, Vector2 position, float baseSize)
     {
         if (model == null || ModelActorScene == null)
-        {
             return null;
-        }
 
         var container = teamId == 1 ? _unitsTeamA : _unitsTeamB;
         if (container == null)
-        {
             return null;
-        }
 
         var actor = ModelActorScene.Instantiate<BattleModelActor>();
         if (actor == null)
-        {
             return null;
-        }
 
         container.AddChild(actor);
         actor.Position = position;
@@ -339,41 +286,30 @@ public partial class BattleField : Node2D
         actor.SetBaseSize(baseSize);
 
         if (teamId == 1)
-        {
             _teamAActors.Add(actor);
-        }
         else
-        {
             _teamBActors.Add(actor);
-        }
-
         return actor;
     }
 
     private Vector2 GetSquadCenter(IReadOnlyList<BattleModelActor> actors)
     {
         if (actors == null || actors.Count == 0)
-        {
             return Vector2.Zero;
-        }
 
         var sum = Vector2.Zero;
         var count = 0;
         foreach (var actor in actors)
         {
             if (!IsActorUsable(actor))
-            {
                 continue;
-            }
 
             sum += actor.GlobalPosition;
             count++;
         }
 
         if (count <= 0)
-        {
             return Vector2.Zero;
-        }
 
         return sum / count;
     }
@@ -428,9 +364,7 @@ public partial class BattleField : Node2D
     {
         PruneTrackingState("BeginDragSquad");
         if (actors == null || actors.Count == 0)
-        {
             return;
-        }
 
         var validActors = actors.Where(IsActorUsable).ToList();
         if (validActors.Count == 0)
@@ -473,7 +407,6 @@ public partial class BattleField : Node2D
         _moveOrigin = GetSquadCenter(_draggingActors);
         _moveRulerActive = true;
         UpdateMoveRuler(_moveOrigin);
-
         _isDragging = true;
     }
 
@@ -481,9 +414,7 @@ public partial class BattleField : Node2D
     {
         PruneTrackingState("UpdateDragSquad");
         if (!_isDragging || _draggingActors.Count == 0)
-        {
             return;
-        }
 
         var rawDelta = pointerPosGlobal - _dragStartPointer;
         var delta = rawDelta;
@@ -491,10 +422,8 @@ public partial class BattleField : Node2D
         if (_maxMoveInches > 0f)
         {
             var maxDeltaPx = _maxMoveInches * GameGlobals.Instance.FakeInchPx;
-            if (rawDelta.Length() > maxDeltaPx)
-            {
+            if (rawDelta.Length() > maxDeltaPx) // enforce max move distance by clamping the delta vector
                 delta = rawDelta.Normalized() * maxDeltaPx;
-            }
         }
 
         var proposedPositions = new Dictionary<BattleModelActor, Vector2>(_draggingActors.Count);
@@ -508,9 +437,7 @@ public partial class BattleField : Node2D
             }
 
             if (!_dragStartPositions.TryGetValue(actor, out var startPos))
-            {
                 startPos = actor.GlobalPosition;
-            }
 
             proposedPositions[actor] = startPos + delta;
         }
@@ -534,14 +461,10 @@ public partial class BattleField : Node2D
             foreach (var actor in _draggingActors)
             {
                 if (!IsActorUsable(actor))
-                {
                     continue;
-                }
 
                 if (_lastValidPositions.TryGetValue(actor, out var lastValid))
-                {
                     actor.GlobalPosition = lastValid;
-                }
             }
         }
 
@@ -550,16 +473,13 @@ public partial class BattleField : Node2D
             var newCenter = GetSquadCenter(_draggingActors);
             UpdateMoveRuler(newCenter);
         }
-
         DragUpdated?.Invoke();
     }
 
     public void EndDragSquad()
     {
         if (!_isDragging)
-        {
             return;
-        }
 
         _isDragging = false;
         _dragStartPositions.Clear();
@@ -625,9 +545,7 @@ public partial class BattleField : Node2D
     private void UpdateMeasure(Vector2 pointerWorld)
     {
         if (!_measureActive)
-        {
             return;
-        }
 
         var startLocal = ToLocal(_measureStartWorld);
         var currentLocal = ToLocal(pointerWorld);
@@ -662,10 +580,8 @@ public partial class BattleField : Node2D
     private static float GetReadableLabelAngle(float angleRadians)
     {
         var wrapped = Mathf.Wrap(angleRadians, -Mathf.Pi, Mathf.Pi);
-        if (wrapped > Mathf.Pi * 0.5f || wrapped < -Mathf.Pi * 0.5f)
-        {
+        if (wrapped > Mathf.Pi * 0.5f || wrapped < -Mathf.Pi * 0.5f) // flip angle for better readability when pointing mostly left
             wrapped += Mathf.Pi;
-        }
 
         return Mathf.Wrap(wrapped, -Mathf.Pi, Mathf.Pi);
     }
@@ -680,27 +596,19 @@ public partial class BattleField : Node2D
     {
         var hovered = GetViewport()?.GuiGetHoveredControl();
         if (hovered == null)
-        {
             return false;
-        }
 
         if (hovered.Name == "BattleHud")
-        {
             return false;
-        }
 
         var current = hovered;
         while (current != null)
         {
             if (current is BaseButton || current is ItemList)
-            {
                 return true;
-            }
 
             if (current.Name == "BattleHud")
-            {
                 return false;
-            }
 
             current = current.GetParentControl();
         }
@@ -720,9 +628,7 @@ public partial class BattleField : Node2D
                     if (IsPointerOverUi())
                     {
                         if (_measureActive)
-                        {
                             EndMeasure();
-                        }
                         return;
                     }
 
@@ -734,9 +640,7 @@ public partial class BattleField : Node2D
                     if (IsPointerOverUi())
                     {
                         if (_measureActive)
-                        {
                             EndMeasure();
-                        }
                         return;
                     }
 
@@ -821,22 +725,16 @@ public partial class BattleField : Node2D
     }
 
     private IReadOnlyList<BattleModelActor> GetEnemiesForTeam(int teamId)
-    {
-        return teamId == 1 ? _teamBActors : _teamAActors;
-    }
+        { return teamId == 1 ? _teamBActors : _teamAActors; }
 
     private bool IsMoveValid(IReadOnlyDictionary<BattleModelActor, Vector2> proposedPositions)
-    {
-        return ArePositionsValid(proposedPositions, _draggingEnemies);
-    }
+        { return ArePositionsValid(proposedPositions, _draggingEnemies); }
 
     public bool ArePositionsValid(IReadOnlyDictionary<BattleModelActor, Vector2> proposedPositions, IReadOnlyList<BattleModelActor> enemies)
     {
         PruneTrackingState("ArePositionsValid");
         if (proposedPositions.Count == 0)
-        {
             return true;
-        }
 
         var viewportRect = GetViewportRect();
         var inv2 = GetViewport().GetCanvasTransform().AffineInverse();
@@ -857,9 +755,7 @@ public partial class BattleField : Node2D
             var paddedRect = canvasRect.Grow(-(actor.BaseSizePx / 2f));
 
             if (!paddedRect.HasPoint(newPos))
-            {
                 return false;
-            }
 
             foreach (var enemy in enemyList)
             {
@@ -871,14 +767,11 @@ public partial class BattleField : Node2D
 
                 var enemyBufferPx = _enemyBufferInches * GameGlobals.Instance.FakeInchPx;
                 var minCenterDistance = MathF.Sqrt((actor.BaseSizePx / 2f) + (enemy.BaseSizePx / 2f));
-                minCenterDistance = Mathf.Clamp(minCenterDistance, enemyBufferPx, enemyBufferPx + GameGlobals.Instance.FakeInchPx); // sanity clamp to prevent extreme cases
-                // Compute distance from actor center to enemy's closest edge (treating enemy as a circle)
-                float centerDistance = newPos.DistanceTo(enemy.GlobalPosition);
+                minCenterDistance = Mathf.Clamp(minCenterDistance, enemyBufferPx, enemyBufferPx + GameGlobals.Instance.FakeInchPx); // sanity clamp to prevent extreme cases             
+                float centerDistance = newPos.DistanceTo(enemy.GlobalPosition);  // Compute distance from actor center to enemy's closest edge (treating enemy as a circle)
                 float distanceToEnemyEdge = MathF.Max(0f, centerDistance - (enemy.BaseSizePx / 2f));
                 if (distanceToEnemyEdge < minCenterDistance)
-                {
-                    return false;
-                }
+                    return false; // too close to enemy
             }
 
             var sameTeamActors = (actor.TeamId == 1 ? _teamAActors : _teamBActors)
@@ -891,9 +784,7 @@ public partial class BattleField : Node2D
                 var centerDistance = newPos.DistanceTo(friendly.GlobalPosition);
                 var edgeDistance = centerDistance - ((actor.BaseSizePx + friendly.BaseSizePx) * 0.25f);
                 if (edgeDistance < minFriendlyEdgeDistancePx)
-                {
                     return false;
-                }
             }
         }
 
@@ -905,13 +796,10 @@ public partial class BattleField : Node2D
             {
                 var first = proposedArray[i];
                 var second = proposedArray[j];
-
                 var centerDistance = first.Value.DistanceTo(second.Value);
                 var edgeDistance = centerDistance - ((first.Key.BaseSizePx + second.Key.BaseSizePx) * 0.25f);
                 if (edgeDistance < minFriendlyDistancePx)
-                {
                     return false;
-                }
             }
         }
 

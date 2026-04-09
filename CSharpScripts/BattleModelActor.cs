@@ -29,10 +29,7 @@ public partial class BattleModelActor : Node2D
         _clickArea = GetNode<Area2D>("ClickArea");
         _hpLabel = GetNode<Label>("HpLabel");
         _hitShape = _clickArea.GetNode<CollisionShape2D>("CollisionShape2D");
-
-        // Visual defaults (do NOT force purple)
         _hpLabel.HorizontalAlignment = HorizontalAlignment.Center;
-
         _clickArea.InputEvent += OnClickAreaInputEvent;
     }
 
@@ -46,7 +43,6 @@ public partial class BattleModelActor : Node2D
     public void SetTexture(Texture2D? texture)
     {
         if (_miniSprite == null) return;
-
         _miniSprite.Texture = texture;
         _miniSprite.Visible = texture != null;
     }
@@ -55,7 +51,6 @@ public partial class BattleModelActor : Node2D
     {
         if (_miniSprite?.Texture == null) return;
         _baseSizePx = baseSizePx;
-        // Make sprite behave like a “token”
         _miniSprite.Centered = true;
         _miniSprite.Position = Vector2.Zero;
         if (_clickArea != null)
@@ -68,7 +63,6 @@ public partial class BattleModelActor : Node2D
             _hitShape.Position = Vector2.Zero;
             _hitShape.Disabled = false;
         }
-        // Scale sprite so its max dimension ~= baseSizePx
         Vector2 tex = _miniSprite.Texture.GetSize();
         float native = Mathf.Max(tex.X, tex.Y);
         if (native <= 0.01f) native = GameGlobals.Instance.FakeInchPx * 4.9f;
@@ -76,27 +70,22 @@ public partial class BattleModelActor : Node2D
         float s = baseSizePx / native;
         _miniSprite.Scale = new Vector2(s, s);
 
-        // --- PLACE HP LABEL RIGHT BELOW THE SPRITE ---
-        float spriteW = tex.X * _miniSprite.Scale.X;
+        float spriteW = tex.X * _miniSprite.Scale.X;     // --- PLACE HP LABEL RIGHT BELOW THE SPRITE --
         float spriteH = tex.Y * _miniSprite.Scale.Y;
 
         float margin = Mathf.Max(2f, baseSizePx * 0.06f);
 
-        // Make label width match the token size (looks clean)
         _hpLabel.Size = new Vector2(baseSizePx, Mathf.Max(GameGlobals.Instance.FakeInchPx, baseSizePx * 0.30f));
-        _hpLabel.HorizontalAlignment = HorizontalAlignment.Center;
-
-        // Control.Position is TOP-LEFT, so we center it under the sprite
+        _hpLabel.HorizontalAlignment = HorizontalAlignment.Center;  // Make label width match the token size (looks clean)
+ 
         float labelX = -_hpLabel.Size.X / 2f;
-        float labelY = (spriteH / 2f) + margin;
+        float labelY = (spriteH / 2f) + margin; // Control.Position is TOP-LEFT, so we center it under the sprite
 
-        _hpLabel.Position = new Vector2(labelX, labelY);
+        _hpLabel.Position = new Vector2(labelX, labelY);     
+        _hpLabel.AddThemeFontSizeOverride("font_size", Mathf.RoundToInt(Mathf.Clamp(baseSizePx * 0.22f, 10f, 22f)));  // Font size scales with unit size
 
-        // Font size scales with unit size
-        _hpLabel.AddThemeFontSizeOverride("font_size", Mathf.RoundToInt(Mathf.Clamp(baseSizePx * 0.22f, 10f, 22f)));
-        // Hitbox
         if (_hitShape.Shape is CircleShape2D circle)
-            circle.Radius = baseSizePx * 0.333f;
+            circle.Radius = baseSizePx * 0.333f;  // Hitbox
         else if (_hitShape.Shape is RectangleShape2D rect)
             rect.Size = new Vector2(baseSizePx, baseSizePx);
     }
@@ -104,9 +93,7 @@ public partial class BattleModelActor : Node2D
     public void ApplyDamage(int damage)
     {
         if (theModel == null || damage <= 0)
-        {
             return;
-        }
 
         theModel.Health = Mathf.Max(0, theModel.Health - damage);
         RefreshHp();
@@ -118,9 +105,7 @@ public partial class BattleModelActor : Node2D
         if (theModel == null || _hpLabel == null) return;
 
         _hpLabel.Text = theModel.Health.ToString();
-
-        // Only change to HP color if we aren't currently flashing purple
-        if (!_flashLock && !_selectionLock)
+        if (!_flashLock && !_selectionLock)         // Only change to HP color if we aren't currently flashing purple
             _hpLabel.Modulate = GetHpColor(theModel.Health, theModel.StartingHealth, theModel.Bracketed);
     }
 
@@ -135,13 +120,9 @@ public partial class BattleModelActor : Node2D
         await ToSignal(GetTree().CreateTimer(seconds), "timeout");
 
         if (!_selectionLock)
-        {
             _hpLabel.Modulate = GetHpColor(theModel.Health, theModel.StartingHealth, theModel.Bracketed);
-        }
         else
-        {
             _hpLabel.Modulate = new Color(0.6f, 0.2f, 0.8f);
-        }
         _flashLock = false;
     }
 
@@ -151,13 +132,9 @@ public partial class BattleModelActor : Node2D
 
         _selectionLock = selected;
         if (selected)
-        {
             _hpLabel.Modulate = new Color(0.6f, 0.2f, 0.8f);
-        }
         else
-        {
             _hpLabel.Modulate = GetHpColor(theModel.Health, theModel.StartingHealth, theModel.Bracketed);
-        }
     }
 
     private void OnClickAreaInputEvent(Node viewport, InputEvent @event, long shapeIdx)
@@ -177,11 +154,10 @@ public partial class BattleModelActor : Node2D
 
     private static Color GetHpColor(int Health, int StartingHealth, int bracketHp)
     {
-        if (StartingHealth <= 0) return Colors.Green;
         float frac = Health / (float)StartingHealth;
 
         if (frac >= 0.66f) return Colors.Green;
         if (frac < 0.66f && Health > bracketHp) return Colors.Yellow;
-        return Colors.Red;
+        return Colors.Red; // Red if in bracket or below
     }
 }

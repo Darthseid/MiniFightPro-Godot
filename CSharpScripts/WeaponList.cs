@@ -3,7 +3,6 @@ using System;
 
 public partial class WeaponList : Control
 {
-    // Point these to your actual folder paths
     [Export] public PackedScene ListItemScene = GD.Load<PackedScene>("res://Scenes/WeaponRow.tscn");
 
     private VBoxContainer _listContainer;
@@ -17,11 +16,8 @@ public partial class WeaponList : Control
         AddChild(_deleteDialog);
         _deleteDialog.Confirmed += HandleDeleteConfirmed;
 
-        // Connect Back Button
         GetNode<Button>("VBoxContainer/BtnBack").Pressed += () =>
             GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
-
-        // Connect Create Button
         GetNode<Button>("VBoxContainer/BtnCreate").Pressed += () =>
             OnCreatePressed();
 
@@ -44,42 +40,34 @@ public partial class WeaponList : Control
     }
 
     private void PopulateList()
-    {
-        // 1. Safety check for the container (Unique Name)
-        if (_listContainer == null) return;
+    {      
+        if (_listContainer == null) return;   // 1. Safety check for the container (Unique Name)
 
-        // 2. Clear old items
+
         foreach (Node child in _listContainer.GetChildren())
-        {
-            child.QueueFree();
-        }
-
-        // 3. Use the Static Instance instead of GetNode("/root/GameData")
-        var data = GameData.Instance;
-
-        // 4. Check if data is null (prevents crash if Autoload hasn't finished loading)
-        if (data == null)
+            child.QueueFree();         // 2. Clear old items
+                                       // 
+        var data = GameData.Instance;  // 3. Use the Static Instance instead of GetNode("/root/GameData")
+   
+        if (data == null)  // 4. Check if data is null (prevents crash if Autoload hasn't finished loading)
         {
             GD.PrintErr("GameData Instance is null!");
             return;
         }
-
-        // 5. Build the list
-        for (int i = 0; i < data.WeaponList.Count; i++)
+      
+        for (int i = 0; i < data.WeaponList.Count; i++) // 5. Build the list
         {
             var item = ListItemScene.Instantiate<WeaponListItem>();
             _listContainer.AddChild(item);
-
-            // Pass the name and index to the row script
-            item.Setup(data.WeaponList[i].WeaponName, i);
-
-            // Connect the signal using a C# Lambda
+         
+            item.Setup(data.WeaponList[i].WeaponName, i);  // Pass the name and index to the row script
+        
             item.WeaponClicked += (idx) => {
                 data.SelectedWeaponIndex = idx;
-                GetTree().ChangeSceneToFile("res://Scenes/CreateWeapon.tscn");
+                GetTree().ChangeSceneToFile("res://Scenes/CreateWeapon.tscn");  // Connect the signal using a C# Lambda
             };
             item.WeaponDeleteRequested += (idx) => {
-                RequestDelete(idx);
+                RequestDelete(idx); 
             };
         }
     }
@@ -88,9 +76,7 @@ public partial class WeaponList : Control
     {
         var data = GameData.Instance;
         if (index < 0 || index >= data.WeaponList.Count)
-        {
             return;
-        }
 
         _pendingDeleteIndex = index;
         var weaponName = data.WeaponList[index].WeaponName;

@@ -11,11 +11,11 @@ public sealed class OrderManager
     private readonly Dictionary<int, HashSet<string>> _usedOrdersThisTurn = new();
     private readonly Dictionary<int, bool> _usedOrderThisPhase = new();
     private readonly Dictionary<int, bool> _usedCommandRerollThisPhase = new();
-    private readonly Dictionary<int, Squad?> _overwatchArmedSquad = new();
+    private readonly Dictionary<int, Squad?> _ReactiveFireArmedSquad = new();
     private readonly HashSet<Squad> _fightPhasePrecisionTargets = new();
-    private readonly HashSet<Squad> _goToGroundTargets = new();
+    private readonly HashSet<Squad> _hitTheGroundTargets = new();
     private readonly Dictionary<int, List<Squad>> _mistsReserveTargetsByOwner = new();
-    private readonly Dictionary<int, Squad?> _heroicInterventionEnemyByPlayer = new();
+    private readonly Dictionary<int, Squad?> _CounterChargeEnemyByPlayer = new();
     private Squad? _currentShootingDefender;
 
     public OrderManager(Battle battle)
@@ -27,12 +27,12 @@ public sealed class OrderManager
         _usedOrderThisPhase[2] = false;
         _usedCommandRerollThisPhase[1] = false;
         _usedCommandRerollThisPhase[2] = false;
-        _overwatchArmedSquad[1] = null;
-        _overwatchArmedSquad[2] = null;
+        _ReactiveFireArmedSquad[1] = null;
+        _ReactiveFireArmedSquad[2] = null;
         _mistsReserveTargetsByOwner[1] = new List<Squad>();
         _mistsReserveTargetsByOwner[2] = new List<Squad>();
-        _heroicInterventionEnemyByPlayer[1] = null;
-        _heroicInterventionEnemyByPlayer[2] = null;
+        _CounterChargeEnemyByPlayer[1] = null;
+        _CounterChargeEnemyByPlayer[2] = null;
     }
 
     public void InitializeBattlePoints()
@@ -52,8 +52,8 @@ public sealed class OrderManager
         _usedOrderThisPhase[2] = false;
         _usedCommandRerollThisPhase[1] = false;
         _usedCommandRerollThisPhase[2] = false;
-        _overwatchArmedSquad[1] = null;
-        _overwatchArmedSquad[2] = null;
+        _ReactiveFireArmedSquad[1] = null;
+        _ReactiveFireArmedSquad[2] = null;
         RefreshHud();
     }
 
@@ -82,15 +82,12 @@ public sealed class OrderManager
         _openWindows.Remove(windowType);
         if (windowType == OrderWindowType.OpponentEngagementPhaseStart)
         {
-            _overwatchArmedSquad[1] = null;
-            _overwatchArmedSquad[2] = null;
+            _ReactiveFireArmedSquad[1] = null;
+            _ReactiveFireArmedSquad[2] = null;
         }
 
         if (windowType == OrderWindowType.OnTargetedByShooting)
-        {
-            _currentShootingDefender = null;
-        }
-
+            _currentShootingDefender = null; // Clear defender reference when shooting window closes to avoid confusion for orders that reference it outside of shooting.
         RefreshHud();
     }
 
@@ -102,9 +99,7 @@ public sealed class OrderManager
     }
 
     public bool IsWindowOpen(OrderWindowType windowType)
-    {
-        return _openWindows.Contains(windowType);
-    }
+        { return _openWindows.Contains(windowType); }
 
     public bool IsOrderUsable(int playerId, Order order, out string reason)
     {
@@ -145,7 +140,7 @@ public sealed class OrderManager
             return false;
         }
 
-        if (string.Equals(order.OrderId, "heroic_intervention", StringComparison.OrdinalIgnoreCase) && _battle.ActiveTeamId == playerId)
+        if (string.Equals(order.OrderId, "counter_charge", StringComparison.OrdinalIgnoreCase) && _battle.ActiveTeamId == playerId)
         {
             reason = "Only defending player can use this now.";
             return false;
@@ -172,44 +167,38 @@ public sealed class OrderManager
         var targets = GetValidTargets(playerId, order);
         if (order.RequiresTarget && targets.Count == 0)
         {
-            if (order.TargetSide == OrderTargetSide.Friendly && !string.Equals(order.OrderId, "epic_bravery", StringComparison.OrdinalIgnoreCase)
+            if (order.TargetSide == OrderTargetSide.Friendly && !string.Equals(order.OrderId, "chutzpah", StringComparison.OrdinalIgnoreCase)
                 && _battle.GetAliveSquadsForTeam(playerId).Any(s => s.ShellShock && order.MatchesTargetType(s)))
-            {
-                reason = "Cannot target shell-shocked unit with this order";
-            }
+                reason = "Cannot target shell-shocked unit with this order"; // Special case for Chutzpah since it's the only order that can target shell-shocked units, so we want to show a more specific message if that's the reason there are no valid targets.
             else
-            {
                 reason = "No valid targets.";
-            }
-
             return false;
         }
-
         return true;
     }
 
     public IReadOnlyList<Squad> GetValidTargets(int playerId, Order order)
     {
-        if (string.Equals(order.OrderId, "go_to_ground", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.OrderId, "hit_the_ground", StringComparison.OrdinalIgnoreCase))
         {
             return _currentShootingDefender != null
                 ? new List<Squad> { _currentShootingDefender }
                 : new List<Squad>();
         }
 
-        if (string.Equals(order.OrderId, "heroic_intervention", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.OrderId, "counter_charge", StringComparison.OrdinalIgnoreCase))
         {
             return _battle.GetAliveSquadsForTeam(playerId)
-                .Where(s => IsHeroicInterventionTarget(playerId, s))
+                .Where(s => IsCounterChargeTarget(playerId, s))
                 .ToList();
         }
 
-        var targetTeamId = order.TargetSide switch
+        var targetTeamId = order.TargetSide switch // For orders that target enemies, we show valid squads from the enemy team. For orders that target friendlies or self, we show valid squads from the player's own team. This means that for orders that target "self", the player can only select their own squads as targets, which is consistent with how those orders are described and prevents confusion about what the "self" designation means.
         {
             OrderTargetSide.Friendly => playerId,
             OrderTargetSide.Self => playerId,
             OrderTargetSide.Enemy => playerId == 1 ? 2 : 1,
-            _ => playerId
+            _ => playerId 
         };
 
         var candidates = _battle.GetAliveSquadsForTeam(targetTeamId);
@@ -219,17 +208,13 @@ public sealed class OrderManager
     private bool IsValidTargetByType(int playerId, Order order, Squad squad)
     {
         if (!order.MatchesTargetType(squad))
-        {
             return false;
-        }
 
         if (squad.ShellShock)
         {
             var friendlyTarget = _battle.GetAliveSquadsForTeam(playerId).Contains(squad);
-            if (friendlyTarget && !string.Equals(order.OrderId, "epic_bravery", StringComparison.OrdinalIgnoreCase))
-            {
+            if (friendlyTarget && !string.Equals(order.OrderId, "chutzpah", StringComparison.OrdinalIgnoreCase))
                 return false;
-            }
         }
 
         if (order.TargetType == OrderTargetType.Shooters)
@@ -239,9 +224,7 @@ public sealed class OrderManager
         }
 
         if (order.TargetType == OrderTargetType.FightEligible)
-        {
             return _battle.IsSquadInFightRange(squad, playerId == 1 ? 2 : 1);
-        }
 
         return true;
     }
@@ -251,9 +234,7 @@ public sealed class OrderManager
         var player = _battle.GetPlayerByTeam(playerId);
         var order = player?.Orders?.FirstOrDefault(o => string.Equals(o.OrderId, orderId, StringComparison.OrdinalIgnoreCase));
         if (order == null)
-        {
             return false;
-        }
 
         if (!IsOrderUsable(playerId, order, out var reason))
         {
@@ -268,9 +249,7 @@ public sealed class OrderManager
             var validTargets = GetValidTargets(playerId, order);
             target = await _battle.PromptForSquadTargetAsync($"{order.OrderName}: select target squad", targetTeamId, validTargets);
             if (target == null)
-            {
                 return false;
-            }
         }
 
         ApplyOrderEffect(order, playerId, target);
@@ -286,20 +265,16 @@ public sealed class OrderManager
     private void ApplyOrderEffect(Order order, int playerId, Squad? target)
     {
         if (target == null)
-        {
             return;
-        }
 
-        if (string.Equals(order.OrderId, "epic_challenge", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.OrderId, "mano_a_mano", StringComparison.OrdinalIgnoreCase))
         {
             foreach (var weapon in (target.Composition ?? new List<Model>())
                          .SelectMany(model => model.Tools ?? new List<Weapon>())
                          .Where(weapon => weapon.IsMelee))
             {
                 if (weapon.Special.All(ability => ability.Innate != WeaponAbilities.TempPrecision.Innate || ability.Name != WeaponAbilities.TempPrecision.Name))
-                {
                     weapon.Special.Add(WeaponAbilities.TempPrecision);
-                }
             }
 
             _fightPhasePrecisionTargets.Add(target);
@@ -309,69 +284,58 @@ public sealed class OrderManager
         if (string.Equals(order.OrderId, "tank_shock", StringComparison.OrdinalIgnoreCase))
         {
             if (target.SquadAbilities.All(ability => ability.Name != SquadAbilities.StampedeTemp.Name || ability.Innate != SquadAbilities.StampedeTemp.Innate))
-            {
                 target.SquadAbilities.Add(SquadAbilities.StampedeTemp);
-            }
 
             return;
         }
 
-        if (string.Equals(order.OrderId, "fire_overwatch", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.OrderId, "reactive fire", StringComparison.OrdinalIgnoreCase))
         {
-            _overwatchArmedSquad[playerId] = target;
+            _ReactiveFireArmedSquad[playerId] = target;
             return;
         }
 
-        if (string.Equals(order.OrderId, "go_to_ground", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.OrderId, "hit_the_ground", StringComparison.OrdinalIgnoreCase))
         {
             if (target.SquadAbilities.All(ability => ability.Innate != SquadAbilities.CoverBenefitTemp.Innate || !ability.IsTemporary))
-            {
                 target.SquadAbilities.Add(SquadAbilities.CoverBenefitTemp);
-            }
 
             if (target.SquadAbilities.All(ability => ability.Innate != SquadAbilities.SixPlusDodgeTemp.Innate || !ability.IsTemporary))
-            {
                 target.SquadAbilities.Add(SquadAbilities.SixPlusDodgeTemp);
-            }
 
-            _goToGroundTargets.Add(target);
+            _hitTheGroundTargets.Add(target);
             return;
         }
 
-        if (string.Equals(order.OrderId, "counter_offensive", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.OrderId, "sudden_reflexes", StringComparison.OrdinalIgnoreCase))
         {
             if (target.SquadAbilities.All(ability => ability.Innate != SquadAbilities.TempFirstStrike.Innate || !ability.IsTemporary))
-            {
                 target.SquadAbilities.Add(SquadAbilities.TempFirstStrike);
-            }
 
             return;
         }
 
-        if (string.Equals(order.OrderId, "heroic_intervention", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.OrderId, "counter_charge", StringComparison.OrdinalIgnoreCase))
         {
-            var enemy = _heroicInterventionEnemyByPlayer[playerId];
+            var enemy = _CounterChargeEnemyByPlayer[playerId];
             if (enemy != null)
             {
                 var moved = _battle.TryMoveSquadIntoEngagement(target, enemy);
                 if (moved)
-                {
                     _battle.Hud?.ShowToast($"{target.Name} heroically intervenes into engagement.");
-                }
             }
-
             return;
         }
 
-        if (string.Equals(order.OrderId, "mists_of_deimos", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.OrderId, "misty_retreat", StringComparison.OrdinalIgnoreCase))
         {
-            target.IsInStrategicReserve = true;
-            _battle.SetSquadStrategicReserveVisual(target, true);
+            target.IsInBackupForce = true;
+            _battle.SetSquadBackupForceVisual(target, true);
             _mistsReserveTargetsByOwner[playerId].Add(target);
             return;
         }
 
-        if (string.Equals(order.OrderId, "epic_bravery", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(order.OrderId, "chutzpah", StringComparison.OrdinalIgnoreCase))
         {
             target.ShellShock = false;
             _battle.Hud?.ShowToast($"{target.Name} is no longer shell-shocked.");
@@ -386,78 +350,69 @@ public sealed class OrderManager
 
     public void ClearShootingPhaseTemporaryEffects()
     {
-        foreach (var squad in _goToGroundTargets)
+        foreach (var squad in _hitTheGroundTargets)
         {
             squad.SquadAbilities.RemoveAll(ability => ability.IsTemporary &&
                 (ability.Innate == SquadAbilities.CoverBenefitTemp.Innate || ability.Innate == SquadAbilities.SixPlusDodgeTemp.Innate));
         }
 
-        _goToGroundTargets.Clear();
+        _hitTheGroundTargets.Clear();
         _currentShootingDefender = null;
     }
 
     public async Task HandleMistsRedeployAtShootingStartAsync(int playerId)
     {
-        var reserves = _mistsReserveTargetsByOwner[playerId].Where(s => s != null && s.IsInStrategicReserve).ToList();
+        var reserves = _mistsReserveTargetsByOwner[playerId].Where(s => s != null && s.IsInBackupForce).ToList();
         foreach (var squad in reserves)
         {
-            var success = await _battle.RedeployStrategicReserveSquadAsync(playerId, squad);
+            var success = await _battle.RedeployBackupForceSquadAsync(playerId, squad);
             if (success)
             {
-                squad.IsInStrategicReserve = false;
+                squad.IsInBackupForce = false;
                 squad.CannotChargeThisTurn = true;
-                _battle.SetSquadStrategicReserveVisual(squad, false);
+                _battle.SetSquadBackupForceVisual(squad, false);
             }
         }
 
-        _mistsReserveTargetsByOwner[playerId].RemoveAll(s => s == null || !s.IsInStrategicReserve);
+        _mistsReserveTargetsByOwner[playerId].RemoveAll(s => s == null || !s.IsInBackupForce);
     }
 
-    public void ConfigureHeroicInterventionEnemy(int playerId, Squad? enemy)
-    {
-        _heroicInterventionEnemyByPlayer[playerId] = enemy;
-    }
+    public void ConfigureCounterChargeEnemy(int playerId, Squad? enemy)
+        { _CounterChargeEnemyByPlayer[playerId] = enemy; }
 
-    private bool IsHeroicInterventionTarget(int playerId, Squad squad)
+    private bool IsCounterChargeTarget(int playerId, Squad squad)
     {
         if (squad == null || _battle.IsSquadInFightRange(squad, playerId == 1 ? 2 : 1))
-        {
             return false;
-        }
 
-        var enemy = _heroicInterventionEnemyByPlayer[playerId];
+        var enemy = _CounterChargeEnemyByPlayer[playerId];
         if (enemy == null)
-        {
             return false;
-        }
 
         return _battle.AreSquadsWithinDistance(squad, enemy, 6f);
     }
 
     public void EndFightPhaseCleanup()
     {
-        foreach (var squad in _fightPhasePrecisionTargets)
-        {
-            foreach (var weapon in (squad.Composition ?? new List<Model>()).SelectMany(model => model.Tools ?? new List<Weapon>()))
-            {
-                weapon.Special.RemoveAll(ability => ability.IsTemporary && ability.Innate == WeaponAbilities.TempPrecision.Innate);
-            }
-        }
+        var weapons = _fightPhasePrecisionTargets
+            .SelectMany(squad => squad.Composition ?? new List<Model>())
+            .SelectMany(model => model.Tools ?? new List<Weapon>());
+
+        foreach (var weapon in weapons)
+            weapon.Special.RemoveAll(ability => ability.IsTemporary && ability.Innate == WeaponAbilities.TempPrecision.Innate);
 
         _fightPhasePrecisionTargets.Clear();
     }
 
-    public async Task TryResolveOverwatchOnChargeDeclaredAsync(int attackerTeamId, Squad chargingSquad, Squad declaredTarget)
+    public async Task TryResolveReactiveFireOnChargeDeclaredAsync(int attackerTeamId, Squad chargingSquad, Squad declaredTarget)
     {
         var defenderTeamId = attackerTeamId == 1 ? 2 : 1;
-        if (!_overwatchArmedSquad.TryGetValue(defenderTeamId, out var armedSquad) || !ReferenceEquals(armedSquad, declaredTarget))
-        {
+        if (!_ReactiveFireArmedSquad.TryGetValue(defenderTeamId, out var armedSquad) || !ReferenceEquals(armedSquad, declaredTarget))
             return;
-        }
 
-        _overwatchArmedSquad[defenderTeamId] = null;
-        _battle.Hud?.ShowToast($"{declaredTarget.Name} fires Overwatch!");
-        await _battle.ResolveOverwatchAsync(defenderTeamId, declaredTarget, chargingSquad);
+        _ReactiveFireArmedSquad[defenderTeamId] = null;
+        _battle.Hud?.ShowToast($"{declaredTarget.Name} fires ReactiveFire!");
+        await _battle.ResolveReactiveFireAsync(defenderTeamId, declaredTarget, chargingSquad);
         RefreshHud();
     }
 
@@ -532,29 +487,19 @@ public sealed class OrderManager
     }
 
     private int GetOrderPoints(int playerId)
-    {
-        return playerId == 1 ? _battle.Player1OrderPoints : _battle.Player2OrderPoints;
-    }
+        { return playerId == 1 ? _battle.Player1OrderPoints : _battle.Player2OrderPoints; }
 
     private void SetOrderPoints(int playerId, int value)
     {
         if (playerId == 1)
-        {
             _battle.Player1OrderPoints = value;
-        }
         else
-        {
             _battle.Player2OrderPoints = value;
-        }
     }
 
     public void RefreshHud()
-    {
-        _battle.Hud?.ConfigureOrders(_battle.TeamAPlayer, _battle.TeamBPlayer, this, OnOrderPressed);
-    }
+        { _battle.Hud?.ConfigureOrders(_battle.TeamAPlayer, _battle.TeamBPlayer, this, OnOrderPressed); }
 
     private void OnOrderPressed(int playerId, string orderId)
-    {
-        _ = TryActivateOrderAsync(playerId, orderId);
-    }
+        { _ = TryActivateOrderAsync(playerId, orderId); }
 }

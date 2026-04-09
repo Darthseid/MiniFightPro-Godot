@@ -6,9 +6,7 @@ using System.Linq;
 public static class CombatHelpers
 {
     private static void LogAbilityTrigger(string abilityType, string abilityInnate, string context)
-    {
-        GD.Print($"[Ability Triggered] {abilityType} ability '{abilityInnate}' triggered ({context}).");
-    }
+        { GD.Print($"[Ability Triggered] {abilityType} ability '{abilityInnate}' triggered ({context})."); }
 
 
 
@@ -21,9 +19,7 @@ public static class CombatHelpers
         bool includeSelf = true)
     {
         if (target == null || friendlySquads == null || string.IsNullOrWhiteSpace(auraInnate) || areSquadsWithinDistance == null)
-        {
             return false;
-        }
 
         return friendlySquads.Any(source =>
             source != null
@@ -40,9 +36,7 @@ public static class CombatHelpers
         Func<Squad, Squad, float, bool> areSquadsWithinDistance)
     {
         if (target == null || enemySquads == null || string.IsNullOrWhiteSpace(auraInnate) || areSquadsWithinDistance == null)
-        {
             return false;
-        }
 
         return enemySquads.Any(source =>
             source != null
@@ -51,26 +45,18 @@ public static class CombatHelpers
     }
 
     public static Squad GetActiveSquad(int activeTeamId, Squad teamASquad, Squad teamBSquad)
-    {
-        return activeTeamId == 1 ? teamASquad : teamBSquad;
-    }
+        { return activeTeamId == 1 ? teamASquad : teamBSquad; }
 
     public static Squad GetInactiveSquad(int activeTeamId, Squad teamASquad, Squad teamBSquad)
-    {
-        return activeTeamId == 1 ? teamBSquad : teamASquad;
-    }
+        { return activeTeamId == 1 ? teamBSquad : teamASquad; }
 
     public static MoveVars GetActiveMoveVars(int activeTeamId, MoveVars teamAMove, MoveVars teamBMove)
-    {
-        return activeTeamId == 1 ? teamAMove : teamBMove;
-    }
+        { return activeTeamId == 1 ? teamAMove : teamBMove; }
 
     public static MoveVars GetMoveVarsForTeam(int teamId, MoveVars teamAMove, MoveVars teamBMove)
-    {
-        return teamId == 1 ? teamAMove : teamBMove;
-    }
+        { return teamId == 1 ? teamAMove : teamBMove; }
 
-    private static bool IsBigGunsNeverTireSquad(Squad squad)
+    private static bool IsMonsterorVehicle(Squad squad)
     {
         return squad?.SquadType?.Any(type => type == "Monster" || type == "Vehicle") == true;
     }
@@ -92,28 +78,18 @@ public static class CombatHelpers
         var shotAbilities = firearm.Special;
         var fightRange = currentDistance <= 1f;
         if (firearm.IsMelee)
-        {
-            return false;
-        }
+            return false; //This method doesn't trigger during the Melee Phase.
         if (shooterMove.Rush && shotAbilities.All(ability => ability.Innate != "RunGun"))
-        {
             validShooting = false;
-        }
         if (shooterMove.Retreat && shooterSquad.SquadAbilities.All(ability => ability.Innate != "FleeShoot"))
-        {
             validShooting = false;
-        }
-        if (!IsBigGunsNeverTireSquad(shooterSquad))
+        if (!IsMonsterorVehicle(shooterSquad))
         {
             if (fightRange && shotAbilities.All(ability => ability.Innate != "Handgun"))
-            {
                 validShooting = false;
-            }
         }
         if (!hasLineOfSight && firearm.Special.All(ability => ability.Innate != WeaponAbilities.IndirectFire.Innate))
-        {
             validShooting = false;
-        }
         if (targetSquad.SquadAbilities.Any(ability => ability.Innate == "12 inch or bust") && currentDistance > 12f)
         {
             LogAbilityTrigger("Squad", "12 inch or bust", "invalidated shooting beyond 12 inches");
@@ -165,7 +141,7 @@ public static class CombatHelpers
             }
         }
 
-        if (currentDistance <= 1f && IsBigGunsNeverTireSquad(attackerSquad) && !firearm.IsMelee)
+        if (currentDistance <= 1f && IsMonsterorVehicle(attackerSquad) && !firearm.IsMelee)
             hitMod -= 1;
         if (currentDistance > 12f && firearm.Special.Any(ability => ability.Innate == "Convert"))
         {
@@ -175,13 +151,9 @@ public static class CombatHelpers
         var armorMod = firearm.ArmorPenetration;
         if (coverType && firearm.Special.All(ability => ability.Innate != "noCover"))
             armorMod += 1;
-        if (defenderSquad.Defense > 3 &&
-            defenderSquad.SquadAbilities.Any(ability => ability.Innate == SquadAbilities.CoverBenefit.Innate) &&
-            firearm.Special.All(ability => ability.Innate != WeaponAbilities.IgnoresCover.Innate))
-        {
+        if (defenderSquad.Defense > 3 && defenderSquad.SquadAbilities.Any(ability => ability.Innate == SquadAbilities.CoverBenefit.Innate) &&
+            firearm.Special.All(ability => ability.Innate != WeaponAbilities.IgnoresCover.Innate)) //This represents being in cover.
             armorMod += 1;
-        }
-        armorMod = Math.Min(armorMod, 1);
         var unsteady = attackerMove.Move;
         if (!unsteady && firearm.Special.Any(ability => ability.Innate == "Hefty"))
         {
@@ -254,7 +226,10 @@ public static class CombatHelpers
             hitMod = Math.Max(hitMod, 0);
             woundMod = Math.Max(woundMod, 0);
             LogAbilityTrigger("Squad", "Pow-1", "prevented negative hit/wound modifiers");
-        }
+        }       
+        hitMod = Math.Clamp(hitMod, -1, 1);
+        woundMod = Math.Clamp(woundMod, -1, 1);
+        armorMod = Math.Clamp(armorMod, -1, 1); // All modifiers must be between -1 and 1.
 
         return new DiceModifiers(hitMod, woundMod, hitReroll, woundReroll, armorMod, critThreshold, antiThreshold);
     }
@@ -263,9 +238,7 @@ public static class CombatHelpers
     {
         if (targetSquadAbilities.Any(ability => ability.Innate == "BrainBlock") &&
             specials.Any(ability => ability.Innate == "Psi"))
-        {
             LogAbilityTrigger("Squad", "BrainBlock", "applies psychic damage resistance instead of negating damage");
-        }
 
         var newDamage = damage;
         var fusionModifier = specials.FirstOrDefault(ability => ability.Innate == "Fusion")?.ResolveModifier() ?? 0;
@@ -281,7 +254,7 @@ public static class CombatHelpers
         }
         if (targetSquadAbilities.Any(ability => ability.Innate == "Less2"))
         {
-            newDamage = (newDamage + 1) / 2;
+            newDamage = (newDamage + 1) / 2; //This rounds up when halving, so 3 damage would be reduced to 2 instead of 1.
             LogAbilityTrigger("Squad", "Less2", "halved incoming damage");
         }
         if (targetSquadAbilities.Any(ability => ability.Innate == "Less3"))

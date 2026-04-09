@@ -4,11 +4,10 @@ using System;
 public partial class WeaponListItem : Button
 {
     public int Index; // Which weapon in the list does this button represent?
-    private const float LongPressSeconds = 0.65f;
+    private const float LongPressSeconds = 0.65f; //Change this to be a global value.
     private Timer _longPressTimer;
     private bool _longPressTriggered = false;
 
-    // Define a custom signal we can listen to
     [Signal] public delegate void WeaponClickedEventHandler(int index);
     [Signal] public delegate void WeaponDeleteRequestedEventHandler(int index);
 
@@ -35,10 +34,8 @@ public partial class WeaponListItem : Button
         {
             _longPressTriggered = false;
             return;
-        }
-
-        // When clicked, shout "I was clicked!" and pass my index ID
-        EmitSignal(SignalName.WeaponClicked, Index);
+        }     
+        EmitSignal(SignalName.WeaponClicked, Index);  // When clicked, shout "I was clicked!" and pass my index ID
     }
 
     public override void _GuiInput(InputEvent @event)
@@ -52,14 +49,10 @@ public partial class WeaponListItem : Button
             }
 
             if (mouseEvent.ButtonIndex == MouseButton.Left)
-            {
                 HandlePress(mouseEvent.Pressed);
-            }
         }
         else if (@event is InputEventScreenTouch touchEvent)
-        {
             HandlePress(touchEvent.Pressed);
-        }
     }
 
     private void HandlePress(bool pressed)
@@ -70,9 +63,7 @@ public partial class WeaponListItem : Button
             _longPressTimer?.Start();
         }
         else
-        {
             _longPressTimer?.Stop();
-        }
     }
 
     private void OnLongPressTimeout()

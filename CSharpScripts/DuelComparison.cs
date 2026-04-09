@@ -59,9 +59,7 @@ public partial class DuelComparison : Control
         {
             var squad = squads[i];
             if (squad?.Composition == null || squad.Composition.Count == 0)
-            {
                 continue;
-            }
 
             var idx = _squads.Count;
             _squads.Add(squad);
@@ -70,14 +68,10 @@ public partial class DuelComparison : Control
         }
 
         if (_squadASelect.ItemCount > 0)
-        {
             _squadASelect.Select(0);
-        }
 
         if (_squadBSelect.ItemCount > 1)
-        {
             _squadBSelect.Select(1);
-        }
     }
 
     private async Task RunSimulationAsync()
@@ -94,13 +88,12 @@ public partial class DuelComparison : Control
         var config = new DuelConfig
         {
             RangeInches = (float)_rangeInput.Value,
-            RoundCap = 20,
-            NoDamageRoundLimit = 3,
+            RoundCap = 20, //If two squads haven't defeated each other after this many rounds, the trial is a draw. This is to prevent infinite loops in edge cases where neither squad can kill the other.
+            NoDamageRoundLimit = 3, //If no damage is dealt for this many consecutive rounds, the trial is a draw. This is to prevent infinite loops in edge cases where neither squad can hurt the other.
             FirstAttacker = FirstAttackerMode.Random
         };
 
         var trials = Math.Clamp((int)_trialsInput.Value, 1, 100000);
-        var seed = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         _runButton.Disabled = true;
         _resultLabel.Text = string.Empty;
@@ -110,7 +103,7 @@ public partial class DuelComparison : Control
 
         try
         {
-            var rng = new Random(seed);
+            var rng = new Random();
             var simulator = new DuelSimulator();
 
             var aWins = 0;

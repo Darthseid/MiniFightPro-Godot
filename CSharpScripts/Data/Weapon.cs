@@ -157,16 +157,12 @@ public static class WeaponAbilities
     private static string GetVariableBaseDisplayName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-        {
             return name;
-        }
 
         var trimmed = name.Trim();
         var parts = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length > 1 && int.TryParse(parts[^1], out _))
-        {
             return string.Join(" ", parts, 0, parts.Length - 1);
-        }
 
         return trimmed;
     }

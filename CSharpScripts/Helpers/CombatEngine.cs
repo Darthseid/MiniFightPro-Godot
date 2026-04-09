@@ -65,9 +65,7 @@ public static class CombatEngine
         for (int i = 0; i < actors.Count; i++)
         {
             if (IsActorAlive(actors[i]))
-            {
                 count++;
-            }
         }
 
         return count;
@@ -76,10 +74,7 @@ public static class CombatEngine
     private static void DebugAllocationLog(string message)
     {
         if (!DebugDamageAllocation)
-        {
             return;
-        }
-
         GD.Print($"[CombatEngine.AllocateDamage] {message}");
     }
 
@@ -93,12 +88,8 @@ public static class CombatEngine
     )
     {
         if (defenderActors == null || defenderSquad == null || weapon == null || unsavedInjuries <= 0)
-        {
             return 0;
-        }
-
         var totalApplied = 0;
-
         for (int injuryIndex = 0; injuryIndex < unsavedInjuries; injuryIndex++)
         {
             currentRecipient = SelectDamageRecipient(currentRecipient, defenderActors, weapon);
@@ -141,15 +132,11 @@ public static class CombatEngine
     private static string ResolveWeaponHitSoundKey(Weapon weapon)
     {
         if (weapon == null)
-        {
             return "rifleshot.mp3";
-        }
 
         var manager = AudioManager.Instance;
         if (manager == null)
-        {
             return string.IsNullOrWhiteSpace(weapon.HitSfxKey) ? "rifleshot.mp3" : weapon.HitSfxKey;
-        }
 
         var normalized = manager.NormalizeWeaponHitKey(weapon.HitSfxKey);
         return string.IsNullOrEmpty(normalized) ? "rifleshot.mp3" : normalized;
@@ -179,14 +166,10 @@ public static class CombatEngine
     )
     {
         if (attackerSquad == null || attackerActors == null || weapon?.Special == null)
-        {
             return 0;
-        }
 
         if (!weapon.Special.Any(ability => ability?.Innate == "Self-Inflict"))
-        {
             return 0;
-        }
 
         var fingerprint = BuildWeaponFingerprint(weapon);
         var infantryBearer = attackerSquad.SquadType?.Contains("Infantry") == true;
@@ -197,9 +180,7 @@ public static class CombatEngine
             var hasPerilousWeapon = attackerActor?.BoundModel?.Tools
                 ?.Any(tool => tool != null && BuildWeaponFingerprint(tool) == fingerprint) == true;
             if (!hasPerilousWeapon)
-            {
                 continue;
-            }
 
             var perilousRoll = await DiceRoller.PresentAndRollAsync(
                 6,
@@ -214,9 +195,7 @@ public static class CombatEngine
                     false,
                     attackerActor.TeamId));
             if (perilousRoll.Results.FirstOrDefault() != 1)
-            {
                 continue;
-            }
 
             recoilHits++;
             if (infantryBearer)
@@ -231,25 +210,19 @@ public static class CombatEngine
                 battleHud?.ShowToast($"Perilous! {attackerActor.BoundModel.Name} suffers 3 pure damage.", 2f);
                 AudioManager.Instance?.Play("perilous");
             }
-
             attackerActor.RefreshHp();
         }
-
         return recoilHits;
     }
 
 
-    private static void ConsumeOneShotWeapons(Squad attackerSquad, Weapon weapon)
+    private static void ConsumeOneShotWeapons(Squad attackerSquad, Weapon weapon) //Todo Remove this function and refactor.
     {
         if (attackerSquad == null || weapon == null)
-        {
             return;
-        }
 
         if (weapon.Special == null || weapon.Special.All(ability => ability?.Innate != "1 Shot"))
-        {
             return;
-        }
 
         var fingerprint = BuildWeaponFingerprint(weapon);
         foreach (var model in attackerSquad.Composition.Where(model => model != null && model.Health > 0))
@@ -257,14 +230,10 @@ public static class CombatEngine
             foreach (var tool in model.Tools)
             {
                 if (tool == null)
-                {
                     continue;
-                }
 
                 if (BuildWeaponFingerprint(tool) == fingerprint)
-                {
                     tool.Attacks = "0";
-                }
             }
         }
     }
@@ -272,9 +241,7 @@ public static class CombatEngine
     public static List<Weapon> GetEffectiveWeaponsForPhase(Squad attackerSquad, bool isMelee)
     {
         if (attackerSquad == null)
-        {
             return new List<Weapon>();
-        }
 
         var effectiveWeapons = attackerSquad.Composition
             .Where(model => model != null && model.Health > 0)
@@ -297,21 +264,17 @@ public static class CombatEngine
 
             effectiveWeapons.AddRange(passengerWeapons);
         }
-
         return effectiveWeapons;
     }
 
     public static List<WeaponBatch> BuildWeaponBatches(Squad attackerSquad, bool isMelee)
-    {
-        return BuildWeaponBatches(attackerSquad, isMelee, null);
-    }
+        { return BuildWeaponBatches(attackerSquad, isMelee, null); }
+
 
     public static List<WeaponBatch> BuildWeaponBatches(Squad attackerSquad, bool isMelee, string requiredWeaponFingerprint)
     {
         if (attackerSquad == null)
-        {
             return new List<WeaponBatch>();
-        }
 
         var eligibleWeapons = GetEffectiveWeaponsForPhase(attackerSquad, isMelee)
             .Where(weapon => weapon != null && weapon.IsMelee == isMelee);
@@ -337,22 +300,16 @@ public static class CombatEngine
     }
 
     public static string GetWeaponFingerprint(Weapon weapon)
-    {
-        return BuildWeaponFingerprint(weapon);
-    }
+        { return BuildWeaponFingerprint(weapon); }
 
     private static bool HasPrecision(Weapon weapon)
-    {
-        return weapon?.Special?.Any(ability => ability?.Innate == "rareFirst") == true;
-    }
+        { return weapon?.Special?.Any(ability => ability?.Innate == "rareFirst") == true; }
 
     private static BattleModelActor SelectLeastCommonNamedDefender(List<BattleModelActor> defenders)
     {
         var living = defenders.Where(IsActorAlive).ToList();
         if (living.Count == 0)
-        {
             return null;
-        }
 
         var nameCounts = living
             .GroupBy(actor => actor.BoundModel?.Name ?? actor.Name)
@@ -368,15 +325,11 @@ public static class CombatEngine
     {
         var living = defenders.Where(IsActorAlive).ToList();
         if (living.Count == 0)
-        {
             return null;
-        }
 
         var center = Vector2.Zero;
         foreach (var actor in living)
-        {
             center += actor.GlobalPosition;
-        }
 
         center /= living.Count;
 
@@ -394,10 +347,7 @@ public static class CombatEngine
         if (HasPrecision(weapon))
         {
             if (IsActorAlive(preferred))
-            {
                 return preferred;
-            }
-
             return SelectLeastCommonNamedDefender(defenders) ?? SelectFurthestFromSquadCenter(defenders);
         }
 
@@ -414,9 +364,7 @@ public static class CombatEngine
     )
     {
         if (defenderModel == null || weaponBatches == null || weaponBatches.Count == 0)
-        {
             return new AttackResult(0, false, new List<WeaponResolutionSummary>());
-        }
 
         var totalApplied = 0;
         var remainingHealth = defenderModel.Health;
@@ -426,17 +374,12 @@ public static class CombatEngine
         {
             var weapon = batch.Weapon;
             var hasLineOfSight = true;
-            if (!isMelee &&
-                !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance, hasLineOfSight))
-            {
+            if (!isMelee && !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance, hasLineOfSight))
                 continue;
-            }
 
             var attacks = batch.TotalAttacks;
             if (attacks <= 0)
-            {
                 continue;
-            }
             var weaponHitSoundKey = ResolveWeaponHitSoundKey(weapon);
             var modifiers = CombatHelpers.ObtainModifiers(
                 weapon,
@@ -458,22 +401,14 @@ public static class CombatEngine
             hits += hardHits;
 
             for (int i = 0; i < hardHits; i++)
-            {
                 AudioManager.Instance?.PlayStaggeredJitter("critical", hardHits, 0.02f);
-            }
 
             if (hits > 0)
-            {
                 AudioManager.Instance?.PlayStaggeredJitter(weaponHitSoundKey, attacks, 0.02f);
-            }
             else if (weapon.IsMelee)
-            {
                 AudioManager.Instance?.Play("meleemiss");
-            }
             else
-            {
                 AudioManager.Instance?.Play("rangedmiss");
-            }
 
             var defenderHardness = defenderSquad.Hardness;
             if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)
@@ -490,13 +425,9 @@ public static class CombatEngine
             injuries += devastating;
             var unsaved = CombatRolls.SaveSequence(injuries, defenderSquad.Defense, modifiers.DefenseMod, defenderSquad.Dodge);
             if (weapon.IsMelee && unsaved > 0)
-            {
                 AudioManager.Instance?.Play("chomp");
-            }
             else if (injuries > 0 && unsaved == 0)
-            {
                 AudioManager.Instance?.Play("defensepassed");
-            }
 
             for (int i = 0; i < unsaved && remainingHealth > 0; i++)
             {
@@ -516,13 +447,9 @@ public static class CombatEngine
                 unsaved
             ));
             ConsumeOneShotWeapons(attackerSquad, weapon);
-
             if (remainingHealth <= 0)
-            {
                 break;
-            }
         }
-
         return new AttackResult(totalApplied, remainingHealth <= 0, weaponSummaries);
     }
 
@@ -536,17 +463,13 @@ public static class CombatEngine
     )
     {
         if (attackerModel == null || defenderModel == null)
-        {
             return new AttackResult(0, false, new List<WeaponResolutionSummary>());
-        }
 
         var weapons = attackerModel.Tools
             .Where(weapon => isMelee ? weapon.IsMelee : !weapon.IsMelee)
             .ToList();
         if (weapons.Count == 0)
-        {
             return new AttackResult(0, false, new List<WeaponResolutionSummary>());
-        }
 
         var weaponBatches = weapons
             .Select(weapon => new WeaponBatch(weapon, DiceHelpers.DamageParser(weapon.Attacks)))
@@ -581,9 +504,7 @@ public static class CombatEngine
     )
     {
         if (attacker == null || defender == null)
-        {
             return;
-        }
 
         var attackerSquad = attacker.TeamId == 1 ? teamASquad : teamBSquad;
         var defenderSquad = attacker.TeamId == 1 ? teamBSquad : teamASquad;
@@ -591,9 +512,7 @@ public static class CombatEngine
         var defenderActors = attacker.TeamId == 1 ? teamBActors : teamAActors;
 
         if (attackerSquad == null || defenderSquad == null)
-        {
             return;
-        }
         _currentDistance = BoardGeometry.DistanceInches(attacker, defender);
         var result = ResolveAttack(
             attacker.BoundModel,
@@ -605,9 +524,7 @@ public static class CombatEngine
         );
         var aliveBefore = CountLivingActors(defenderActors);
         if (result.TotalDamageApplied > 0)
-        {
             defender.ApplyDamage(result.TotalDamageApplied);
-        }
         foreach (var summary in result.WeaponSummaries)
         {
             battleHud?.ShowToast(BuildWeaponToast(summary), 2f);
@@ -616,9 +533,7 @@ public static class CombatEngine
         var aliveAfter = CountLivingActors(defenderActors);
         var demiseCheck = System.Math.Max(0, aliveBefore - aliveAfter);
         if (demiseCheck > 0)
-        {
             handleExplosionProcess?.Invoke(defenderSquad, attackerSquad, demiseCheck);
-        }
         RemoveDeadModels(defenderActors, defenderSquad, battleField);
         checkVictory?.Invoke();
     }
@@ -643,9 +558,7 @@ public static class CombatEngine
     )
     {
         if (attacker == null || defender == null)
-        {
             return;
-        }
 
         var attackerSquad = attacker.TeamId == 1 ? teamASquad : teamBSquad;
         var defenderSquad = attacker.TeamId == 1 ? teamBSquad : teamASquad;
@@ -653,9 +566,7 @@ public static class CombatEngine
         var defenderActors = attacker.TeamId == 1 ? teamBActors : teamAActors;
 
         if (attackerSquad == null || defenderSquad == null)
-        {
             return;
-        }
 
         _currentDistance = BoardGeometry.ClosestDistanceInches(teamAActors, teamBActors);
         var weaponBatches = BuildWeaponBatches(attackerSquad, isFight, selectedWeaponFingerprint);
@@ -667,22 +578,16 @@ public static class CombatEngine
             var weapon = batch.Weapon;
             if (!isFight &&
                 !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance, hasLineOfSight))
-            {
                 continue;
-            }
 
             var aliveBeforeWeapon = CountLivingActors(defenderActors);
             var attacks = batch.TotalAttacks;
             if (attacks <= 0)
-            {
                 continue;
-            }
             var weaponHitSoundKey = ResolveWeaponHitSoundKey(weapon);
             var indirectShot = !isFight && !hasLineOfSight && weapon.Special.Any(ability => ability.Innate == WeaponAbilities.IndirectFire.Innate);
             if (indirectShot)
-            {
                 GD.Print($"[Indirect Fire] {attackerSquad.Name} firing {weapon.WeaponName} indirectly at {defenderSquad.Name}.");
-            }
 
             var modifiers = CombatHelpers.ObtainModifiers(
                 weapon,
@@ -717,22 +622,14 @@ public static class CombatEngine
             hits += hardHits;
 
             for (int i = 0; i < hardHits; i++)
-            {
                 AudioManager.Instance?.Play("critical");
-            }
 
             if (hits > 0)
-            {
                 AudioManager.Instance?.PlayStaggeredJitter(weaponHitSoundKey, attacks, 0.02f);
-            }
             else if (weapon.IsMelee)
-            {
                 AudioManager.Instance?.Play("meleemiss");
-            }
             else
-            {
                 AudioManager.Instance?.Play("rangedmiss");
-            }
 
             var defenderHardness = defenderSquad.Hardness;
             if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)
@@ -771,22 +668,14 @@ public static class CombatEngine
             var dodge = defenderSquad.Dodge > 6 && defenderSquad.SquadAbilities.Any(a => a.Innate == SquadAbilities.SixPlusDodge.Innate) ? defenderSquad.Dodge - 1 : defenderSquad.Dodge;
             var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, dodge, saveContext);
             if (weapon.IsMelee && unsaved > 0)
-            {
                 AudioManager.Instance?.Play("chomp");
-            }
             else if (injuries > 0 && unsaved == 0)
-            {
                 AudioManager.Instance?.Play("defensepassed");
-            }
 
             if (HasPrecision(weapon))
-            {
                 currentRecipient = SelectLeastCommonNamedDefender(defenderActors);
-            }
             else
-            {
                 currentRecipient = SelectFurthestFromSquadCenter(defenderActors);
-            }
 
             AllocateDamage(
                 attacker,
@@ -815,17 +704,13 @@ public static class CombatEngine
             var aliveAfterWeapon = CountLivingActors(defenderActors);
             var demiseCheck = System.Math.Max(0, aliveBeforeWeapon - aliveAfterWeapon);
             if (demiseCheck > 0)
-            {
                 handleExplosionProcess?.Invoke(defenderSquad, attackerSquad, demiseCheck);
-            }
 
             RemoveDeadModels(defenderActors, defenderSquad, battleField);
                 checkVictory?.Invoke();
 
             if (CountLivingActors(defenderActors) == 0)
-            {
                 break;
-            }
         }
     }
 
@@ -853,9 +738,7 @@ public static class CombatEngine
         var defenderActors = attackerTeamId == 1 ? teamBActors : teamAActors;
 
         if (attackerSquad == null || defenderSquad == null || defenderActors == null || defenderActors.Count == 0)
-        {
             return;
-        }
 
         _currentDistance = BoardGeometry.ClosestDistanceInches(teamAActors, teamBActors);
         var attackerMove = CombatHelpers.GetMoveVarsForTeam(attackerTeamId, teamAMove, teamBMove);
@@ -867,27 +750,19 @@ public static class CombatEngine
         {
             var weapon = batch.Weapon;
             if (weapon == null)
-            {
                 continue;
-            }
 
             if (!isFight && !CombatHelpers.CheckValidShooting(attackerSquad, attackerMove, weapon, defenderSquad, _currentDistance, hasLineOfSight))
-            {
                 continue;
-            }
 
             var attacks = batch.TotalAttacks;
             if (attacks <= 0)
-            {
                 continue;
-            }
             var aliveBeforeWeapon = CountLivingActors(defenderActors);
             var weaponHitSoundKey = ResolveWeaponHitSoundKey(weapon);
             var indirectShot = !isFight && !hasLineOfSight && weapon.Special.Any(ability => ability.Innate == WeaponAbilities.IndirectFire.Innate);
             if (indirectShot)
-            {
                 GD.Print($"[Indirect Fire] {attackerSquad.Name} firing {weapon.WeaponName} indirectly at {defenderSquad.Name}.");
-            }
 
             var modifiers = CombatHelpers.ObtainModifiers(weapon, attackerSquad, attackerMove, defenderSquad, indirectShot, isFight, _currentDistance, indirectShot ? -1 : 0);
             var hitContext = new RollContext(
@@ -904,22 +779,14 @@ public static class CombatEngine
             hits += hardHits;
 
             for (int i = 0; i < hardHits; i++)
-            {
                 AudioManager.Instance?.Play("critical");
-            }
 
             if (hits > 0)
-            {
                 AudioManager.Instance?.PlayStaggeredJitter(weaponHitSoundKey, attacks, 0.02f);
-            }
             else if (weapon.IsMelee)
-            {
                 AudioManager.Instance?.Play("meleemiss");
-            }
             else
-            {
                 AudioManager.Instance?.Play("rangedmiss");
-            }
 
             var defenderHardness = defenderSquad.Hardness;
             if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)
@@ -947,19 +814,15 @@ public static class CombatEngine
                 attackerTeamId == 1 ? 2 : 1
             );
             var dodge = defenderSquad.Dodge > 6 && defenderSquad.SquadAbilities.Any(a => a.Innate == SquadAbilities.SixPlusDodge.Innate) ? defenderSquad.Dodge - 1 : defenderSquad.Dodge;
-            var unsaved = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, dodge, saveContext);
-            if (weapon.IsMelee && unsaved > 0)
-            {
+            var penetrating = await CombatRolls.SaveSequenceAsync(injuries, defenderSquad.Defense, modifiers.DefenseMod, dodge, saveContext);
+            if (weapon.IsMelee && penetrating > 0)
                 AudioManager.Instance?.Play("chomp");
-            }
-            else if (injuries > 0 && unsaved == 0)
-            {
+            else if (injuries > 0 && penetrating == 0)
                 AudioManager.Instance?.Play("defensepassed");
-            }
 
-            AllocateDamage(attackerActor, defenderActors, defenderSquad, weapon, unsaved, ref currentRecipient);
+            AllocateDamage(attackerActor, defenderActors, defenderSquad, weapon, penetrating, ref currentRecipient);
 
-            var summary = new WeaponResolutionSummary(weapon.WeaponName, attacks, hits, injuries, unsaved);
+            var summary = new WeaponResolutionSummary(weapon.WeaponName, attacks, hits, injuries, penetrating);
             ConsumeOneShotWeapons(attackerSquad, weapon);
             battleHud?.ShowToast(BuildWeaponToast(summary), 2f);
             await Task.Delay(2000);
@@ -971,26 +834,20 @@ public static class CombatEngine
             var aliveAfterWeapon = CountLivingActors(defenderActors);
             var demiseCheck = System.Math.Max(0, aliveBeforeWeapon - aliveAfterWeapon);
             if (demiseCheck > 0)
-            {
                 handleExplosionProcess?.Invoke(defenderSquad, attackerSquad, demiseCheck);
-            }
 
             RemoveDeadModels(defenderActors, defenderSquad, battleField);
                 checkVictory?.Invoke();
 
             if (CountLivingActors(defenderActors) == 0)
-            {
                 break;
-            }
         }
     }
 
     public static void RemoveDeadModels(List<BattleModelActor> actors, Squad squad, BattleField battleField = null)
     {
         if (actors == null || squad == null)
-        {
             return;
-        }
 
         var hasSelfResurrection = squad.SquadAbilities.Any(ability => ability.Innate == "2nd Life");
         var allDead = actors.Count > 0 && actors.All(actor => actor?.BoundModel == null || actor.BoundModel.Health <= 0);
@@ -999,9 +856,7 @@ public static class CombatEngine
             foreach (var actor in actors)
             {
                 if (actor?.BoundModel == null)
-                {
                     continue;
-                }
 
                 var halfHealth = actor.BoundModel.StartingHealth / 2;
                 actor.BoundModel.Health = System.Math.Max(1, halfHealth);
@@ -1017,15 +872,11 @@ public static class CombatEngine
         {
             var actor = actors[i];
             if (actor == null || actor.BoundModel == null)
-            {
                 continue;
-            }
             if (actor.BoundModel.Health <= 0)
             {
                 if (DiceHelpers.SimpleRoll(100) <= 20)
-                {
-                    AudioManager.Instance?.PlayStaggeredJitter("wilhelm_scream",actors.Count, 0.03f);
-                }
+                    AudioManager.Instance?.PlayStaggeredJitter("wilhelm_scream", 1, 0.03f);
                 squad.Composition.Remove(actor.BoundModel);
                 battleField?.UnregisterActor(actor);
                 actor.QueueFree();

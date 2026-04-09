@@ -46,9 +46,8 @@ public partial class CreateModel : Control
 
         _mobileImportHint.Text = "On mobile, copy images into: user://import then select from there.";
         EnsureImportFolderExists();
-
-        // Use GuiInput to detect presses/touches and drags for long-press behaviour.
-        _weaponList.GuiInput += OnWeaponListGuiInput;
+      
+        _weaponList.GuiInput += OnWeaponListGuiInput;  // Use GuiInput to detect presses/touches and drags for long-press behaviour.
 
         PopulateWeaponList();
         LoadDataIfEditing();
@@ -59,9 +58,7 @@ public partial class CreateModel : Control
         _weaponList.Clear();
         var data = GameData.Instance;
         foreach (var weapon in data.WeaponList)
-        {
             _weaponList.AddItem(GetWeaponDisplayText(weapon));
-        }
     }
 
     private string GetWeaponDisplayText(Weapon weapon)
@@ -74,9 +71,7 @@ public partial class CreateModel : Control
     {
         var data = GameData.Instance;
         for (int i = 0; i < data.WeaponList.Count; i++)
-        {
             _weaponList.SetItemText(i, GetWeaponDisplayText(data.WeaponList[i]));
-        }
     }
 
     private void RefreshImagePreview()
@@ -84,19 +79,13 @@ public partial class CreateModel : Control
         _imagePreview.Texture = ModelImageService.LoadTextureForModel(_editingModel);
     }
 
-    // Use ItemList.GetItemAtPosition with global=true to get item under the pointer.
-    private int GetItemIndexAtGlobalPosition(Vector2 globalPosition)
+  
+    private int GetItemIndexAtGlobalPosition(Vector2 globalPosition)   // Use ItemList.GetItemAtPosition with global=true to get item under the pointer.
     {
-        // Godot's ItemList API supports passing global coordinates when requested.
-        // Returns -1 if none.
         try
-        {
-            return (int)_weaponList.GetItemAtPosition(globalPosition, true);
-        }
+        { return (int)_weaponList.GetItemAtPosition(globalPosition, true); }   // Godot's ItemList API supports passing global coordinates when requested. 
         catch
-        {
-            return -1;
-        }
+        { return -1; } // Returns - 1 if none.
     }
 
     private void OnWeaponListGuiInput(InputEvent @event)
@@ -110,63 +99,48 @@ public partial class CreateModel : Control
             case InputEventScreenTouch st:
                 HandlePressState(st.Pressed, st.Position);
                 break;
-
-            case InputEventScreenDrag _:
-                // Cancel pending press when dragging
-                CancelPendingPress();
+            case InputEventScreenDrag _:        
+                CancelPendingPress();     // If the user drags, we cancel any pending long-press action to avoid confusion.
                 break;
         }
     }
 
-    private void HandlePressState(bool isPressed, Vector2 position)
+    private void HandlePressState(bool isPressed, Vector2 position) //Explain tapping and long-pressing logic in the manual.
     {
         if (isPressed)
         {
             _pressedWeaponIndex = GetItemIndexAtGlobalPosition(position);
             if (_pressedWeaponIndex >= 0)
-            {
                 _pressStartedAtMs = Time.GetTicksMsec();
-            }
             return;
         }
-
-        // on release
-        if (_pressedWeaponIndex < 0)
+        
+        if (_pressedWeaponIndex < 0)  // on release
             return;
 
         var releasedIndex = GetItemIndexAtGlobalPosition(position);
         if (releasedIndex != _pressedWeaponIndex)
-        {
-            // user moved off the original item => ignore
-            _pressedWeaponIndex = -1;
+        {          
+            _pressedWeaponIndex = -1;  // user moved off the original item => ignore
             return;
         }
 
-        var heldDuration = Time.GetTicksMsec() - _pressStartedAtMs;
+        var heldDuration = Time.GetTicksMsec() - _pressStartedAtMs; 
         if (heldDuration >= LongPressThresholdMs)
-        {
-            // long-press => remove last copy
-            RemoveWeaponCopy(releasedIndex);
-        }
-        else
-        {
-            // short tap => add (duplicates allowed)
-            AddWeaponCopy(releasedIndex);
-        }
-
+            RemoveWeaponCopy(releasedIndex); // long-press => remove last copy
+        else      
+            AddWeaponCopy(releasedIndex);   // short tap => add (duplicates allowed)
         _weaponList.Deselect(releasedIndex);
         _pressedWeaponIndex = -1;
     }
 
     private void CancelPendingPress()
-    {
-        _pressedWeaponIndex = -1;
-    }
+        { _pressedWeaponIndex = -1; }
 
     private void AddWeaponCopy(int index)
     {
         var data = GameData.Instance;
-        if (index < 0 || index >= data.WeaponList.Count)
+        if (index < 0 || index >= data.WeaponList.Count) // Out of bounds error.
             return;
 
         if (_selectedWeapons.Count >= MaxWeaponsPerModel)
@@ -186,7 +160,7 @@ public partial class CreateModel : Control
             return;
 
         var weaponName = data.WeaponList[index].WeaponName;
-        var removeIndex = _selectedWeapons.FindLastIndex(w => w.WeaponName == weaponName);
+        var removeIndex = _selectedWeapons.FindLastIndex(w => w.WeaponName == weaponName); // Find the last occurrence of this weapon in the selected list to remove one copy.
         if (removeIndex >= 0)
         {
             _selectedWeapons.RemoveAt(removeIndex);
@@ -211,10 +185,10 @@ public partial class CreateModel : Control
         else
         {
             _titleLabel.Text = "Create Model";
-            _editingModel = new Model("", 1, 1, 0, new List<Weapon>());
+            _editingModel = new Model("", 1, 1, 0, new List<Weapon>()); // Default values for a new model. Name empty, health 1, bracketed 1, no weapons.
         }
 
-        ModelImageService.EnsureModelIdentityAndDefault(_editingModel);
+        ModelImageService.EnsureModelIdentityAndDefault(_editingModel); // Ensure the model has a unique ID and a default image if it doesn't have one already, so that the image preview can show something immediately.
         RefreshImagePreview();
     }
 
@@ -246,13 +220,9 @@ public partial class CreateModel : Control
         ModelImageService.EnsureModelIdentityAndDefault(_editingModel);
 
         if (data.SelectedModelIndex == -1)
-        {
             data.ModelList.Add(_editingModel);
-        }
         else
-        {
             data.ModelList[data.SelectedModelIndex] = _editingModel;
-        }
 
         data.SaveModelsToFile();
         data.SelectedModelIndex = -1;
@@ -281,19 +251,16 @@ public partial class CreateModel : Control
     }
 
     private void EnsureImportFolderExists()
-    {
-        DirAccess.MakeDirRecursiveAbsolute("user://import");
-    }
+        { DirAccess.MakeDirRecursiveAbsolute("user://import"); }
 
     private void OnImageFileSelected(string path)
     {
-        var result = ModelImageService.ImportAndApplyCustomImage(_editingModel, path);
+        var result = ModelImageService.ImportAndApplyCustomImage(_editingModel, path); // This method handles copying the image to the appropriate location and updating the model's image reference. It returns an error code if something goes wrong during the import process.
         if (result != Error.Ok)
         {
             OS.Alert($"Could not import image: {result}", "Import Failed");
             return;
         }
-
         RefreshImagePreview();
     }
 }

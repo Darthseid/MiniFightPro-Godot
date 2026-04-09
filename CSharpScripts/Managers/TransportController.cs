@@ -48,9 +48,7 @@ public sealed class TransportController
     public async Task HandleTransportEmbarkDisembarkStepAsync(int activeTeamId, bool activeTeamIsAI)
     {
         if (activeTeamIsAI)
-        {
             return;
-        }
 
         var enemyTeamId = activeTeamId == 1 ? 2 : 1;
         var activeSquads = _getAliveSquadsForTeam(activeTeamId);
@@ -115,12 +113,12 @@ public sealed class TransportController
         }
     }
 
-    public async Task<bool> RedeployStrategicReserveSquadAsync(int teamId, Squad squad)
+    public async Task<bool> RedeployBackupForceSquadAsync(int teamId, Squad squad)
     {
         var enemyTeamId = teamId == 1 ? 2 : 1;
         var enemyActors = _getAliveSquadsForTeam(enemyTeamId).SelectMany(_getActorsForSquad).ToList();
         _setActiveSquadForTeam(teamId, squad);
-        SetSquadStrategicReserveVisual(squad, false);
+        SetSquadBackupForceVisual(squad, false);
 
         var squadActors = _getActorsForSquad(squad);
         if (squadActors.Count > 0)
@@ -141,47 +139,36 @@ public sealed class TransportController
             var placedActors = _getActorsForSquad(squad);
             var closestEnemyDistanceInches = BoardGeometry.ClosestDistanceInches(placedActors, enemyActors);
             if (enemyActors.Count == 0 || closestEnemyDistanceInches > 9f)
-            {
                 return true;
-            }
 
             _showToast("Reserve redeploy must end more than 9\" away from enemies.");
             var reattempt = await _confirmAsync("Invalid placement. Reattempt redeploy placement?");
             if (!reattempt)
             {
-                SetSquadStrategicReserveVisual(squad, true);
+                SetSquadBackupForceVisual(squad, true);
                 return false;
             }
-
-            SetSquadStrategicReserveVisual(squad, false);
+            SetSquadBackupForceVisual(squad, false);
         }
     }
 
     public bool TryEmbarkSquad(Squad transport, Squad passenger)
     {
         if (!transport.IsTransport() || transport.EmbarkedSquad != null || !passenger.IsEmbarkEligiblePassenger())
-        {
             return false;
-        }
 
         var transportTeamId = _getTeamIdForSquad(transport);
         var enemyTeamId = transportTeamId == 1 ? 2 : 1;
         if (_squadInFightRangeOfEnemy(transport, enemyTeamId) || _squadInFightRangeOfEnemy(passenger, enemyTeamId))
-        {
             return false;
-        }
 
         var transportActors = _getActorsForSquad(transport);
         var passengerActors = _getActorsForSquad(passenger);
         if (transportActors.Count == 0 || passengerActors.Count == 0)
-        {
             return false;
-        }
 
         if (BoardGeometry.ClosestDistanceInches(transportActors, passengerActors) > 3f)
-        {
             return false;
-        }
 
         transport.EmbarkedSquad = passenger;
         passenger.TransportedBy = transport;
@@ -193,9 +180,7 @@ public sealed class TransportController
     {
         var passenger = transport?.EmbarkedSquad;
         if (transport == null || passenger == null)
-        {
             return false;
-        }
 
         var transportTeamId = _getTeamIdForSquad(transport);
         var enemyTeamId = transportTeamId == 1 ? 2 : 1;
@@ -203,9 +188,7 @@ public sealed class TransportController
         var passengerActors = _getActorsForSquad(passenger);
         var enemyActors = _getAliveSquadsForTeam(enemyTeamId).SelectMany(_getActorsForSquad).ToList();
         if (passengerActors.Count == 0)
-        {
             return false;
-        }
 
         SetSquadActorsEmbarkedVisualState(passenger, false);
         bool placed;
@@ -214,9 +197,7 @@ public sealed class TransportController
             placed = BoardGeometry.PlacePassengerSquadAroundTransport(transportActors, passengerActors, emergency ? 6f : 3f, enemyActors, true)
                      || BoardGeometry.PlacePassengerSquadAroundTransport(transportActors, passengerActors, emergency ? 6f : 3f, enemyActors, false);
             if (placed)
-            {
                 _lastKnownTransportCenters[transport] = BoardGeometry.GetActorsCenter(transportActors);
-            }
         }
         else if (emergency && _lastKnownTransportCenters.TryGetValue(transport, out var lastCenter))
         {
@@ -224,9 +205,7 @@ public sealed class TransportController
                      || BoardGeometry.PlacePassengerSquadAroundPoint(lastCenter, passengerActors, 6f, enemyActors, false);
         }
         else
-        {
             return false;
-        }
 
         transport.EmbarkedSquad = null;
         passenger.TransportedBy = null;
@@ -235,11 +214,10 @@ public sealed class TransportController
         if (emergency)
         {
             passenger.ShellShock = true;
-            AudioManager.Instance?.Play("demonlaugh");
+            AudioManager.Instance?.Play("failedbravery"); //Consider changing this sound effect to a terrified scream.
             _showToast($"{passenger.Name} became shell-shocked.");
             _applyRout(passenger, false);
         }
-
         return true;
     }
 
@@ -250,23 +228,17 @@ public sealed class TransportController
             actor.Visible = !embarked;
             var clickArea = actor.GetNodeOrNull<Area2D>("ClickArea");
             if (clickArea != null)
-            {
                 clickArea.InputPickable = !embarked;
-            }
 
             var collision = actor.GetNodeOrNull<CollisionShape2D>("ClickArea/CollisionShape2D");
             if (collision != null)
-            {
                 collision.Disabled = embarked;
-            }
         }
     }
 
-    public void SetSquadStrategicReserveVisual(Squad squad, bool inReserve)
+    public void SetSquadBackupForceVisual(Squad squad, bool inReserve)
     {
         foreach (var actor in _getActorsForSquad(squad))
-        {
             actor.Visible = !inReserve;
-        }
     }
 }

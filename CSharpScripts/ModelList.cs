@@ -30,12 +30,11 @@ public partial class ModelList : Control
     private void OnCreatePressed()
     {
         var data = GameData.Instance;
-        if (data.ModelList.Count > 3000)
+        if (data.ModelList.Count > 3000) // Arbitrary limit to prevent excessive memory usage
         {
             OS.Alert("You have too many models.", "Limit reached");
             return;
         }
-
         TryNavigateToCreateModel();
     }
 
@@ -55,9 +54,7 @@ public partial class ModelList : Control
         if (_listContainer == null) return;
 
         foreach (Node child in _listContainer.GetChildren())
-        {
-            child.QueueFree();
-        }
+            child.QueueFree(); // Clear existing items
 
         var data = GameData.Instance;
         if (data == null)
@@ -86,9 +83,7 @@ public partial class ModelList : Control
     {
         var data = GameData.Instance;
         if (index < 0 || index >= data.ModelList.Count)
-        {
             return;
-        }
 
         _pendingDeleteIndex = index;
         var modelName = data.ModelList[index].Name;

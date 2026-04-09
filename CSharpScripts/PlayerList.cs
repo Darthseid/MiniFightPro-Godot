@@ -57,9 +57,7 @@ public partial class PlayerList : Control
         if (_listContainer == null) return;
 
         foreach (Node child in _listContainer.GetChildren())
-        {
-            child.QueueFree();
-        }
+            child.QueueFree(); // Clear existing items
 
         var data = GameData.Instance;
         if (data == null)
@@ -88,9 +86,7 @@ public partial class PlayerList : Control
     {
         var data = GameData.Instance;
         if (index < 0 || index >= data.PlayerList.Count)
-        {
             return;
-        }
 
         _pendingDeleteIndex = index;
         var playerName = data.PlayerList[index].PlayerName;

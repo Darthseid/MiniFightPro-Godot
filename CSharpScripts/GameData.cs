@@ -29,16 +29,12 @@ public partial class GameData : Node
     public int SelectedPlayerIndex = -1;
 
     public override void _Ready()
-    {
-        Instance = this;
-    }
+        { Instance = this; }
 
     public void LoadWeaponsFromFile()
     {
         if (_weaponsLoaded)
-        {
             return;
-        }
 
         var path = $"user://{WeaponsFileName}";
         if (!FileAccess.FileExists(path))
@@ -76,17 +72,13 @@ public partial class GameData : Node
             file.StoreString(json);
         }
         catch (Exception error)
-        {
-            GD.PrintErr($"Failed to save weapons file: {error.Message}");
-        }
+            { GD.PrintErr($"Failed to save weapons file: {error.Message}"); }
     }
 
     public void LoadModelsFromFile()
     {
         if (_modelsLoaded)
-        {
             return;
-        }
 
         var path = $"user://{ModelsFileName}";
         if (!FileAccess.FileExists(path))
@@ -106,14 +98,10 @@ public partial class GameData : Node
 
             var changed = false;
             foreach (var model in ModelList)
-            {
                 changed |= ModelImageService.EnsureModelIdentityAndDefault(model);
-            }
 
             if (changed)
-            {
                 SaveModelsToFile();
-            }
 
             _modelsLoaded = true;
         }
@@ -136,17 +124,13 @@ public partial class GameData : Node
             file.StoreString(json);
         }
         catch (Exception error)
-        {
-            GD.PrintErr($"Failed to save models file: {error.Message}");
-        }
+            { GD.PrintErr($"Failed to save models file: {error.Message}"); }
     }
 
     public void LoadSquadsFromFile()
     {
         if (_squadsLoaded)
-        {
             return;
-        }
 
         var path = $"user://{SquadsFileName}";
         if (!FileAccess.FileExists(path))
@@ -232,47 +216,35 @@ public partial class GameData : Node
             file.StoreString(json);
         }
         catch (Exception error)
-        {
-            GD.PrintErr($"Failed to save players file: {error.Message}");
-        }
+        { GD.PrintErr($"Failed to save players file: {error.Message}"); }
     }
 
     public void SyncModelsWithWeapons()
     {
         if (WeaponList.Count == 0 || ModelList.Count == 0)
-        {
             return;
-        }
 
         var weaponLookup = new Dictionary<string, Weapon>();
         foreach (var weapon in WeaponList)
         {
             if (!string.IsNullOrWhiteSpace(weapon.WeaponName))
-            {
                 weaponLookup[weapon.WeaponName] = weapon;
-            }
         }
 
         var updated = false;
         foreach (var model in ModelList)
         {
             if (model.Tools == null)
-            {
                 continue;
-            }
 
             var updatedTools = new List<Weapon>();
             foreach (var tool in model.Tools)
             {
                 if (tool?.WeaponName == null)
-                {
                     continue;
-                }
 
                 if (weaponLookup.TryGetValue(tool.WeaponName, out var latestWeapon))
-                {
                     updatedTools.Add(latestWeapon);
-                }
             }
 
             if (updatedTools.Count != model.Tools.Count)
@@ -299,50 +271,37 @@ public partial class GameData : Node
                 }
             }
         }
-
         if (updated)
-        {
             SaveModelsToFile();
-        }
     }
 
     public void SyncSquadsWithModels()
     {
         if (ModelList.Count == 0 || SquadList.Count == 0)
-        {
             return;
-        }
 
         var modelLookupById = new Dictionary<string, Model>();
         var modelLookupByName = new Dictionary<string, Model>();
         foreach (var model in ModelList)
         {
             if (!string.IsNullOrWhiteSpace(model.ModelId))
-            {
                 modelLookupById[model.ModelId] = model;
-            }
 
             if (!string.IsNullOrWhiteSpace(model.Name))
-            {
                 modelLookupByName[model.Name] = model;
-            }
         }
 
         var updated = false;
         foreach (var squad in SquadList)
         {
             if (squad.Composition == null)
-            {
                 continue;
-            }
 
             var updatedModels = new List<Model>();
             foreach (var model in squad.Composition)
             {
                 if (model?.Name == null)
-                {
                     continue;
-                }
 
                 if (!string.IsNullOrWhiteSpace(model.ModelId) && modelLookupById.TryGetValue(model.ModelId, out var latestModelById))
                 {
@@ -351,9 +310,7 @@ public partial class GameData : Node
                 }
 
                 if (modelLookupByName.TryGetValue(model.Name, out var latestModelByName))
-                {
                     updatedModels.Add(latestModelByName);
-                }
             }
 
             if (updatedModels.Count != squad.Composition.Count)
@@ -380,50 +337,37 @@ public partial class GameData : Node
                 }
             }
         }
-
         if (updated)
-        {
             SaveSquadsToFile();
-        }
     }
 
 
     public void SyncPlayersWithSquads()
     {
         if (PlayerList.Count == 0 || SquadList.Count == 0)
-        {
             return;
-        }
 
         var squadLookup = new Dictionary<string, Squad>();
         foreach (var squad in SquadList)
         {
             if (!string.IsNullOrWhiteSpace(squad.Name))
-            {
                 squadLookup[squad.Name] = squad;
-            }
         }
 
         var updated = false;
         foreach (var player in PlayerList)
         {
             if (player?.TheirSquads == null)
-            {
                 continue;
-            }
 
             var updatedSquads = new List<Squad>();
             foreach (var squad in player.TheirSquads)
             {
                 if (squad?.Name == null)
-                {
                     continue;
-                }
 
                 if (squadLookup.TryGetValue(squad.Name, out var latestSquad))
-                {
                     updatedSquads.Add(latestSquad.DeepCopy());
-                }
             }
 
             if (updatedSquads.Count != player.TheirSquads.Count)
@@ -443,11 +387,8 @@ public partial class GameData : Node
                 }
             }
         }
-
         if (updated)
-        {
             SavePlayersToFile();
-        }
     }
 
     public void EnsurePresetDataLoaded()
@@ -590,10 +531,10 @@ public partial class GameData : Node
     new Weapon("Varnox Battle Cannon", 48f, "D6+1", 4, 10, -1, "3",
         new List<WeaponAbility> { WeaponAbilities.Blast }, "cannon.mp3"),
 
-    new Weapon("Twin Autocannon", 48f, "2", 4, 9, -1, "3",
+    new Weapon("Dual Bullet Hoses", 48f, "2", 4, 9, -1, "3",
         new List<WeaponAbility>(), "Machine Gun.mp3"),
 
-    new Weapon("Twin Hot-shot Volley Gun", 24f, "6", 4, 5, -1, "1",
+    new Weapon("Dual Close-up Lasers", 24f, "6", 4, 5, -1, "1",
         new List<WeaponAbility>(), "laser.mp3"),
 
     new Weapon("Armored Tracks", 1f, "6", 4, 7, 0, "1",
@@ -663,9 +604,7 @@ public partial class GameData : Node
         var mechaSquad = new List<Model> { new Model("Huge Mecha", 100, 33, hugeMechaWeapons) };
         var bikerSquad = new List<Model>();
         for (int i = 0; i < 3; i++)
-        {
             bikerSquad.Add(presetModels[10].DeepCopy());
-        }
 
         var planeSquad = new List<Model> { new Model("Homemade Biplane", 12, 4, planeWeapons) };
         var pylonModel = new List<Model> { new Model("Zapper Pylon", 10, 0, pylonWeapon) };
@@ -673,30 +612,20 @@ public partial class GameData : Node
 
         var guardSquad = new List<Model>();
         for (int i = 0; i < 18; i++)
-        {
             guardSquad.Add(presetModels[0].DeepCopy());
-        }
         for (int i = 0; i < 2; i++)
-        {
             guardSquad.Add(presetModels[4].DeepCopy());
-        }
 
         var marineSquad = new List<Model>();
         for (int i = 0; i < 2; i++)
-        {
             marineSquad.Add(presetModels[3].DeepCopy());
-        }
         marineSquad.Add(presetModels[2].DeepCopy());
         for (int i = 0; i < 7; i++)
-        {
             marineSquad.Add(presetModels[1].DeepCopy());
-        }
 
         var tankSquad = new List<Model>();
         for (int i = 0; i < 3; i++)
-        {
             tankSquad.Add(presetModels[5].DeepCopy());
-        }
 
         var varnoxSquad = new List<Model> { presetModels[11].DeepCopy() };
 
@@ -730,21 +659,21 @@ public partial class GameData : Node
         var allOrders = Order.BuildDefaultOrders();
         var humanDefaultOrders = new List<Order>
         {
-            allOrders.First(o => o.OrderId == "mists_of_deimos"),
-            allOrders.First(o => o.OrderId == "go_to_ground"),
-            allOrders.First(o => o.OrderId == "fire_overwatch")
+            allOrders.First(o => o.OrderId == "misty_retreat"),
+            allOrders.First(o => o.OrderId == "hit_the_ground"),
+            allOrders.First(o => o.OrderId == "anti-charge shots")
         }.Select(o => new Order(o.OrderId, o.OrderCost, o.OrderName, o.AvailablePhase, o.TargetsEnemy, o.Description, o.WindowType, o.TargetSide, o.TargetType, o.RequiresTarget)).ToList();
         var cyborgDefaultOrders = new List<Order>
         {
             allOrders.First(o => o.OrderId == "tank_shock"),
-            allOrders.First(o => o.OrderId == "fire_overwatch")
+            allOrders.First(o => o.OrderId == "anti-charge shots")
         }.Select(o => new Order(o.OrderId, o.OrderCost, o.OrderName, o.AvailablePhase, o.TargetsEnemy, o.Description, o.WindowType, o.TargetSide, o.TargetType, o.RequiresTarget)).ToList();
         var xeliaDefaultOrders = new List<Order>
         {
-            allOrders.First(o => o.OrderId == "heroic_intervention"),
-            allOrders.First(o => o.OrderId == "counter_offensive"),
-            allOrders.First(o => o.OrderId == "epic_challenge"),
-            allOrders.First(o => o.OrderId == "epic_bravery")
+            allOrders.First(o => o.OrderId == "counter_charge"),
+            allOrders.First(o => o.OrderId == "sudden_reflexes"),
+            allOrders.First(o => o.OrderId == "mano_a_mano"),
+            allOrders.First(o => o.OrderId == "chutzpah")
         }.Select(o => new Order(o.OrderId, o.OrderCost, o.OrderName, o.AvailablePhase, o.TargetsEnemy, o.Description, o.WindowType, o.TargetSide, o.TargetType, o.RequiresTarget)).ToList();
 
         var presetPlayers = new List<Player>

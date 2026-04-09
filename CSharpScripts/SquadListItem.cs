@@ -50,14 +50,10 @@ public partial class SquadListItem : Button
             }
 
             if (mouseEvent.ButtonIndex == MouseButton.Left)
-            {
                 HandlePress(mouseEvent.Pressed);
-            }
         }
         else if (@event is InputEventScreenTouch touchEvent)
-        {
             HandlePress(touchEvent.Pressed);
-        }
     }
 
     private void HandlePress(bool pressed)
@@ -68,9 +64,7 @@ public partial class SquadListItem : Button
             _longPressTimer?.Start();
         }
         else
-        {
             _longPressTimer?.Stop();
-        }
     }
 
     private void OnLongPressTimeout()

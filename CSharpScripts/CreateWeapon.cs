@@ -5,7 +5,6 @@ using System.Linq;
 
 public partial class CreateWeapon : Control
 {
-    // Form References
     private LineEdit _nameIn = null!;
     private LineEdit _attacksIn = null!;
     private LineEdit _dmgIn = null!;
@@ -159,15 +158,12 @@ public partial class CreateWeapon : Control
     private void SetupAbilitiesList()
     {
         _abilitiesList.Clear();
-
         _sortedAbilityOptions = AbilityOptions
             .OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         for (int i = 0; i < _sortedAbilityOptions.Count; i++)
-        {
             _abilitiesList.AddItem(_sortedAbilityOptions[i].Name);
-        }
     }
 
     private void SetupVariableAbilityOptions()
@@ -178,9 +174,7 @@ public partial class CreateWeapon : Control
             .ToList();
 
         foreach (var baseAbility in _sortedVariableBaseOptions)
-        {
             _variableAbilityBaseDropdown.AddItem(baseAbility.Name);
-        }
     }
 
 
@@ -195,31 +189,22 @@ public partial class CreateWeapon : Control
 
         const string weaponSoundPath = "res://Assets/WeaponSounds";
         if (!DirAccess.DirExistsAbsolute(weaponSoundPath))
-        {
             return;
-        }
 
         var discovered = new List<string>();
         using var dir = DirAccess.Open(weaponSoundPath);
         if (dir == null)
-        {
             return;
-        }
 
         dir.ListDirBegin();
         while (true)
         {
             var fileName = dir.GetNext();
             if (string.IsNullOrEmpty(fileName))
-            {
                 break;
-            }
 
             if (dir.CurrentIsDir() || !fileName.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
-            {
                 continue;
-            }
-
             discovered.Add(fileName);
         }
         dir.ListDirEnd();
@@ -237,9 +222,7 @@ public partial class CreateWeapon : Control
     private string GetSelectedHitSoundKey()
     {
         if (_hitSoundDropdown.Selected < 0 || _hitSoundDropdown.Selected >= _hitSoundDropdown.ItemCount)
-        {
             return string.Empty;
-        }
 
         var metadata = _hitSoundDropdown.GetItemMetadata(_hitSoundDropdown.Selected);
         return metadata.VariantType == Variant.Type.Nil ? string.Empty : metadata.AsString();
@@ -292,7 +275,6 @@ public partial class CreateWeapon : Control
             if (idx >= 0 && idx < _sortedAbilityOptions.Count)
                 _currentAbilities.Add(_sortedAbilityOptions[idx]);
         }
-
         _currentAbilities.AddRange(variableAbilities);
         UpdateAbilitiesLabel();
     }
@@ -336,9 +318,7 @@ public partial class CreateWeapon : Control
     private void UpdateAbilitiesLabel()
     {
         if (_currentAbilities.Count == 0)
-        {
             _selectedAbilitiesLabel.Text = "No abilities selected.";
-        }
         else
         {
             _selectedAbilitiesLabel.Text =

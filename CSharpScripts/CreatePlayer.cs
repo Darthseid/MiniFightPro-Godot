@@ -72,9 +72,7 @@ public partial class CreatePlayer : Control
 
         foreach (var squad in GameData.Instance.SquadList
                      .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase))
-        {
             _availableSquads.AddItem(squad.Name);
-        }
     }
 
     private void PopulateOrdersLists()
@@ -82,9 +80,7 @@ public partial class CreatePlayer : Control
         _availableOrders.Clear();
         _selectedOrders.Clear();
         foreach (var order in Order.BuildDefaultOrders())
-        {
             _availableOrders.AddItem(order.OrderName);
-        }
     }
 
     private void PopulateDialogs()
@@ -114,19 +110,13 @@ public partial class CreatePlayer : Control
             _selectedAbilities.AddRange(player.PlayerAbilities ?? new List<string>());
 
             foreach (var squad in player.TheirSquads ?? new List<Squad>())
-            {
                 _selectedSquads.AddItem(squad.Name);
-            }
 
             foreach (var order in player.Orders ?? new List<Order>())
-            {
                 _selectedOrders.AddItem(order.OrderName);
-            }
         }
         else
-        {
             _titleLabel.Text = "Create Player";
-        }
     }
 
     private void OnAddSquads()
@@ -138,7 +128,6 @@ public partial class CreatePlayer : Control
                 OS.Alert($"A player cannot have more than {MaxSquadsPerPlayer} squads.", "Limit reached");
                 return;
             }
-
             var name = _availableSquads.GetItemText(index);
             _selectedSquads.AddItem(name);
         }
@@ -237,9 +226,7 @@ public partial class CreatePlayer : Control
         foreach (var selectedName in selectedSquadNames)
         {
             if (squadLookup.TryGetValue(selectedName, out var matchedSquad))
-            {
                 squads.Add(matchedSquad.DeepCopy());
-            }
         }
 
         var orderTemplates = Order.BuildDefaultOrders();
@@ -249,9 +236,7 @@ public partial class CreatePlayer : Control
         {
             var selectedName = _selectedOrders.GetItemText(i);
             if (orderLookupByName.TryGetValue(selectedName, out var template))
-            {
                 selectedOrders.Add(new Order(template.OrderId, template.OrderCost, template.OrderName, template.AvailablePhase, template.TargetsEnemy, template.Description, template.WindowType, template.TargetSide, template.TargetType, template.RequiresTarget));
-            }
         }
 
         var player = new Player(

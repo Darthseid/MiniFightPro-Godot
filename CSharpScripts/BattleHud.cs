@@ -46,27 +46,19 @@ public partial class BattleHud : Control
 
         var nextButton = GetNodeOrNull<Button>("%BtnNextPhase");
         if (nextButton != null)
-        {
             nextButton.Pressed += () => EmitSignal(SignalName.NextPhasePressed);
-        }
 
         _measureButton = GetNodeOrNull<Button>("%BtnMeasure");
         if (_measureButton != null)
-        {
             _measureButton.Pressed += () => EmitSignal(SignalName.MeasureRequested);
-        }
 
         var player1Toggle = GetNodeOrNull<Button>("%BtnPlayer1OrdersFolder");
         if (player1Toggle != null)
-        {
             player1Toggle.Pressed += () => ToggleOrderPanel("%Player1OrdersPanel");
-        }
 
         var player2Toggle = GetNodeOrNull<Button>("%BtnPlayer2OrdersFolder");
         if (player2Toggle != null)
-        {
             player2Toggle.Pressed += () => ToggleOrderPanel("%Player2OrdersPanel");
-        }
 
         SetMeasureButtonEnabledVisual(false);
 
@@ -78,9 +70,7 @@ public partial class BattleHud : Control
     private static void ConfigurePromptDialog(ConfirmationDialog? dialog)
     {
         if (dialog == null)
-        {
             return;
-        }
 
         dialog.Set("dialog_close_on_escape", false);
         dialog.Set("uncloseable", true);
@@ -90,16 +80,12 @@ public partial class BattleHud : Control
     {
         var panel = GetNodeOrNull<Control>(path);
         if (panel == null)
-        {
             return;
-        }
 
         var otherPath = path == "%Player1OrdersPanel" ? "%Player2OrdersPanel" : "%Player1OrdersPanel";
         var other = GetNodeOrNull<Control>(otherPath);
         if (other != null)
-        {
             other.Visible = false;
-        }
 
         panel.Visible = !panel.Visible;
     }
@@ -107,29 +93,19 @@ public partial class BattleHud : Control
     public void ConfigureOrders(Player player1, Player player2, OrderManager manager, Action<int, string> onOrderPressed)
     {
         if (player1 == null || player2 == null || manager == null || onOrderPressed == null)
-        {
             return;
-        }
 
         if (_player1OrdersPoints != null)
-        {
             _player1OrdersPoints.Text = $"Order Points: {player1.OrderPoints}";
-        }
 
         if (_player1OrdersHeader != null)
-        {
             _player1OrdersHeader.Text = $"{player1.PlayerName} Orders";
-        }
 
         if (_player2OrdersPoints != null)
-        {
             _player2OrdersPoints.Text = $"Order Points: {player2.OrderPoints}";
-        }
 
         if (_player2OrdersHeader != null)
-        {
             _player2OrdersHeader.Text = $"{player2.PlayerName} Orders";
-        }
 
         RenderOrderButtons(_player1OrdersList, player1, 1, manager, onOrderPressed);
         RenderOrderButtons(_player2OrdersList, player2, 2, manager, onOrderPressed);
@@ -138,14 +114,10 @@ public partial class BattleHud : Control
     private static void RenderOrderButtons(VBoxContainer? container, Player player, int playerId, OrderManager manager, Action<int, string> onOrderPressed)
     {
         if (container == null)
-        {
             return;
-        }
 
         foreach (var child in container.GetChildren())
-        {
             child.QueueFree();
-        }
 
         foreach (var order in player.Orders ?? new List<Order>())
         {
@@ -180,9 +152,7 @@ public partial class BattleHud : Control
     public void ShowGameOverBanner(string text)
     {
         if (_gameOverOverlay == null || _gameOverLabel == null)
-        {
             return;
-        }
 
         _gameOverLabel.Text = text;
         _gameOverOverlay.Visible = true;
@@ -191,15 +161,11 @@ public partial class BattleHud : Control
     public void HideGameOverBanner()
     {
         if (_gameOverOverlay == null)
-        {
             return;
-        }
 
         _gameOverOverlay.Visible = false;
         if (_gameOverLabel != null)
-        {
             _gameOverLabel.Text = string.Empty;
-        }
     }
 
     private void OnToastTimeout()
@@ -254,9 +220,7 @@ public partial class BattleHud : Control
     public Task<int> ChooseOptionAsync(string title, IReadOnlyList<string> options)
     {
         if (_optionDialog == null || _optionList == null)
-        {
             return Task.FromResult(-1);
-        }
 
         var tcs = new TaskCompletionSource<int>();
 
@@ -282,9 +246,7 @@ public partial class BattleHud : Control
 
         _optionList.Clear();
         foreach (var option in options)
-        {
             _optionList.AddItem(option);
-        }
         _optionList.SelectMode = ItemList.SelectModeEnum.Single;
         _optionDialog.Title = title;
         _optionDialog.GetCancelButton().Text = "Skip";
@@ -299,10 +261,8 @@ public partial class BattleHud : Control
     public void SetMeasureButtonEnabledVisual(bool enabled)
     {
         if (_measureButton == null)
-        {
             return;
-        }
 
-        _measureButton.Modulate = enabled ? new Color(1f, 0.92f, 0.35f, 1f) : Colors.White;
+        _measureButton.Modulate = enabled ? new Color(1f, 0.92f, 0.35f, 1f) : Colors.White; // Highlighted Gold when enabled, white when disabled
     }
 }

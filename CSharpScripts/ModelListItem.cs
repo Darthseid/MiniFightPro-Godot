@@ -49,15 +49,11 @@ public partial class ModelListItem : Button
                 return;
             }
 
-            if (mouseEvent.ButtonIndex == MouseButton.Left)
-            {
+            if (mouseEvent.ButtonIndex == MouseButton.Left) //This is equivalent to touching on mobile, so we want to handle long press for both mouse and touch.
                 HandlePress(mouseEvent.Pressed);
-            }
         }
         else if (@event is InputEventScreenTouch touchEvent)
-        {
             HandlePress(touchEvent.Pressed);
-        }
     }
 
     private void HandlePress(bool pressed)
@@ -68,9 +64,7 @@ public partial class ModelListItem : Button
             _longPressTimer?.Start();
         }
         else
-        {
-            _longPressTimer?.Stop();
-        }
+            _longPressTimer?.Stop(); // This handles tapping versus long pressing. If the user releases before the timer, it won't trigger the long press action.
     }
 
     private void OnLongPressTimeout()

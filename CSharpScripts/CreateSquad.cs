@@ -95,11 +95,8 @@ public partial class CreateSquad : Control
         _availableModels.Clear();
         _selectedModels.Clear();
 
-        foreach (var model in GameData.Instance.ModelList
-                     .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase))
-        {
+        foreach (var model in GameData.Instance.ModelList.OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase))
             _availableModels.AddItem(model.Name);
-        }
     }
 
     private void PopulateDialogs()
@@ -129,16 +126,14 @@ public partial class CreateSquad : Control
             .ToList();
 
         foreach (var baseAbility in _sortedVariableBaseAbilities)
-        {
             _variableAbilityBaseDropdown.AddItem(baseAbility.Name);
-        }
     }
 
     private void LoadDataIfEditing()
     {
         var data = GameData.Instance;
 
-        if (data.SelectedSquadIndex >= 0 && data.SelectedSquadIndex < data.SquadList.Count)
+        if (data.SelectedSquadIndex >= 0 && data.SelectedSquadIndex < data.SquadList.Count) //This means that there is a squad selected for editing. If -1, we're creating a new squad.
         {
             _titleLabel.Text = "Edit Squad";
             var squad = data.SquadList[data.SelectedSquadIndex];
@@ -158,14 +153,10 @@ public partial class CreateSquad : Control
             _selectedAbilities.AddRange(squad.SquadAbilities ?? new List<SquadAbility>());
 
             foreach (var model in squad.Composition ?? new List<Model>())
-            {
                 _selectedModels.AddItem(model.Name);
-            }
         }
         else
-        {
             _titleLabel.Text = "Create Squad";
-        }
     }
 
     private void OnAddModels()
@@ -177,7 +168,6 @@ public partial class CreateSquad : Control
                 OS.Alert($"A squad cannot have more than {MaxModelsPerSquad} models.", "Limit reached");
                 return;
             }
-
             var name = _availableModels.GetItemText(index);
             _selectedModels.AddItem(name);
         }
@@ -195,18 +185,15 @@ public partial class CreateSquad : Control
     private void ShowSquadTypesDialog()
     {
         _squadTypesList.UnselectAll();
-
         for (int i = 0; i < _sortedSquadTypes.Count; i++)
             if (_selectedSquadTypes.Contains(_sortedSquadTypes[i]))
                 _squadTypesList.Select(i);
-
         _squadTypesDialog.PopupCentered();
     }
 
     private void ApplySquadTypesSelection()
     {
         _selectedSquadTypes.Clear();
-
         foreach (int index in _squadTypesList.GetSelectedItems())
             if (index >= 0 && index < _sortedSquadTypes.Count)
                 _selectedSquadTypes.Add(_sortedSquadTypes[index]);
@@ -338,9 +325,7 @@ public partial class CreateSquad : Control
         foreach (var selectedName in selectedModelNames)
         {
             if (modelLookup.TryGetValue(selectedName, out var matchedModel))
-            {
                 composition.Add(matchedModel);
-            }
         }
 
         var squad = new Squad(

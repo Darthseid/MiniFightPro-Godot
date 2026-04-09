@@ -93,9 +93,7 @@ public class Order
     public bool MatchesTargetType(Squad squad)
     {
         if (squad == null)
-        {
             return false;
-        }
 
         return TargetType switch
         {
@@ -119,100 +117,105 @@ public class Order
     public static List<Order> BuildDefaultOrders()
     {
         return new List<Order>
-        {
-            new Order(
-                "epic_challenge",
-                1,
-                "Epic Challenge",
-                "Melee",
-                false,
-                "Friendly Character squad gains temporary Precision on melee weapons for this melee phase.",
-                OrderWindowType.StartOfMeleePhase,
-                OrderTargetSide.Friendly,
-                OrderTargetType.Character,
-                true),
-            new Order(
-                "tank_shock",
-                1,
-                "Tank Shock",
-                "Engagement",
-                false,
-                "Friendly Vehicle squad gains temporary Stampede until end of turn.",
-                OrderWindowType.EngagementPhase,
-                OrderTargetSide.Friendly,
-                OrderTargetType.Vehicle,
-                true),
-            new Order(
-                "go_to_ground",
-                1,
-                "Go to Ground",
-                "Opponent Shooting",
-                false,
-                "When targeted in opponent shooting phase, a friendly Infantry squad gains temporary Cover Benefit and Six Plus Dodge until end of that phase.",
-                OrderWindowType.OnTargetedByShooting,
-                OrderTargetSide.Friendly,
-                OrderTargetType.Infantry,
-                true),
-            new Order(
-                "counter_offensive",
-                2,
-                "Counter-Offensive",
-                "Melee",
-                false,
-                "At start of melee phase, choose a friendly eligible squad; it gains temporary First Strike for this turn.",
-                OrderWindowType.StartOfMeleePhase,
-                OrderTargetSide.Friendly,
-                OrderTargetType.FightEligible,
-                true),
-            new Order(
-                "heroic_intervention",
-                2,
-                "Heroic Intervention",
-                "Melee",
-                false,
-                "At the beginning of opponent melee phase, a friendly squad within 6\" of an enemy already engaging another friendly squad may immediately move into engagement.",
-                OrderWindowType.StartOfMeleePhase,
-                OrderTargetSide.Friendly,
-                OrderTargetType.Any,
-                true),
-            new Order(
-                "mists_of_deimos",
-                3,
-                "Mists of Deimos",
-                "Opponent Shooting",
-                false,
-                "At beginning of opponent shooting phase, remove a friendly squad into strategic reserve. It returns at the start of your next shooting phase using teleport placement and cannot charge that turn.",
-                OrderWindowType.OpponentShootingPhaseStart,
-                OrderTargetSide.Friendly,
-                OrderTargetType.Any,
-                true),
-            new Order(
-                "epic_bravery",
-                2,
-                "Epic Bravery",
-                "Movement",
-                false,
-                "At beginning of active player movement phase, remove Shell Shock from a friendly squad.",
-                OrderWindowType.StartOfMovementPhase,
-                OrderTargetSide.Friendly,
-                OrderTargetType.Any,
-                true),
-            new Order(
-                "fire_overwatch",
-                1,
-                "Fire Overwatch",
-                "Engagement",
-                false,
-                "At start of opponent engagement phase, arm a friendly shooter squad to fire Overwatch when charged.",
-                OrderWindowType.OpponentEngagementPhaseStart,
-                OrderTargetSide.Friendly,
-                OrderTargetType.Shooters,
-                true)
-        };
-    }
+		{
+	new Order(
+		"mano_a_mano",
+		1,
+		"Mano A Mano",
+		"Melee",
+		false,
+		"Friendly Character squad gains temporary Precision on melee weapons for this melee phase.",
+		OrderWindowType.StartOfMeleePhase,
+		OrderTargetSide.Friendly,
+		OrderTargetType.Character,
+		true),
+
+	new Order(
+		"tank_shock",
+		1,
+		"Tank Shock",
+		"Engagement",
+		false,
+		"Friendly Vehicle squad gains temporary Stampede until end of turn.",
+		OrderWindowType.EngagementPhase,
+		OrderTargetSide.Friendly,
+		OrderTargetType.Vehicle,
+		true),
+
+	new Order(
+		"hit_the_ground",
+		1,
+		"Hit The Ground",
+		"Opponent Shooting",
+		false,
+		"When targeted in opponent shooting phase, a friendly Infantry squad gains temporary Cover Benefit and Six Plus Dodge until end of that phase.",
+		OrderWindowType.OnTargetedByShooting,
+		OrderTargetSide.Friendly,
+		OrderTargetType.Infantry,
+		true),
+
+	new Order(
+		"sudden_reflexes",
+		2,
+		"Sudden Reflexes",
+		"Melee",
+		false,
+		"At start of melee phase, choose a friendly eligible squad; it gains temporary First Strike for this turn.",
+		OrderWindowType.StartOfMeleePhase,
+		OrderTargetSide.Friendly,
+		OrderTargetType.FightEligible,
+		true),
+
+	new Order(
+		"counter_charge",
+		2,
+		"Counter Charge",
+		"Melee",
+		false,
+		"At the beginning of opponent melee phase, a friendly squad within 6\" of an enemy already engaging another friendly squad may immediately move into engagement.",
+		OrderWindowType.StartOfMeleePhase,
+		OrderTargetSide.Friendly,
+		OrderTargetType.Any,
+		true),
+
+	new Order(
+		"misty_retreat",
+		3,
+		"Misty Retreat",
+		"Opponent Shooting",
+		false,
+		"At beginning of opponent shooting phase, remove a friendly squad into strategic reserve. It returns at the start of your next shooting phase using teleport placement and cannot charge that turn.",
+		OrderWindowType.OpponentShootingPhaseStart,
+		OrderTargetSide.Friendly,
+		OrderTargetType.Any,
+		true),
+
+	new Order(
+		"chutzpah",
+		2,
+		"Chutzpah",
+		"Movement",
+		false,
+		"At beginning of active player movement phase, remove Shell Shock from a friendly squad.",
+		OrderWindowType.StartOfMovementPhase,
+		OrderTargetSide.Friendly,
+		OrderTargetType.Any,
+		true),
+
+	new Order(
+		"reactive fire",
+		1,
+		"reactive fire",
+		"Engagement",
+		false,
+		"At start of opponent engagement phase, arm a friendly shooter squad to fire ReactiveFire when charged.",
+		OrderWindowType.OpponentEngagementPhaseStart,
+		OrderTargetSide.Friendly,
+		OrderTargetType.Shooters,
+		true)
+};
+	}
 
     public static Order? FindById(string orderId)
-    {
-        return BuildDefaultOrders().FirstOrDefault(o => string.Equals(o.OrderId, orderId, StringComparison.OrdinalIgnoreCase));
-    }
+        { return BuildDefaultOrders().FirstOrDefault(o => string.Equals(o.OrderId, orderId, StringComparison.OrdinalIgnoreCase)); }
 }

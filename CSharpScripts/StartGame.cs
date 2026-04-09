@@ -119,9 +119,7 @@ public partial class StartGame : Control
         foreach (var player in data.PlayerList)
         {
             if (player.TheirSquads != null && player.TheirSquads.Count > 0)
-            {
                 _selectablePlayers.Add(player);
-            }
         }
     }
 }

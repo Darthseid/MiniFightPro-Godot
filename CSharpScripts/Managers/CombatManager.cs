@@ -52,21 +52,15 @@ public sealed class CombatManager
         var attackers = _getActiveActors().ToList();
         var defenders = _getInactiveActors();
         if (attackers.Count == 0 || defenders.Count == 0)
-        {
             return;
-        }
 
         var attacker = attackers.FirstOrDefault(actor => actor?.BoundModel != null && actor.BoundModel.Health > 0);
         if (attacker == null)
-        {
             return;
-        }
 
         var target = BoardGeometry.GetClosestEnemy(attacker, defenders);
         if (target == null)
-        {
             return;
-        }
 
         BoardGeometry.FaceGroupTowardsEnemies(attackers, defenders);
         await CombatEngine.ResolveBatchedAttack(attacker, target, false, _getTeamASquad(), _getTeamBSquad(), attackers, defenders, _getTeamAMove(), _getTeamBMove(), _battleHud, _battleField, _postDamageCleanupAndVictoryCheck, HandleExplosionProcess, selectedWeaponFingerprint, false, hasLineOfSight);
@@ -77,27 +71,21 @@ public sealed class CombatManager
         var attackers = _getActiveActors().ToList();
         var defenders = _getInactiveActors();
         if (attackers.Count == 0 || defenders.Count == 0)
-        {
             return;
-        }
 
         var attacker = attackers.FirstOrDefault(actor => actor?.BoundModel != null && actor.BoundModel.Health > 0);
         if (attacker == null)
-        {
             return;
-        }
 
         var target = BoardGeometry.GetClosestEnemy(attacker, defenders);
         if (target == null)
-        {
             return;
-        }
 
         BoardGeometry.FaceGroupTowardsEnemies(attackers, defenders);
         await CombatEngine.ResolveBatchedAttack(attacker, target, true, _getTeamASquad(), _getTeamBSquad(), attackers, defenders, _getTeamAMove(), _getTeamBMove(), _battleHud, _battleField, _postDamageCleanupAndVictoryCheck, HandleExplosionProcess, selectedWeaponFingerprint);
     }
 
-    public async Task ResolveOverwatchAsync(int defenderTeamId, Squad defenderSquad, Squad chargingSquad, Action<int> setActiveTeamId, Action<int, Squad> setActiveSquadForTeam)
+    public async Task ResolveReactiveFireAsync(int defenderTeamId, Squad defenderSquad, Squad chargingSquad, Action<int> setActiveTeamId, Action<int, Squad> setActiveSquadForTeam)
     {
         setActiveSquadForTeam(defenderTeamId, defenderSquad);
         setActiveSquadForTeam(defenderTeamId == 1 ? 2 : 1, chargingSquad);
@@ -115,23 +103,17 @@ public sealed class CombatManager
     public void HandleExplosionProcess(Squad explodedSquad, Squad enemySquad, int demiseCheck)
     {
         if (explodedSquad == null || enemySquad == null || demiseCheck <= 0 || explodedSquad.SquadAbilities.All(ability => ability.Innate != "Explodes"))
-        {
             return;
-        }
 
         var manyExplosions = 0;
         for (int i = 0; i < demiseCheck; i++)
         {
             if (DiceHelpers.SimpleRoll(6) == 1)
-            {
                 manyExplosions++;
-            }
         }
 
         if (manyExplosions <= 0)
-        {
             return;
-        }
 
         const int safetyLimit = 10;
         var processedExplosions = 0;
@@ -145,29 +127,21 @@ public sealed class CombatManager
             {
                 CombatRolls.AllocatePure(blastDamage, nearbySquad);
                 foreach (var enemyActor in _getActorsForSquad(nearbySquad))
-                {
                     enemyActor.RefreshHp();
-                }
             }
 
             var newExplosions = CombatRolls.AllocatePure(blastDamage, explodedSquad);
             foreach (var explodedActor in _getActorsForSquad(explodedSquad))
-            {
                 explodedActor.RefreshHp();
-            }
 
             manyExplosions = 0;
             for (int i = 0; i < newExplosions; i++)
             {
                 if (DiceHelpers.SimpleRoll(6) == 1)
-                {
                     manyExplosions++;
-                }
             }
-
             processedExplosions++;
         }
-
         _postDamageCleanupAndVictoryCheck();
     }
 
@@ -176,9 +150,7 @@ public sealed class CombatManager
         var attackerActors = _getActorsForSquad(attacker);
         var targetActors = _getActorsForSquad(target);
         if (attackerActors.Count == 0 || targetActors.Count == 0)
-        {
             return false;
-        }
 
         var targetCenter = BoardGeometry.GetActorsCenter(targetActors);
         var canSee = attackerActors.Count(actor => _hasLineOfSight(actor.GlobalPosition, targetCenter));

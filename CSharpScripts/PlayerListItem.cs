@@ -4,7 +4,7 @@ using System;
 public partial class PlayerListItem : Button
 {
     public int Index;
-    private const float LongPressSeconds = 0.65f;
+    private const float LongPressSeconds = 0.65f; 
     private Timer _longPressTimer;
     private bool _longPressTriggered = false;
 
@@ -50,14 +50,10 @@ public partial class PlayerListItem : Button
             }
 
             if (mouseEvent.ButtonIndex == MouseButton.Left)
-            {
                 HandlePress(mouseEvent.Pressed);
-            }
         }
         else if (@event is InputEventScreenTouch touchEvent)
-        {
             HandlePress(touchEvent.Pressed);
-        }
     }
 
     private void HandlePress(bool pressed)
@@ -68,9 +64,7 @@ public partial class PlayerListItem : Button
             _longPressTimer?.Start();
         }
         else
-        {
             _longPressTimer?.Stop();
-        }
     }
 
     private void OnLongPressTimeout()

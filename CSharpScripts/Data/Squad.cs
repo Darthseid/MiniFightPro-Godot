@@ -34,7 +34,7 @@ public class Squad
     public List<SquadAbility> SquadAbilities;
     public Squad EmbarkedSquad;
     public Squad TransportedBy;
-    public bool IsInStrategicReserve;
+    public bool IsInBackupForce;
     public bool CannotChargeThisTurn;
     public bool RushedThisTurn;
     public bool RetreatedThisTurn;
@@ -70,7 +70,7 @@ public class Squad
         SquadAbilities = squadAbilities ?? new List<SquadAbility>();
         EmbarkedSquad = null;
         TransportedBy = null;
-        IsInStrategicReserve = false;
+        IsInBackupForce = false;
         CannotChargeThisTurn = false;
         RushedThisTurn = false;
         RetreatedThisTurn = false;
@@ -78,21 +78,15 @@ public class Squad
 
 
     public bool IsTransport()
-    {
-        return SquadType?.Contains("Transport") == true;
-    }
+        { return SquadType?.Contains("Transport") == true; }
 
     public bool IsEmbarked()
-    {
-        return TransportedBy != null;
-    }
+        { return TransportedBy != null; }
 
     public bool IsEmbarkEligiblePassenger()
     {
         if (TransportedBy != null)
-        {
             return false;
-        }
 
         return SquadType?.Contains("Infantry") == true || SquadType?.Contains("Character") == true;
     }
@@ -115,11 +109,9 @@ public class Squad
 
         copy.EmbarkedSquad = EmbarkedSquad?.DeepCopy();
         if (copy.EmbarkedSquad != null)
-        {
             copy.EmbarkedSquad.TransportedBy = copy;
-        }
 
-        copy.IsInStrategicReserve = IsInStrategicReserve;
+        copy.IsInBackupForce = IsInBackupForce;
         copy.CannotChargeThisTurn = CannotChargeThisTurn;
         copy.RushedThisTurn = RushedThisTurn;
         copy.RetreatedThisTurn = RetreatedThisTurn;
@@ -258,16 +250,12 @@ public static class SquadAbilities
     private static string GetVariableBaseDisplayName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-        {
             return name;
-        }
 
         var trimmed = name.Trim();
         var parts = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length > 1 && int.TryParse(parts[^1], out _))
-        {
             return string.Join(" ", parts, 0, parts.Length - 1);
-        }
 
         return trimmed;
     }
