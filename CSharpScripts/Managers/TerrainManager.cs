@@ -16,32 +16,24 @@ public sealed class TerrainManager
     public int UnplacedCount => _terrainUnplacedCount;
 
     public void Initialize(int terrainCount)
-    {
-        _terrainCount = Math.Max(0, terrainCount);
-    }
+        { _terrainCount = Math.Max(0, terrainCount); }
 
     public void BuildTerrainFeatures()
     {
         ActiveTerrain.Clear();
         _terrainUnplacedCount = _terrainCount;
         for (int i = 0; i < _terrainCount; i++)
-        {
             ActiveTerrain.Add(new TerrainFeature { Radius = TerrainRadiusInches, IsPlaced = false });
-        }
     }
 
     public void SpawnTerrainPieces(Node parentBattleField, PackedScene terrainPieceScene)
     {
         foreach (var piece in _terrainPieces)
-        {
             piece?.QueueFree();
-        }
 
         _terrainPieces.Clear();
         if (parentBattleField == null || terrainPieceScene == null)
-        {
             return;
-        }
 
         foreach (var terrain in ActiveTerrain)
         {
@@ -59,9 +51,7 @@ public sealed class TerrainManager
     public bool PlaceNextTerrainAt(Vector2 globalPos, Func<Vector2, Vector2> clampOrTransformIfNeeded = null)
     {
         if (_terrainLocked || _terrainUnplacedCount <= 0)
-        {
             return false;
-        }
 
         var next = ActiveTerrain.FirstOrDefault(t => !t.IsPlaced);
         if (next == null)
@@ -94,9 +84,7 @@ public sealed class TerrainManager
         {
             piece?.SetLocked(true);
             if (piece != null)
-            {
                 piece.Visible = true;
-            }
         }
     }
 
@@ -108,9 +96,7 @@ public sealed class TerrainManager
             {
                 var radiusPx = terrain.Radius * pxPerInch;
                 if (BoardGeometry.SegmentIntersectsCircle(segment.start, segment.end, terrain.Position, radiusPx))
-                {
                     return true;
-                }
             }
         }
 
@@ -123,21 +109,17 @@ public sealed class TerrainManager
         {
             var radiusPx = terrain.Radius * pxPerInch;
             if (BoardGeometry.SegmentIntersectsCircle(from, to, terrain.Position, radiusPx, 4f))
-            {
                 return false;
-            }
         }
 
         return true;
     }
 
-    public bool HasMajorityLineOfSight(IEnumerable<Vector2> attackerPoints, Vector2 targetCenter, float pxPerInch)
+    public bool HasMajorityLineOfSight(IEnumerable<Vector2> attackerPoints, Vector2 targetCenter, float pxPerInch) //Consider recoding this so that the models that can see the target are marked and then fire.
     {
         var points = attackerPoints.ToList();
         if (points.Count == 0)
-        {
             return false;
-        }
 
         var canSee = points.Count(point => HasLineOfSight(point, targetCenter, pxPerInch));
         return canSee > points.Count / 2;
@@ -147,17 +129,13 @@ public sealed class TerrainManager
     {
         var points = squadPoints.ToList();
         if (points.Count == 0)
-        {
             return false;
-        }
 
         foreach (var terrain in ActiveTerrain.Where(t => t.IsPlaced && t.ProvidesCover))
         {
             var threshold = (terrain.Radius + 3f) * pxPerInch;
             if (points.Any(point => point.DistanceTo(terrain.Position) <= threshold))
-            {
                 return true;
-            }
         }
 
         return false;

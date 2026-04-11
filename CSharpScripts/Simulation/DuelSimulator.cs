@@ -43,39 +43,29 @@ public sealed class DuelSimulator
             var roundDidDamage = false;
 
             if (aActsFirst)
-            {
                 ResolveRoundForActive(config, squadA, squadB, attackerIsA: true, ref roundDidDamage);
-            }
             else
-            {
                 ResolveRoundForActive(config, squadB, squadA, attackerIsA: false, ref roundDidDamage);
-            }
 
             if (squadA.IsDestroyed || squadB.IsDestroyed)
-            {
                 break;
-            }
 
             if (!roundDidDamage)
             {
                 noDamageRounds++;
-                if (noDamageRounds >= config.NoDamageRoundLimit)
-                {
+                if (noDamageRounds >= config.NoDamageRoundLimit) // If we've had too many rounds in a row with no damage, end the duel to prevent infinite loops.
                     break;
-                }
             }
             else
-            {
                 noDamageRounds = 0;
-            }
 
             aActsFirst = !aActsFirst;
         }
 
         var aDestroyed = squadA.IsDestroyed;
         var bDestroyed = squadB.IsDestroyed;
-
         var result = new DuelResult
+
         {
             RoundsElapsed = roundsElapsed,
             HitRoundCap = roundsElapsed >= config.RoundCap && !aDestroyed && !bDestroyed,
@@ -89,7 +79,6 @@ public sealed class DuelSimulator
             SquadADamageDealt = _trialSquadADamage,
             SquadBDamageDealt = _trialSquadBDamage
         };
-
         result.FirstAttackerWon = firstAttackerIsA ? result.SquadAWon : (!result.IsDraw && !result.SquadAWon);
         return result;
     }
@@ -192,9 +181,7 @@ public sealed class DuelSimulator
     private void ResolveAttackStep(DuelConfig config, SimSquadState attacker, SimSquadState defender, bool isMelee, bool attackerIsA, ref bool roundDidDamage, bool allowRetaliation = true)
     {
         if (attacker.IsDestroyed || defender.IsDestroyed)
-        {
-            return;
-        }
+            return; // Sanity check to prevent attacks from or against destroyed squads, which could cause weird edge cases.
 
         var weaponBatches = CombatEngine.BuildWeaponBatches(attacker.WorkingSquad, isMelee);
         foreach (var batch in weaponBatches)
@@ -205,17 +192,13 @@ public sealed class DuelSimulator
             if (!isMelee)
             {
                 if (!CombatHelpers.CheckValidShooting(attacker.WorkingSquad, _stationaryMove, weapon, defender.WorkingSquad, config.RangeInches))
-                {
                     continue;
-                }
 
-                if (config.RangeInches < 1f)
+                if (config.RangeInches < 1f) // This is engagement range.
                 {
                     var isPistol = weapon.Special.Any(a => a?.Innate == "Handgun");
                     if (!isPistol && !attacker.IsVehicleOrMonster)
-                    {
                         continue;
-                    }
                 }
             }
 
@@ -261,26 +244,18 @@ public sealed class DuelSimulator
 
             var damageDealt = ApplyUnsavedInjuries(attacker, defender, weapon, unsaved, config.RangeInches, ref roundDidDamage);
             if (attackerIsA)
-            {
                 _trialSquadADamage += damageDealt;
-            }
             else
-            {
                 _trialSquadBDamage += damageDealt;
-            }
             ConsumeOneShotWeapons(attacker.WorkingSquad, weapon);
             ResolvePerilous(attacker, weapon, ref roundDidDamage);
 
             var defenderAliveAfter = defender.WorkingSquad.Composition.Count(model => model.Health > 0);
             if (allowRetaliation && isMelee && defender.HasFightOnDeath && defenderAliveAfter < defenderAliveBefore && !defender.IsDestroyed)
-            {
                 ResolveAttackStep(config, defender, attacker, isMelee: true, !attackerIsA, ref roundDidDamage, allowRetaliation: false);
-            }
 
             if (attacker.IsDestroyed || defender.IsDestroyed)
-            {
                 break;
-            }
         }
     }
 
@@ -290,34 +265,25 @@ public sealed class DuelSimulator
         for (var i = 0; i < unsaved; i++)
         {
             if (defender.WorkingSquad.Composition.Count == 0)
-            {
                 break;
-            }
 
             Model? target = null;
             foreach (var model in defender.WorkingSquad.Composition)
             {
                 if (model.Health <= 0)
-                {
                     continue;
-                }
 
                 if (target == null || model.Health < target.Health)
-                {
                     target = model;
-                }
+
             }
 
             if (target == null)
-            {
                 break;
-            }
 
             var baseDamage = DiceHelpers.DamageParser(weapon.Damage);
             var finalDamage = CombatHelpers.DamageMods(baseDamage, defender.WorkingSquad.SquadAbilities, weapon.Special, range <= weapon.Range / 2f);
-
             var resist = CombatRolls.ResolveEffectiveDamageResistance(defender.WorkingSquad, weapon.Special);
-
             for (var p = 0; p < finalDamage && target.Health > 0; p++)
             {
                 var negated = DiceHelpers.SimpleRoll(6) >= resist;
@@ -325,17 +291,14 @@ public sealed class DuelSimulator
                 {
                     target.Health -= 1;
                     damageApplied++;
-                    roundDidDamage = true;
+                    roundDidDamage = true; 
                 }
             }
         }
-
         var deadBefore = defender.WorkingSquad.Composition.Count(m => m.Health <= 0);
         defender.RemoveDeadAndHandleSecondLife();
         if (deadBefore > 0)
-        {
             HandleExplosions(defender, attacker, deadBefore, range, ref roundDidDamage);
-        }
 
         return damageApplied;
     }
@@ -343,24 +306,18 @@ public sealed class DuelSimulator
     private static void HandleExplosions(SimSquadState exploded, SimSquadState other, int deadCount, float range, ref bool roundDidDamage)
     {
         if (!exploded.WorkingSquad.SquadAbilities.Any(a => a?.Innate == "Explodes"))
-        {
             return;
-        }
 
         var explodeDamage = exploded.WorkingSquad.SquadAbilities.FirstOrDefault(a => a?.Innate == "Explodes")?.ResolveModifier() ?? 1;
         var triggers = 0;
         for (var i = 0; i < deadCount; i++)
         {
             if (DiceHelpers.SimpleRoll(6) == 1)
-            {
                 triggers++;
-            }
         }
 
         if (triggers <= 0)
-        {
             return;
-        }
 
         var blast = explodeDamage * triggers;
         CombatRolls.AllocatePure(blast, exploded.WorkingSquad);
@@ -368,11 +325,9 @@ public sealed class DuelSimulator
         roundDidDamage = true;
 
         if (range <= 6f)
-        {
             CombatRolls.AllocatePure(blast, other.WorkingSquad);
             other.RemoveDeadAndHandleSecondLife();
             roundDidDamage = true;
-        }
     }
 
     private static void ConsumeOneShotWeapons(Squad attackerSquad, Weapon weapon)
@@ -395,48 +350,34 @@ public sealed class DuelSimulator
         }
     }
 
-    private static void ResolvePerilous(SimSquadState attacker, Weapon weapon, ref bool roundDidDamage)
+    private static void ResolvePerilous(SimSquadState attacker, Weapon weapon, ref bool roundDidDamage) //Consider using base function.
     {
         if (weapon.Special == null || weapon.Special.All(a => a?.Innate != "Self-Inflict"))
-        {
             return;
-        }
 
         var fingerprint = CombatEngine.GetWeaponFingerprint(weapon);
         foreach (var model in attacker.WorkingSquad.Composition.Where(m => m.Health > 0))
         {
             var hasWeapon = model.Tools.Any(tool => CombatEngine.GetWeaponFingerprint(tool) == fingerprint);
             if (!hasWeapon)
-            {
                 continue;
-            }
 
             if (DiceHelpers.SimpleRoll(6) != 1)
-            {
                 continue;
-            }
 
             if (attacker.IsInfantry)
-            {
                 model.Health = 0;
-            }
             else
-            {
                 model.Health = Math.Max(0, model.Health - 3);
-            }
-
             roundDidDamage = true;
         }
-
         attacker.RemoveDeadAndHandleSecondLife();
     }
 
-    private static void SeedDiceHelpers(Random rng)
+    private static void SeedDiceHelpers(Random rng) //Consider removing seeds.
     {
         if (DiceRngField?.GetValue(null) is RandomNumberGenerator godotRng)
-        {
             godotRng.Seed = (ulong)rng.NextInt64(1, long.MaxValue);
-        }
     }
 
     private void ResetTrialCounters()

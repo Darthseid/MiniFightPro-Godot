@@ -156,7 +156,7 @@ public static class CombatRolls
         if (hitSkill < 2)
             return (attackRolls, hardHits);
 
-        var hitChange = Mathf.Clamp(hitModifier, -1, 1);
+        var hitChange = Math.Clamp(hitModifier, -1, 1);
         var bonusHits = abilityCheck.FirstOrDefault(ability => ability.Innate == "Bonus Hits")?.ResolveModifier() ?? 0;
         var hardHitsTest = abilityCheck.Any(ability => ability.Innate == "HH");
         var oneReroll = abilityCheck.Any(ability => ability.Innate == "!");
@@ -231,7 +231,7 @@ public static class CombatRolls
     {
         var injuries = 0;
         var devastatingCounter = 0;
-        var injuryChange = Mathf.Clamp(injuryModifier, -1, 1);
+        var injuryChange = Math.Clamp(injuryModifier, -1, 1);
         var devastatingInjuries = abilityCheck.Any(ability => ability.Innate == "DI");
         var oneReroll = abilityCheck.Any(ability => ability.Innate == "%");
 
@@ -296,14 +296,14 @@ public static class CombatRolls
             return 0;
         int modifiedArmorSave = defense + armorPenetration;
         int finalSave = Math.Min(modifiedArmorSave, dodge);
-        bool usingInvuln = finalSave == dodge;
+        bool usingDodge = finalSave == dodge;
         int unsaved = 0;
         var saveBatch = await DiceRoller.PresentAndRollAsync(6, injuries, rollContext);
 
         foreach (var roll in saveBatch.Results)
         {
             bool saved;
-            if (usingInvuln)
+            if (usingDodge)
                 saved = roll >= dodge;
             else
                 saved = (roll - armorPenetration) >= defense;

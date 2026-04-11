@@ -8,20 +8,16 @@ public static class ModelImageService
     public static string GetCustomImagePath(Model model)
     {
         if (model == null)
-        {
             return string.Empty;
-        }
 
         EnsureModelIdentityAndDefault(model);
         return $"user://custom_models/{model.ModelId}.png";
     }
 
-    public static Error ImportAndApplyCustomImage(Model model, string sourcePath, int maxDim = 1024)
+    public static Error ImportAndApplyCustomImage(Model model, string sourcePath, int maxDim = 1024) // maxDim is the maximum width or height for the imported image to prevent excessive memory usage
     {
         if (model == null || string.IsNullOrWhiteSpace(sourcePath))
-        {
             return Error.InvalidParameter;
-        }
 
         EnsureModelIdentityAndDefault(model);
 
@@ -62,28 +58,22 @@ public static class ModelImageService
     public static Texture2D LoadTextureForModel(Model model)
     {
         if (model == null)
-        {
             return null;
-        }
 
         EnsureModelIdentityAndDefault(model);
 
-        if (!string.IsNullOrWhiteSpace(model.CustomImagePath) && FileAccess.FileExists(model.CustomImagePath))
+        if (!string.IsNullOrWhiteSpace(model.CustomImagePath) && FileAccess.FileExists(model.CustomImagePath)) // Check if the custom image path is set and the file exists before trying to load it
         {
             var image = new Image();
             var loadErr = image.Load(model.CustomImagePath);
             if (loadErr == Error.Ok)
-            {
                 return ImageTexture.CreateFromImage(image);
-            }
 
             GD.PrintErr($"Failed to load custom model image '{model.CustomImagePath}': {loadErr}");
         }
 
-        if (!string.IsNullOrWhiteSpace(model.DefaultImagePath))
-        {
+        if (!string.IsNullOrWhiteSpace(model.DefaultImagePath)) 
             return ResourceLoader.Load<Texture2D>(model.DefaultImagePath);
-        }
 
         return null;
     }
@@ -91,9 +81,7 @@ public static class ModelImageService
     public static bool EnsureModelIdentityAndDefault(Model model)
     {
         if (model == null)
-        {
             return false;
-        }
 
         var changed = false;
         if (string.IsNullOrWhiteSpace(model.ModelId))
@@ -113,7 +101,6 @@ public static class ModelImageService
             model.CustomImagePath = string.Empty;
             changed = true;
         }
-
         return changed;
     }
 }

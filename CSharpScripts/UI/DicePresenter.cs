@@ -19,13 +19,11 @@ public partial class DicePresenter : Node, IDicePresenter
 
     private Battle? GetBattle()
     {
-        return GetParentOrNull<Battle>();
+        { return GetParentOrNull<Battle>(); }
     }
 
     private OrderManager? GetOrderManager()
-    {
-        return GetBattle()?.OrderManager;
-    }
+        { return GetBattle()?.OrderManager; }
 
     public async Task PresentAsync(RollEvent rollEvent)
     {
@@ -46,9 +44,7 @@ public partial class DicePresenter : Node, IDicePresenter
             InteractionMode = DiceInteractionMode.None;
         }
         finally
-        {
-            _queueSemaphore.Release();
-        }
+        { _queueSemaphore.Release(); }
     }
 
     public Task<bool> WaitForRushAsync()
@@ -60,9 +56,7 @@ public partial class DicePresenter : Node, IDicePresenter
     private void EnsureOverlay()
     {
         if (IsInstanceValid(_overlay))
-        {
             return;
-        }
 
         _overlay = DiceOverlayScene.Instantiate<DiceOverlay>();
         _overlay.NextPressed += OnNextPressed;
@@ -74,9 +68,7 @@ public partial class DicePresenter : Node, IDicePresenter
     private void OnNextPressed()
     {
         if (InteractionMode != DiceInteractionMode.AwaitingPlayerRush && InteractionMode != DiceInteractionMode.AwaitingRerollSelection)
-        {
             return;
-        }
 
         if (InteractionMode == DiceInteractionMode.AwaitingRerollSelection)
         {
@@ -92,9 +84,7 @@ public partial class DicePresenter : Node, IDicePresenter
     {
         var orderManager = GetOrderManager();
         if (_currentRoll == null || orderManager == null)
-        {
             return;
-        }
 
         if (!orderManager.CanUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, out var reason))
         {
@@ -113,9 +103,7 @@ public partial class DicePresenter : Node, IDicePresenter
         var orderManager = GetOrderManager();
         var battle = GetBattle();
         if (_currentRoll == null || orderManager == null || battle == null)
-        {
             return;
-        }
 
         if (InteractionMode == DiceInteractionMode.AwaitingRerollSelection)
         {
@@ -135,30 +123,20 @@ public partial class DicePresenter : Node, IDicePresenter
         }
 
         if (InteractionMode != DiceInteractionMode.AwaitingPlayerRush)
-        {
             return;
-        }
 
         if (_currentRoll.OwnerTeamId != ActivePlayerTeamId)
-        {
             return;
-        }
 
         if (battle.IsTeamAI(ActivePlayerTeamId))
-        {
             return;
-        }
 
         var player = battle.GetPlayerByTeam(ActivePlayerTeamId);
         if (_fateReplacementLockedThisRoll)
-        {
             return;
-        }
 
         if (player?.HasStrandedMiracle != true)
-        {
             return;
-        }
 
         if (player.FateSixPool <= 0)
         {
@@ -167,9 +145,7 @@ public partial class DicePresenter : Node, IDicePresenter
         }
 
         if (index < 0 || index >= _currentRoll.Results.Count)
-        {
             return;
-        }
 
         if (_currentRoll.RerolledFlags[index])
         {
@@ -200,9 +176,7 @@ public partial class DicePresenter : Node, IDicePresenter
     {
         var battle = GetBattle();
         if (battle == null || _overlay == null)
-        {
             return;
-        }
 
         var p1 = battle.TeamAPlayer;
         var p2 = battle.TeamBPlayer;
@@ -218,25 +192,16 @@ public partial class DicePresenter : Node, IDicePresenter
         var canReroll = false;
         var orderManager = GetOrderManager();
         if (_currentRoll != null && orderManager != null && !_rerollUsedThisRoll)
-        {
-            canReroll = orderManager.CanUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, out _);
-        }
+            canReroll = orderManager.CanUseCommandReroll(_currentRoll.OwnerTeamId, _currentRoll, out _); 
 
         _overlay.SetButtonsState(
             canRush: InteractionMode == DiceInteractionMode.AwaitingPlayerRush || InteractionMode == DiceInteractionMode.AwaitingRerollSelection,
             canReroll: InteractionMode == DiceInteractionMode.AwaitingPlayerRush && canReroll);
-
         if (InteractionMode == DiceInteractionMode.AwaitingRerollSelection)
-        {
             _overlay.SetRerollSelectionState(true);
-        }
         else if (InteractionMode == DiceInteractionMode.AwaitingPlayerRush)
-        {
             _overlay.SetNormalSelectionState(true);
-        }
         else
-        {
             _overlay.SetNormalSelectionState(false);
-        }
     }
 }

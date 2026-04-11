@@ -42,9 +42,7 @@ public sealed class MovementManager
     {
         _movementStartPositions.Clear();
         foreach (var actor in activeActors)
-        {
             _movementStartPositions[actor] = actor.GlobalPosition;
-        }
 
         _movementAllowanceInches = movementAllowanceInches;
         _movementIgnoresMaxLimit = ignoreMaxDistance;
@@ -54,23 +52,17 @@ public sealed class MovementManager
 
         _movementAllowsTeleport = activeSquad?.SquadAbilities?.Any(ability => ability?.Innate == "Tele") == true;
         if (_movementAllowsTeleport)
-        {
             _movementEnemyBufferInches = 0f;
-        }
     }
 
     public async Task<MoveVars> StartMovementAsync(string prompt, bool autoMove, Func<Task<bool>> confirmAsync, Action<string, float?> showToast, Action<IEnumerable<BattleModelActor>, bool> setSelectable, Func<MoveVars> getActiveMoveVars, Action playMoveSound)
     {
         var wantsMove = autoMove;
         if (!autoMove)
-        {
             wantsMove = await confirmAsync();
-        }
 
         if (!wantsMove)
-        {
             return _getActiveMoveVars();
-        }
 
         _awaitingMovement = true;
         setSelectable(_movementStartPositions.Keys, true);
@@ -79,9 +71,7 @@ public sealed class MovementManager
         await _movementTcs.Task;
 
         if (_movementAllowsTeleport)
-        {
             GD.Print("[Rules] Teleport movement validation applied for this squad.");
-        }
 
         return getActiveMoveVars();
     }
@@ -93,9 +83,7 @@ public sealed class MovementManager
         foreach (var actor in activeActors)
         {
             if (_movementStartPositions.TryGetValue(actor, out var startPos))
-            {
                 maxMoved = Mathf.Max(maxMoved, actor.GlobalPosition.DistanceTo(startPos));
-            }
         }
 
         var didMove = didAttemptMove && maxMoved > 0.1f;
@@ -132,9 +120,7 @@ public sealed class MovementManager
         }
 
         if (_movementUpdatesMoveVars)
-        {
             _setActiveMoveFlag(didMove);
-        }
 
         return _getActiveMoveVars();
     }
@@ -150,14 +136,12 @@ public sealed class MovementManager
         _movementTcs?.TrySetResult(moved);
     }
 
-    public void RevertTrackedActors(IEnumerable<BattleModelActor> actors)
+    public void RevertTrackedActors(IEnumerable<BattleModelActor> actors) // Used to revert actors to their original positions if a move is invalidated after the fact (e.g. due to teleport restrictions or aircraft minimum move requirements)
     {
         foreach (var actor in actors)
         {
             if (_movementStartPositions.TryGetValue(actor, out var startPos))
-            {
                 actor.GlobalPosition = startPos;
-            }
         }
     }
 }

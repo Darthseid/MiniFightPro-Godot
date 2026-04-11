@@ -58,14 +58,10 @@ public sealed class TransportController
         {
             var wantsDisembark = await _confirmAsync($"{transport.Name}: Disembark {transport.EmbarkedSquad.Name}?");
             if (!wantsDisembark)
-            {
                 continue;
-            }
 
             if (!TryDisembarkSquad(transport, false))
-            {
                 _showToast($"{transport.Name}: could not disembark now.");
-            }
         }
 
         foreach (var transport in transports.Where(t => t.EmbarkedSquad == null))
@@ -75,15 +71,11 @@ public sealed class TransportController
                 .Where(s => BoardGeometry.ClosestDistanceInches(_getActorsForSquad(transport), _getActorsForSquad(s)) <= 3f)
                 .ToList();
             if (candidates.Count == 0)
-            {
                 continue;
-            }
 
             var wantsEmbark = await _confirmAsync($"{transport.Name}: Embark a nearby squad?");
             if (!wantsEmbark)
-            {
                 continue;
-            }
 
             if (_squadInFightRangeOfEnemy(transport, enemyTeamId))
             {
@@ -93,9 +85,7 @@ public sealed class TransportController
 
             var passenger = await _promptForSquadTargetAsync($"{transport.Name}: Click friendly squad to embark", activeTeamId, candidates);
             if (passenger == null)
-            {
                 continue;
-            }
 
             if (_squadInFightRangeOfEnemy(passenger, enemyTeamId))
             {

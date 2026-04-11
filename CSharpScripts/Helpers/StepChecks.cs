@@ -22,9 +22,7 @@ public static class StepChecks
     public static async Task RoundStartChecks(Player activePlayer, Player inactivePlayer, BattleHud hud, bool allowPlayerChoices = true)
     {
         if (activePlayer == null || inactivePlayer == null)
-        {
             return;
-        }
 
         ApplyPlayerWideAbilities(activePlayer);
         ApplyPlayerWideAbilities(inactivePlayer);
@@ -38,49 +36,37 @@ public static class StepChecks
     public static async Task CommandPhaseChecks(Player activePlayer, Player inactivePlayer, Squad activeSquad, Squad inactiveSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
         if (activePlayer == null || inactivePlayer == null)
-        {
             return;
-        }
 
         ApplyPlayerWideAbilities(activePlayer);
         ApplyPlayerWideAbilities(inactivePlayer);
 
         var enemyReference = inactiveSquad ?? inactivePlayer.TheirSquads?.FirstOrDefault();
         if (enemyReference == null)
-        {
             return;
-        }
 
         var squadsToCheck = activePlayer.TheirSquads ?? new List<Squad>();
         if (squadsToCheck.Count == 0 && activeSquad != null)
-        {
             squadsToCheck = new List<Squad> { activeSquad };
-        }
 
         foreach (var squad in squadsToCheck)
         {
             if (squad != null)
-            {
                 await CommandPhaseChecks(squad, enemyReference, hud, allowPlayerChoices);
-            }
         }
 
         foreach (var squad in squadsToCheck.Where(s => s != null && IsUnderStrengthForShellShock(s)))
         {
             squad.ShellShock = ShellShockTest(squad, enemyReference);
             if (squad.ShellShock)
-            {
                 hud?.ShowToast($"{squad.Name} became shell-shocked.");
-            }
         }
     }
 
     private static bool IsUnderStrengthForShellShock(Squad squad)
     {
         if (squad?.Composition == null || squad.Composition.Count == 0)
-        {
             return false;
-        }
 
         if (squad.Composition.Count == 1)
         {
@@ -96,16 +82,12 @@ public static class StepChecks
     private static void ApplyPlayerWideAbilities(Player player)
     {
         if (player?.TheirSquads == null || player.PlayerAbilities == null)
-        {
             return;
-        }
 
         foreach (var squad in player.TheirSquads)
         {
             if (squad?.SquadAbilities == null)
-            {
                 continue;
-            }
 
             if (player.PlayerAbilities.Contains(PlayerAbilities.HiveMind) && squad.SquadAbilities.All(a => a.Name != SquadAbilities.hiveMind.Name))
                 squad.SquadAbilities.Add(SquadAbilities.hiveMind);
@@ -122,9 +104,7 @@ public static class StepChecks
     public static List<SquadAbility> CleanupTemporaryAbilities(Squad unit)
     {
         if (unit?.SquadAbilities == null)
-        {
             return new List<SquadAbility>();
-        }
 
         var cleanedSquadAbilities = unit.SquadAbilities.Where(ability => !ability.IsTemporary).ToList();
         (unit.Composition ?? new List<Model>())
@@ -138,30 +118,20 @@ public static class StepChecks
     public static async Task CommandPhaseChecks(Squad activeSquad, Squad inactiveSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
         if (activeSquad == null || inactiveSquad == null)
-        {
             return;
-        }
 
         if (allowPlayerChoices && inactiveSquad.SquadAbilities.Any(ability => ability.Innate == "Hive") && hud != null)
-        {
             await ActivateAlienTerror(activeSquad, inactiveSquad, hud, allowPlayerChoices);
-        }
 
         if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "Zombie"))
-        {
             TriggerSquadRegeneration(activeSquad);
-        }
         if (allowPlayerChoices && inactiveSquad.SquadAbilities.Any(ability => ability.Innate == "Hive") && hud != null)
-        {
             await ActivateAlienTerror(activeSquad, inactiveSquad, hud, allowPlayerChoices);
-        }
         if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Name == "Officer Order") &&
             activeSquad.SquadAbilities.All(ability => ability.Innate != UsedOfficerOrder.Innate))
         {
             if (hud == null)
-            {
                 return;
-            }
 
             var options = new[]
             {
@@ -176,9 +146,7 @@ public static class StepChecks
             AudioManager.Instance?.Play("bugle");
             var choice = await hud.ChooseOptionAsync($"Choose an order for {activeSquad.Name}", options);
             if (choice < 0 || choice == options.Length - 1)
-            {
                 return;
-            }
 
             switch (choice)
             {
@@ -235,16 +203,12 @@ public static class StepChecks
 
 
     public static async Task RoundStartChecks(Squad teamASquad, Squad teamBSquad, BattleHud hud, bool allowPlayerChoices = true)
-    {
-        await RoundStartChecks(teamASquad, null, teamBSquad, null, hud, allowPlayerChoices);
-    }
+        { await RoundStartChecks(teamASquad, null, teamBSquad, null, hud, allowPlayerChoices); }
 
     private static async Task RoundStartChecks(Squad teamASquad, Player teamAPlayer, Squad teamBSquad, Player teamBPlayer, BattleHud hud, bool allowPlayerChoices)
     {
         if (hud == null)
-        {
             return;
-        }
 
         var squadPlayerPairs = new[]
         {
@@ -255,28 +219,20 @@ public static class StepChecks
         foreach (var (squad, player) in squadPlayerPairs)
         {
             if (squad == null)
-            {
                 continue;
-            }
 
             if (allowPlayerChoices && squad.SquadAbilities.Any(ability => ability.Innate == "Rampage"))
-            {
                 await Berserking(squad, hud, player);
-            }
 
             if (allowPlayerChoices && squad.SquadAbilities.Any(ability => ability.Innate == "Angry God"))
-            {
                 await GenerateBlessings(squad, hud);
-            }
         }
     }
 
     public static async Task ActivateAlienTerror(Squad activeSquad, Squad inactiveSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
         if (!allowPlayerChoices || activeSquad == null || inactiveSquad == null || hud == null)
-        {
             return;
-        }
 
         var useAlienTerror = await hud.ConfirmActionAsync(
             $"{inactiveSquad.Name}: Would you like to activate Alien Terror?",
@@ -285,16 +241,13 @@ public static class StepChecks
         );
 
         if (!useAlienTerror)
-        {
             return;
-        }
+
 
         AudioManager.Instance?.Play("demonlaugh");
         activeSquad.ShellShock = ShellShockTest(activeSquad, inactiveSquad);
         if (activeSquad.ShellShock)
-        {
             hud.ShowToast($"{activeSquad.Name} became shell-shocked.");
-        }
         inactiveSquad.SquadAbilities.RemoveAll(ability => ability.Innate == "Hive");
     }
 
@@ -303,9 +256,7 @@ public static class StepChecks
         if (activeDude.SquadAbilities.Any(ability => ability.Innate == "OO") &&
             activeDude.SquadAbilities.All(ability => ability.Innate != UsedOfficerOrder.Innate) &&
             !activeDude.ShellShock)
-        {
             return 3f;
-        }
         return 0f;
     }
 
@@ -313,9 +264,7 @@ public static class StepChecks
     {
         await Task.Yield();
         if (movedAfterShooting)
-        {
-            return -12f;
-        }
+            return -12f; // This makes charging impossible.
 
         var chargeBoost = activeSquad.SquadAbilities.FirstOrDefault(ability => ability.Innate == "+Charge")?.ResolveModifier() ?? 1;
         return chargeBoost;
@@ -324,22 +273,14 @@ public static class StepChecks
     private static async Task ShootingPhaseChecksBase(Squad activeSquad, Squad inactiveSquad)
     {
         if (activeSquad == null || inactiveSquad == null)
-        {
             return;
-        }
 
         if (inactiveSquad.SquadAbilities.Any(ability => ability.Innate == "Run Away"))
-        {
             return;
-        }
         if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "Satan"))
-        {
             await Task.Yield();
-        }
         if (activeSquad.SquadAbilities.Any(ability => ability.Innate == "SubRoutine"))
-        {
             await Task.Yield();
-        }
     }
 
 
@@ -400,14 +341,12 @@ public static class StepChecks
     {
         if (activeDude == null || hud == null)
             return;
-
-        // Roll 8d6
+        
         var rolls = new List<int>(8);
         for (int i = 0; i < 8; i++)
-            rolls.Add(DiceHelpers.SimpleRoll(6));
-
-        // Local helpers
-        static int CountOf(List<int> list, int face) => list.Count(v => v == face);
+            rolls.Add(DiceHelpers.SimpleRoll(6));  // Roll 8d6
+                                                   // 
+        static int CountOf(List<int> list, int face) => list.Count(v => v == face);   // Local helpers
 
         static void RemoveOccurrences(List<int> list, int face, int count)
         {
@@ -432,12 +371,9 @@ public static class StepChecks
                 .DistinctBy(w => w.WeaponName)
                 .ToList()
                 .ForEach(w => w.Special.Add(ability));
-        }
+        }  
+        var blessings = new List<(string Name, Func<bool> CanApply, Action Apply)>();   // Blessing registry: Name + Apply() + CanApply()
 
-        // Blessing registry: Name + Apply() + CanApply()
-        var blessings = new List<(string Name, Func<bool> CanApply, Action Apply)>();
-
-        // Double 6 => Charge After Rushing
         blessings.Add((
             "Charge After Rushing (Double 6)",
             () => CountOf(rolls, 6) >= 2,
@@ -448,7 +384,6 @@ public static class StepChecks
             }
         ));
 
-        // Triple 4 => Charge After Rushing
         blessings.Add((
             "Charge After Rushing (Triple 4)",
             () => CountOf(rolls, 4) >= 3,
@@ -459,7 +394,6 @@ public static class StepChecks
             }
         ));
 
-        // Double 5 => Melee Hard Hits
         blessings.Add((
             "Melee Hard Hits (Double 5)",
             () => CountOf(rolls, 5) >= 2,
@@ -470,7 +404,6 @@ public static class StepChecks
             }
         ));
 
-        // Double 4 => Fight After Melee Death
         blessings.Add((
             "Fight After Melee Death (Double 4)",
             () => CountOf(rolls, 4) >= 2,
@@ -481,7 +414,6 @@ public static class StepChecks
             }
         ));
 
-        // Triple any => Melee Hard Hits
         blessings.Add((
             "Melee Hard Hits (Triple Any)",
             () => rolls.GroupBy(v => v).Any(g => g.Count() >= 3),
@@ -493,7 +425,6 @@ public static class StepChecks
             }
         ));
 
-        // Double 3 => Bonus Hits 1 (melee)
         blessings.Add((
             "Bonus Hits 1 (Double 3)",
             () => CountOf(rolls, 3) >= 2,
@@ -504,7 +435,6 @@ public static class StepChecks
             }
         ));
 
-        // Double any => Damage Resistance boost (matches your Kotlin: damageResistance -= 1)
         blessings.Add((
             "Damage Resistance (Double Any)",
             () => rolls.GroupBy(v => v).Any(g => g.Count() >= 2),
@@ -517,7 +447,6 @@ public static class StepChecks
             }
         ));
 
-        // Double any => +2 Movement
         blessings.Add((
             "Movement Boost (+2 Movement)",
             () => rolls.GroupBy(v => v).Any(g => g.Count() >= 2),
@@ -529,26 +458,20 @@ public static class StepChecks
                 RemoveOccurrences(rolls, dbl, 2);
             }
         ));
-
-        // Filter to valid
+   
         var valid = blessings.Where(b => b.CanApply()).ToList();
-        if (valid.Count == 0)
+        if (valid.Count == 0)    // Filter to valid
         {
             hud.ShowToast("No valid blessings available!");
             return;
         }
 
-        // Pick up to 2 blessings (since BattleHud currently looks single-choice based)
-        // This mimics the Android multi-choice but in two steps.
         var chosen = new List<int>();
-
-        for (int pick = 0; pick < 2; pick++)
+        for (int pick = 0; pick < 2; pick++) //The user is given 2 single-choice picks to select blessings.
         {
             var names = valid.Select(v => v.Name).ToArray();
             var selection = await hud.ChooseOptionAsync($"Select Blessing {pick + 1}/2 for {activeDude.Name} (or Cancel)", names);
 
-            // If your ChooseOptionAsync can’t cancel, you can add a "Done" option instead.
-            // Here we treat out-of-range as cancel.
             if (selection < 0 || selection >= valid.Count)
                 break;
 
@@ -558,11 +481,7 @@ public static class StepChecks
                 pick--;
                 continue;
             }
-
             chosen.Add(selection);
-
-            // Optional: remove it from future picks so you don't even see duplicates
-            // but keep it simple: allow and block duplicates.
         }
 
         foreach (var idx in chosen)
@@ -581,18 +500,15 @@ public static class StepChecks
 
         AudioManager.Instance?.Play("battle_cry");
 
-        // Kotlin: add marker + charge after rush
         activeDude.SquadAbilities.Add(new SquadAbility("", "buffStrengthAndAttack", 0, false));
         activeDude.SquadAbilities.Add(SquadAbilities.ChargeAfterRush);
 
-        // Kotlin: if dodge > 5, set dodge = 5 and add marker
         if (activeDude.Dodge > 5)
         {
             activeDude.SquadAbilities.Add(new SquadAbility("", "improvedOrkInvuln", 0, false));
             activeDude.Dodge = 5;
         }
 
-        // Melee weapons: +1 strength, +1 attacks
         activeDude.Composition
             .SelectMany(m => m.Tools)
             .Where(w => w.IsMelee)
@@ -608,61 +524,42 @@ public static class StepChecks
         if (owner?.PlayerAbilities != null && owner.PlayerAbilities.Remove(PlayerAbilities.Berserk))
         {
             foreach (var squad in owner.TheirSquads ?? Enumerable.Empty<Squad>())
-            {
                 squad?.SquadAbilities?.RemoveAll(ability => ability?.Innate == SquadAbilities.berserking.Innate);
-            }
         }
     }
 
     public static bool ShellShockTest(Squad activeSquad, Squad inactiveSquad)
     {
         if (activeSquad == null)
-        {
             return false;
-        }
 
         var baseBravery = activeSquad.Bravery;
         var shellShockModifier = 0;
 
-        var hasBadJuju = HasFriendlyAura(activeSquad, "Bad Juju", 0f);
-        var hasHiveMind = HasFriendlyAura(activeSquad, "Hive", 0f);
+        var hasBadJuju = HasFriendlyAura(activeSquad, "Bad Juju", 0f); //This allows demons to regenerate.
+        var hasHiveMind = HasFriendlyAura(activeSquad, "Hive", 0f); //Hive forces are resistant to Morale Checks.
 
         if (hasBadJuju)
-        {
             shellShockModifier += 1;
-        }
 
         if (hasHiveMind)
-        {
             shellShockModifier += DiceHelpers.SimpleRoll(6);
-        }
 
         var hasGrimDebuff = HasEnemyDebuffAura(activeSquad, inactiveSquad, "Grim", 12f);
         if (hasGrimDebuff)
-        {
             shellShockModifier -= 1;
-        }
 
         var test = DiceHelpers.Roll2d6() + shellShockModifier < baseBravery;
         if (test && activeSquad.SquadAbilities.Any(ability => ability.Innate == "TryAgain"))
-        {
             test = DiceHelpers.Roll2d6() + shellShockModifier < baseBravery;
-        }
-
-        if (test)
-        {
+        if (test) //True means the test was failed.
             AudioManager.Instance?.Play("failedbravery");
-        }
 
         if (hasBadJuju && !test)
-        {
             TriggerSquadRegeneration(activeSquad);
-        }
 
         if (test && HasEnemyDebuffAura(activeSquad, inactiveSquad, "Bad Juju", 12f))
-        {
             CombatRolls.AllocatePure(DiceHelpers.SimpleRoll(3), activeSquad);
-        }
 
         return test;
     }
@@ -671,9 +568,7 @@ public static class StepChecks
     private static bool HasFriendlyAura(Squad targetSquad, string innate, float rangeInches)
     {
         if (targetSquad == null || string.IsNullOrWhiteSpace(innate))
-        {
             return false;
-        }
 
         if (FriendlyAuraSquadProvider != null && AuraRangeCheckProvider != null)
         {
@@ -692,9 +587,7 @@ public static class StepChecks
     private static bool HasEnemyDebuffAura(Squad targetSquad, Squad fallbackEnemy, string innate, float rangeInches)
     {
         if (targetSquad == null || string.IsNullOrWhiteSpace(innate))
-        {
             return false;
-        }
 
         if (EnemyAuraSquadProvider != null && AuraRangeCheckProvider != null)
         {
@@ -712,37 +605,29 @@ public static class StepChecks
     public static void TriggerSquadRegeneration(Squad squad)
     {
         if (squad == null)
-        {
             return;
-        }
 
         if (SquadRegenerationHandler != null)
         {
             SquadRegenerationHandler.Invoke(squad);
             return;
         }
-
-        // Fallback for contexts that do not have battlefield actor access.
-        RegenerateSquadWithoutActors(squad);
+        RegenerateSquadWithoutActors(squad);        // Fallback for contexts that do not have battlefield actor access.
     }
 
     public static void RegenerateSquadWithoutActors(Squad squad)
     {
         if (squad.Composition == null || squad.Composition.Count == 0)
-        {
             return;
-        }
 
         var remainingWounds = DiceHelpers.SimpleRoll(3);
         remainingWounds = HealSquadModels(squad, remainingWounds);
 
-        while (remainingWounds > 0 && squad.Composition.Count < squad.StartingModelSize)
+        while (remainingWounds > 0 && squad.Composition.Count < squad.StartingModelSize) //Create a new model first, then heal the squad.
         {
             var referenceModel = squad.Composition.FirstOrDefault();
             if (referenceModel == null)
-            {
                 break;
-            }
 
             var regeneratedModel = referenceModel.DeepCopy();
             regeneratedModel.Health = 1;
@@ -751,9 +636,7 @@ public static class StepChecks
         }
 
         if (remainingWounds > 0)
-        {
             HealSquadModels(squad, remainingWounds);
-        }
     }
 
     public static int HealSquadModels(Squad squad, int remainingWounds)
@@ -762,20 +645,15 @@ public static class StepChecks
         foreach (var model in squad.Composition)
         {
             if (woundsLeft <= 0)
-            {
                 break;
-            }
 
             if (model.Health >= model.StartingHealth)
-            {
                 continue;
-            }
 
             var woundsToHeal = Math.Min(woundsLeft, model.StartingHealth - model.Health);
             model.Health += woundsToHeal;
             woundsLeft -= woundsToHeal;
         }
-
         return woundsLeft;
     }
 
@@ -786,14 +664,10 @@ public static class StepChecks
         var didSelfDamage = false;
 
         if (activeSquad == null || inactiveSquad == null)
-        {
             return false;
-        }
 
         if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Innate == "Satan") && hud != null)
-        {
             didSelfDamage |= await HandleSatanicPrayer(activeSquad, hud);
-        }
 
         if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Innate == "SubRoutine") && hud != null)
         {
@@ -801,9 +675,7 @@ public static class StepChecks
             var options = new[] { "Skirmish Ability", "Hefty Ability", "Skip" };
             var choice = await hud.ChooseOptionAsync("Choose a Subroutine for your guns!", options);
             if (choice < 0 || choice == options.Length - 1)
-            {
                 return didSelfDamage;
-            }
 
             if (choice == 0)
             {
@@ -822,7 +694,6 @@ public static class StepChecks
                     .ForEach(weapon => weapon.Special.Add(WeaponAbilities.HeftyTemp));
             }
         }
-
         return didSelfDamage;
     }
 
@@ -850,9 +721,7 @@ public static class StepChecks
         }
 
         if (choice < 0 || choice == 2)
-        {
             return false;
-        }
 
         var selfHarm = DiceHelpers.Roll2d6() < activeSquad.Bravery;
         if (selfHarm)
@@ -860,16 +729,13 @@ public static class StepChecks
             AudioManager.Instance?.Play("perilous");
             CombatRolls.AllocatePure(DiceHelpers.SimpleRoll(3), activeSquad);
         }
-
         return selfHarm;
     }
 
     public static async Task<bool> FightPhaseChecks(Squad activeSquad, BattleHud hud, bool allowPlayerChoices = true)
     {
         if (activeSquad == null)
-        {
             return false;
-        }
 
         var didSelfDamage = false;
         if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Innate == "martialStance") && hud != null)
@@ -903,10 +769,7 @@ public static class StepChecks
         }
 
         if (allowPlayerChoices && activeSquad.SquadAbilities.Any(ability => ability.Innate == "Satan") && hud != null)
-        {
             didSelfDamage |= await HandleSatanicPrayer(activeSquad, hud);
-        }
-
         return didSelfDamage;
     }
 }

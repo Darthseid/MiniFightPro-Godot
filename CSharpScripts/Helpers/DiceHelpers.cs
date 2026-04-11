@@ -6,22 +6,16 @@ public static class DiceHelpers
     private static readonly RandomNumberGenerator Rng = new RandomNumberGenerator();
 
     static DiceHelpers()
-    {
-        Rng.Randomize();
-    }
+        { Rng.Randomize(); }
 
     public static int SimpleRoll(int maximum)
-    {
-        return (int)Rng.RandiRange(1, maximum);
-    }
+        { return (int)Rng.RandiRange(1, maximum); }
 
     public static int ReRollOnes()
     {
         var result = SimpleRoll(6);
         if (result == 1)
-        {
             result = SimpleRoll(6);
-        }
         return result;
     }
 
@@ -29,27 +23,23 @@ public static class DiceHelpers
     {
         var result = SimpleRoll(6);
         if (result < skill)
-        {
             result = SimpleRoll(6);
-        }
         return result;
     }
 
     public static int Roll2d6()
-    {
-        return SimpleRoll(6) + SimpleRoll(6);
-    }
+        { return SimpleRoll(6) + SimpleRoll(6); }
 
     public static float RandomPosition(int input)
     {
         var conv = (float)input;
-        return conv * ((float)GD.Randf() * 2f - 1f);
+        return conv * ((float)GD.Randf() * 2f - 1f); // This will give a random float between -input and +input
     }
 
 
     private static readonly System.Text.RegularExpressions.Regex DamageRegex =
         new(@"^\s*(\d*)\s*[dD]\s*(\d+)\s*([+-]\s*\d+)?\s*$",
-            System.Text.RegularExpressions.RegexOptions.Compiled);
+            System.Text.RegularExpressions.RegexOptions.Compiled); // Matches expressions like "2d6", "d8", "3d10 + 2", "4d4 - 1"
 
     public static bool IsDamageExpressionValid(string input)
     {
@@ -68,9 +58,8 @@ public static class DiceHelpers
             throw new ArgumentException("Damage string is empty.");
 
         input = input.Trim();
-
         if (int.TryParse(input, out var constantValue))
-            return constantValue;
+            return constantValue; // If it's just a number, return it as the damage
 
         var match = DamageRegex.Match(input);
         if (!match.Success)
@@ -84,16 +73,14 @@ public static class DiceHelpers
             throw new ArgumentException($"Invalid dice values in: '{input}'");
 
         var result = 0;
-        for (var i = 0; i < multiplier; i++)
+        for (var i = 0; i < multiplier; i++) // Roll the specified number of dice. Stuff like 2D6 means "roll 2 six-sided dice and add them together"
             result += SimpleRoll(sides);
 
         if (match.Groups[3].Success)
         {
             var modText = match.Groups[3].Value.Replace(" ", "");
-            result += int.Parse(modText);
+            result += int.Parse(modText); // Apply modifier for stuff like "D6 + 2".
         }
-
         return result;
     }
-
 }

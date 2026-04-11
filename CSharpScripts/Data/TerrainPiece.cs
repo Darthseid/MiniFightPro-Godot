@@ -24,9 +24,7 @@ public partial class TerrainPiece : Area2D
         Data = data;
         GlobalPosition = data?.Position ?? Vector2.Zero;
         if (Data != null)
-        {
             Data.Position = GlobalPosition;
-        }
     }
 
     public void SetLocked(bool locked)
@@ -38,9 +36,7 @@ public partial class TerrainPiece : Area2D
     public override void _InputEvent(Viewport viewport, InputEvent @event, int shapeIdx)
     {
         if (IsLocked)
-        {
             return;
-        }
 
         switch (@event)
         {
@@ -60,9 +56,7 @@ public partial class TerrainPiece : Area2D
     public override void _UnhandledInput(InputEvent @event)
     {
         if (IsLocked || !_isDragging)
-        {
             return;
-        }
 
         switch (@event)
         {
@@ -85,14 +79,14 @@ public partial class TerrainPiece : Area2D
 
     private Vector2 ToGlobalPoint(Vector2 viewportPosition)
     {
-        var inv = GetViewport().GetCanvasTransform().AffineInverse();
+        var inv = GetViewport().GetCanvasTransform().AffineInverse(); // Convert from viewport/screen coordinates to world coordinates, accounting for any camera zoom or offset.
         return inv * viewportPosition;
     }
 
     private void SetFromPointer(Vector2 pointer)
     {
         var viewport = GetViewportRect().Size;
-        var radiusPx = RadiusInches * Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f);
+        var radiusPx = RadiusInches * Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f); 
         var next = pointer + _dragOffset;
         next.X = Mathf.Clamp(next.X, radiusPx, viewport.X - radiusPx);
         next.Y = Mathf.Clamp(next.Y, radiusPx, viewport.Y - radiusPx);
@@ -107,19 +101,15 @@ public partial class TerrainPiece : Area2D
     private void UpdateVisualScale()
     {
         if (_sprite?.Texture == null)
-        {
             return;
-        }
 
         var pxPerInch = Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f);
         var diameterPx = RadiusInches * 2f * pxPerInch;
         var texSize = _sprite.Texture.GetSize();
         if (texSize.X <= 0 || texSize.Y <= 0)
-        {
             return;
-        }
 
-        var scale = diameterPx / Mathf.Max(texSize.X, texSize.Y);
+        var scale = diameterPx / Mathf.Max(texSize.X, texSize.Y); //Uniform scale to fit the larger dimension to the diameter.
         _sprite.Scale = new Vector2(scale, scale);
     }
 }

@@ -13,7 +13,7 @@ public class Weapon
     public string Damage;
     public string HitSfxKey = string.Empty;
     public List<WeaponAbility> Special;
-    public bool IsMelee => Range <= 1f;
+    public bool IsMelee => Range <= 1f; // This is a derived property based on Range
 
     public Weapon(
         string weaponName,

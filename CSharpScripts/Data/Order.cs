@@ -86,9 +86,7 @@ public class Order
     }
 
     public bool MatchesWindow(OrderWindowType currentWindow)
-    {
-        return WindowType == currentWindow;
-    }
+        { return WindowType == currentWindow; }
 
     public bool MatchesTargetType(Squad squad)
     {

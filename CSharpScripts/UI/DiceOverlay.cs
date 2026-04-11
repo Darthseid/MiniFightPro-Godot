@@ -41,9 +41,7 @@ public partial class DiceOverlay : CanvasLayer
     {
         _currentRoll = rollEvent;
         foreach (Node child in _diceGrid.GetChildren())
-        {
             child.QueueFree();
-        }
 
         _headerLabel.Text = $"{rollEvent.Label} - {rollEvent.Results.Count} dice";
         _widgets = new DieWidget[rollEvent.Results.Count];
@@ -63,9 +61,7 @@ public partial class DiceOverlay : CanvasLayer
         await ToSignal(GetTree().CreateTimer(RollAnimSeconds), SceneTreeTimer.SignalName.Timeout);
 
         for (var i = 0; i < rollEvent.Results.Count; i++)
-        {
             _widgets[i].RevealFace(rollEvent.Results[i]);
-        }
     }
 
     public void SetFateSixes(int team1Pool, bool team1HasAbility, int team2Pool, bool team2HasAbility)
@@ -82,26 +78,20 @@ public partial class DiceOverlay : CanvasLayer
         _commandRerollButton.Disabled = !canReroll;
 
         for (var i = 0; i < _widgets.Length; i++)
-        {
             _widgets[i].SetInteractable(canRush, false);
-        }
     }
 
 
     public void SetNormalSelectionState(bool isActive)
     {
         for (var i = 0; i < _widgets.Length; i++)
-        {
             _widgets[i].SetInteractable(isActive, false);
-        }
     }
 
     public void SetRerollSelectionState(bool isActive)
     {
         if (_currentRoll == null)
-        {
             return;
-        }
 
         for (var i = 0; i < _widgets.Length; i++)
         {
@@ -113,15 +103,13 @@ public partial class DiceOverlay : CanvasLayer
     public void UpdateDieFace(int index)
     {
         if (_currentRoll == null || index < 0 || index >= _widgets.Length)
-        {
             return;
-        }
 
         _widgets[index].RevealFace(_currentRoll.Results[index]);
         _widgets[index].SetInteractable(false, false);
     }
 
-    public void HideOverlay()
+    public void HideOverlay() //Refactor this out.
     {
         Visible = false;
     }

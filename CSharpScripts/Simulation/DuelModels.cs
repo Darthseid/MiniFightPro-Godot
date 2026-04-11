@@ -70,23 +70,18 @@ public sealed class SimSquadState
         SyncHpArray();
     }
 
-    public bool IsDestroyed => CurrentModelHp.Length == 0 || CurrentModelHp.All(h => h <= 0);
-
-    public int TotalRemainingHealth => CurrentModelHp.Where(h => h > 0).Sum();
+    public bool IsDestroyed => CurrentModelHp.Length == 0 || CurrentModelHp.All(h => h <= 0); // Consider a squad destroyed if it has no models or all models are at 0 or less health
+    public int TotalRemainingHealth => CurrentModelHp.Where(h => h > 0).Sum(); // Only count health from alive models
 
     public void SyncHpArray()
-    {
-        CurrentModelHp = WorkingSquad.Composition.Select(m => m.Health).ToArray();
-    }
+        { CurrentModelHp = WorkingSquad.Composition.Select(m => m.Health).ToArray(); }
 
     public IEnumerable<int> AliveIndices()
     {
         for (var i = 0; i < CurrentModelHp.Length; i++)
         {
             if (CurrentModelHp[i] > 0)
-            {
-                yield return i;
-            }
+                yield return i; // Return the index of alive models
         }
     }
 
@@ -97,7 +92,6 @@ public sealed class SimSquadState
             SyncHpArray();
             return;
         }
-
         var allDead = WorkingSquad.Composition.All(model => model.Health <= 0);
         var hasSecondLife = WorkingSquad.SquadAbilities.Any(a => a?.Innate == "2nd Life");
         if (allDead && hasSecondLife && !_secondLifeTriggered)
@@ -107,13 +101,11 @@ public sealed class SimSquadState
                 var model = WorkingSquad.Composition[i];
                 model.Health = Math.Max(1, model.StartingHealth / 2);
             }
-
             _secondLifeTriggered = true;
             WorkingSquad.SquadAbilities.RemoveAll(a => a?.Innate == "2nd Life");
             SyncHpArray();
             return;
         }
-
         WorkingSquad.Composition = WorkingSquad.Composition.Where(model => model.Health > 0).ToList();
         SyncHpArray();
     }
