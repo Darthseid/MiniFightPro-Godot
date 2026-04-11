@@ -55,9 +55,7 @@ public static class CombatEngine
     private const bool DebugDamageAllocation = false;
 
     private static bool IsActorAlive(BattleModelActor actor)
-    {
-        return actor != null && actor.BoundModel != null && actor.BoundModel.Health > 0;
-    }
+        { return actor != null && actor.BoundModel != null && actor.BoundModel.Health > 0; }
 
     private static int CountLivingActors(List<BattleModelActor> actors)
     {
@@ -152,7 +150,7 @@ public static class CombatEngine
         return builder.ToString();
     }
 
-    private static string BuildWeaponFingerprint(Weapon weapon)
+    private static string BuildWeaponFingerprint(Weapon weapon) //Creates a string that uniquely identifies a weapon's key characteristics for grouping purposes.
     {
         var specials = string.Join("|", weapon.Special.Select(ability => $"{ability.Innate}:{ability.Modifier}"));
         return $"{weapon.WeaponName}::{weapon.Attacks}::{weapon.Damage}::{weapon.Range}::{weapon.HitSkill}::{weapon.Strength}::{weapon.ArmorPenetration}::{weapon.IsMelee}::{specials}";
@@ -172,7 +170,6 @@ public static class CombatEngine
             return 0;
 
         var fingerprint = BuildWeaponFingerprint(weapon);
-        var infantryBearer = attackerSquad.SquadType?.Contains("Infantry") == true;
         var recoilHits = 0;
 
         foreach (var attackerActor in attackerActors.Where(IsActorAlive))
@@ -194,11 +191,11 @@ public static class CombatEngine
                     BuildWeaponFingerprint(weapon),
                     false,
                     attackerActor.TeamId));
-            if (perilousRoll.Results.FirstOrDefault() != 1)
+            if (perilousRoll.Results.FirstOrDefault() != 1) // Only a roll of 1 causes recoil damage, regardless of modifiers.
                 continue;
 
             recoilHits++;
-            if (infantryBearer)
+            if (attackerSquad.SquadType.Contains("Infantry"))
             {
                 attackerActor.BoundModel.Health = 0;
                 battleHud?.ShowToast($"Perilous! {attackerActor.BoundModel.Name} was destroyed.", 2f);
@@ -312,27 +309,14 @@ public static class CombatEngine
             return null;
 
         var nameCounts = living
-            .GroupBy(actor => actor.BoundModel?.Name ?? actor.Name)
-            .ToDictionary(group => group.Key, group => group.Count());
+            .GroupBy(a => a.BoundModel?.Name ?? a.Name)
+            .ToDictionary(g => g.Key, g => g.Count()); // Count how many living actors share each name.
 
-        BattleModelActor selected = null;
-        var selectedCount = int.MaxValue;
-        string selectedName = null;
-
-        foreach (var actor in living)
+        return living.MinBy(a =>
         {
-            var actorName = actor.BoundModel?.Name ?? actor.Name;
-            var count = nameCounts[actorName];
-
-            if (count < selectedCount || (count == selectedCount && string.CompareOrdinal(actorName, selectedName) < 0))
-            {
-                selected = actor;
-                selectedCount = count;
-                selectedName = actorName;
-            }
-        }
-
-        return selected;
+            var n = a.BoundModel?.Name ?? a.Name;
+            return (nameCounts[n], n);
+        });
     }
 
     private static BattleModelActor SelectFurthestFromSquadCenter(List<BattleModelActor> defenders)
@@ -341,26 +325,13 @@ public static class CombatEngine
         if (living.Count == 0)
             return null;
 
-        var center = Vector2.Zero;
-        foreach (var actor in living)
-            center += actor.GlobalPosition;
+       
+        var center = living  // Compute center
+            .Select(a => a.GlobalPosition)
+            .Aggregate(Vector2.Zero, (sum, pos) => sum + pos) / living.Count;
 
-        center /= living.Count;
-
-        BattleModelActor furthest = null;
-        var furthestDistance = float.MinValue;
-
-        foreach (var actor in living)
-        {
-            var distance = actor.GlobalPosition.DistanceSquaredTo(center);
-            if (distance > furthestDistance)
-            {
-                furthestDistance = distance;
-                furthest = actor;
-            }
-        }
-
-        return furthest;
+        
+        return living.MaxBy(a => a.GlobalPosition.DistanceSquaredTo(center)); // Pick actor with maximum squared distance
     }
 
     private static BattleModelActor SelectDamageRecipient(

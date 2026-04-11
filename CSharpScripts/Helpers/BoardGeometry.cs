@@ -14,24 +14,23 @@ public static class BoardGeometry
         float edgePx = centerPx - averageRadius;
         return edgePx / GameGlobals.Instance.FakeInchPx;
     }
-    public static float ClosestDistanceInches(IReadOnlyList<BattleModelActor> teamA, IReadOnlyList<BattleModelActor> teamB)
+    public static float ClosestDistanceInches(
+     IReadOnlyList<BattleModelActor> teamA,
+     IReadOnlyList<BattleModelActor> teamB)
     {
         if (teamA == null || teamB == null || teamA.Count == 0 || teamB.Count == 0)
             return 0f;
-        float closestEdgePx = float.MaxValue;
-        foreach (var a in teamA)
-        {
-            if (a == null) continue;
-            foreach (var b in teamB)
-            {
-                if (b == null) continue;
-                float centerPx = a.GlobalPosition.DistanceTo(b.GlobalPosition);
-                float averageRadius = (a.BaseSizePx + b.BaseSizePx) / 4f;
-                float edgePx = centerPx - averageRadius;
-                if (edgePx < closestEdgePx)
-                    closestEdgePx = edgePx;
-            }
-        }
+
+        var closestEdgePx =
+            (from a in teamA
+             where a != null
+             from b in teamB
+             where b != null
+             let centerPx = a.GlobalPosition.DistanceTo(b.GlobalPosition)
+             let averageRadius = (a.BaseSizePx + b.BaseSizePx) / 4f // The average radius is used to approximate the edge-to-edge distance between the actors, since they are typically represented as circles in terms of collision and spacing. By subtracting the average radius from the center-to-center distance, we get a better estimate of how close the actors actually are to each other, rather than just how close their centers are.
+             select centerPx - averageRadius)
+            .Min();
+
         return closestEdgePx / GameGlobals.Instance.FakeInchPx;
     }
 

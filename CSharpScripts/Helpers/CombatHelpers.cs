@@ -57,9 +57,7 @@ public static class CombatHelpers
         { return teamId == 1 ? teamAMove : teamBMove; }
 
     private static bool IsMonsterorVehicle(Squad squad)
-    {
-        return squad?.SquadType?.Any(type => type == "Monster" || type == "Vehicle") == true;
-    }
+        { return squad?.SquadType?.Any(type => type == "Monster" || type == "Vehicle") == true; }
 
     public static List<Weapon> AttackUnitWeapons(Squad unity)
     {
