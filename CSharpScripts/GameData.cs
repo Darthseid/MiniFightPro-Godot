@@ -357,38 +357,155 @@ public partial class GameData : Node
         var updated = false;
         foreach (var player in PlayerList)
         {
-            if (player?.TheirSquads == null)
+            if (player == null)
                 continue;
 
-            var updatedSquads = new List<Squad>();
-            foreach (var squad in player.TheirSquads)
+            if (SyncPlayerSquads(player, squadLookup))
             {
-                if (squad?.Name == null)
-                    continue;
-
-                if (squadLookup.TryGetValue(squad.Name, out var latestSquad))
-                    updatedSquads.Add(latestSquad.DeepCopy());
-            }
-
-            if (updatedSquads.Count != player.TheirSquads.Count)
-            {
-                player.TheirSquads = updatedSquads;
                 updated = true;
-                continue;
             }
 
-            for (int i = 0; i < updatedSquads.Count; i++)
+            if (SyncPlayerAbilities(player))
             {
-                if (!ReferenceEquals(updatedSquads[i], player.TheirSquads[i]))
-                {
-                    player.TheirSquads = updatedSquads;
-                    updated = true;
-                    break;
-                }
+                updated = true;
+            }
+
+            if (SyncPlayerOrders(player))
+            {
+                updated = true;
             }
         }
         if (updated)
             SavePlayersToFile();
+    }
+
+    private static bool SyncPlayerSquads(Player player, Dictionary<string, Squad> squadLookup)
+    {
+        if (player.TheirSquads == null)
+            return false;
+
+        var updatedSquads = new List<Squad>();
+        foreach (var squad in player.TheirSquads)
+        {
+            if (squad?.Name == null)
+                continue;
+
+            if (squadLookup.TryGetValue(squad.Name, out var latestSquad))
+                updatedSquads.Add(latestSquad.DeepCopy());
+        }
+
+        if (updatedSquads.Count != player.TheirSquads.Count)
+        {
+            player.TheirSquads = updatedSquads;
+            return true;
+        }
+
+        for (int i = 0; i < updatedSquads.Count; i++)
+        {
+            if (!ReferenceEquals(updatedSquads[i], player.TheirSquads[i]))
+            {
+                player.TheirSquads = updatedSquads;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool SyncPlayerAbilities(Player player)
+    {
+        var currentAbilities = player.PlayerAbilities ?? new List<string>();
+        var updatedAbilities = new List<string>();
+
+        foreach (var ability in currentAbilities)
+        {
+            if (string.IsNullOrWhiteSpace(ability))
+                continue;
+
+            var latestName = PlayerAbilities.All.FirstOrDefault(a =>
+                string.Equals(a, ability, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(latestName) &&
+                !updatedAbilities.Any(existing => string.Equals(existing, latestName, StringComparison.OrdinalIgnoreCase)))
+            {
+                updatedAbilities.Add(latestName);
+            }
+        }
+
+        if (updatedAbilities.Count != currentAbilities.Count ||
+            updatedAbilities.Where((t, i) => !string.Equals(t, currentAbilities[i], StringComparison.Ordinal)).Any())
+        {
+            player.PlayerAbilities = updatedAbilities;
+            player.HasStrandedMiracle = updatedAbilities.Contains(PlayerAbilities.StrandedMiracle);
+            return true;
+        }
+
+        player.HasStrandedMiracle = updatedAbilities.Contains(PlayerAbilities.StrandedMiracle);
+        return false;
+    }
+
+    private static bool SyncPlayerOrders(Player player)
+    {
+        var currentOrders = player.Orders ?? new List<Order>();
+        var defaultOrders = Order.BuildDefaultOrders();
+        var ordersById = new Dictionary<string, Order>(StringComparer.OrdinalIgnoreCase);
+        var ordersByName = new Dictionary<string, Order>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var order in defaultOrders)
+        {
+            if (!string.IsNullOrWhiteSpace(order.OrderId))
+                ordersById[order.OrderId] = order;
+
+            if (!string.IsNullOrWhiteSpace(order.OrderName))
+                ordersByName[order.OrderName] = order;
+        }
+
+        var updatedOrders = new List<Order>();
+        foreach (var order in currentOrders)
+        {
+            if (order == null)
+                continue;
+
+            var hasMatchById = !string.IsNullOrWhiteSpace(order.OrderId) &&
+                               ordersById.TryGetValue(order.OrderId, out var latestById);
+            if (hasMatchById)
+            {
+                updatedOrders.Add(latestById);
+                continue;
+            }
+
+            if (!string.IsNullOrWhiteSpace(order.OrderName) &&
+                ordersByName.TryGetValue(order.OrderName, out var latestByName))
+            {
+                updatedOrders.Add(latestByName);
+            }
+        }
+
+        if (updatedOrders.Count != currentOrders.Count)
+        {
+            player.Orders = updatedOrders;
+            return true;
+        }
+
+        for (int i = 0; i < updatedOrders.Count; i++)
+        {
+            if (!string.Equals(updatedOrders[i].OrderId, currentOrders[i].OrderId, StringComparison.Ordinal) ||
+                !string.Equals(updatedOrders[i].OrderName, currentOrders[i].OrderName, StringComparison.Ordinal) ||
+                updatedOrders[i].OrderCost != currentOrders[i].OrderCost ||
+                !string.Equals(updatedOrders[i].AvailablePhase, currentOrders[i].AvailablePhase, StringComparison.Ordinal) ||
+                updatedOrders[i].TargetsEnemy != currentOrders[i].TargetsEnemy ||
+                !string.Equals(updatedOrders[i].Description, currentOrders[i].Description, StringComparison.Ordinal) ||
+                updatedOrders[i].WindowType != currentOrders[i].WindowType ||
+                updatedOrders[i].TargetSide != currentOrders[i].TargetSide ||
+                updatedOrders[i].TargetType != currentOrders[i].TargetType ||
+                updatedOrders[i].RequiresTarget != currentOrders[i].RequiresTarget)
+            {
+                player.Orders = updatedOrders;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void EnsurePresetDataLoaded()
