@@ -3,10 +3,13 @@ To do list for mini fight free godot:
 * Stress Test everything.
 * Make sure that all the option dialogs are fully readable on mobile devices.
 * Test on multiple devices.
-* Stop squads from hitting themselves sometimes.
 * Change die size and gif and presentation.
 * Remove 40k terminology.
 * Translate into other languages.
 * Remove Bespoke functions.
 * Apply oneShot, perilous, Benefit of Cover, Ignores Cover, Shellshock changes.
  * Fix Mists of Deimos.
+* Stop units from hitting each other.
+* Update MiniRules. 
+* Fix Preset Orders not existing.
+* Update default models for preset players.

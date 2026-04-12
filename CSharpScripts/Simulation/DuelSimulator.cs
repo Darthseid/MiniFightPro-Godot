@@ -1,14 +1,9 @@
-using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 public sealed class DuelSimulator
 {
-    private static readonly FieldInfo DiceRngField = typeof(DiceHelpers)
-        .GetField("Rng", BindingFlags.NonPublic | BindingFlags.Static);
-
     private readonly MoveVars _stationaryMove = new MoveVars(move: false, rush: false, retreat: false);
 
     private long _trialSquadAAttacks;
@@ -21,7 +16,6 @@ public sealed class DuelSimulator
     public DuelResult RunSingle(DuelConfig config, Squad a, Squad b, Random rng)
     {
         ResetTrialCounters();
-        SeedDiceHelpers(rng);
 
         var squadA = new SimSquadState(a);
         var squadB = new SimSquadState(b);
@@ -65,7 +59,6 @@ public sealed class DuelSimulator
         var aDestroyed = squadA.IsDestroyed;
         var bDestroyed = squadB.IsDestroyed;
         var result = new DuelResult
-
         {
             RoundsElapsed = roundsElapsed,
             HitRoundCap = roundsElapsed >= config.RoundCap && !aDestroyed && !bDestroyed,
@@ -83,10 +76,10 @@ public sealed class DuelSimulator
         return result;
     }
 
-    public DuelBatchResult RunBatch(DuelConfig config, Squad a, Squad b, int trials, int? seed)
+    public DuelBatchResult RunBatch(DuelConfig config, Squad a, Squad b, int trials)
     {
         var safeTrials = Math.Clamp(trials, 1, 100000);
-        var rng = seed.HasValue ? new Random(seed.Value) : new Random();
+        var rng = new Random();
 
         var aWins = 0;
         var bWins = 0;
@@ -247,7 +240,10 @@ public sealed class DuelSimulator
                 _trialSquadADamage += damageDealt;
             else
                 _trialSquadBDamage += damageDealt;
-            ConsumeOneShotWeapons(attacker.WorkingSquad, weapon);
+
+            if (weapon.Special != null && weapon.Special.Any(a => a?.Innate == "1 Shot"))
+                weapon.Attacks = "0";
+
             ResolvePerilous(attacker, weapon, ref roundDidDamage);
 
             var defenderAliveAfter = defender.WorkingSquad.Composition.Count(model => model.Health > 0);
@@ -275,7 +271,6 @@ public sealed class DuelSimulator
 
                 if (target == null || model.Health < target.Health)
                     target = model;
-
             }
 
             if (target == null)
@@ -291,7 +286,7 @@ public sealed class DuelSimulator
                 {
                     target.Health -= 1;
                     damageApplied++;
-                    roundDidDamage = true; 
+                    roundDidDamage = true;
                 }
             }
         }
@@ -326,31 +321,11 @@ public sealed class DuelSimulator
 
         if (range <= 6f)
             CombatRolls.AllocatePure(blast, other.WorkingSquad);
-            other.RemoveDeadAndHandleSecondLife();
-            roundDidDamage = true;
+        other.RemoveDeadAndHandleSecondLife();
+        roundDidDamage = true;
     }
 
-    private static void ConsumeOneShotWeapons(Squad attackerSquad, Weapon weapon)
-    {
-        if (weapon.Special == null || weapon.Special.All(a => a?.Innate != "1 Shot"))
-        {
-            return;
-        }
-
-        var fingerprint = CombatEngine.GetWeaponFingerprint(weapon);
-        foreach (var model in attackerSquad.Composition.Where(m => m.Health > 0))
-        {
-            foreach (var tool in model.Tools)
-            {
-                if (CombatEngine.GetWeaponFingerprint(tool) == fingerprint)
-                {
-                    tool.Attacks = "0";
-                }
-            }
-        }
-    }
-
-    private static void ResolvePerilous(SimSquadState attacker, Weapon weapon, ref bool roundDidDamage) //Consider using base function.
+    private static void ResolvePerilous(SimSquadState attacker, Weapon weapon, ref bool roundDidDamage) // Consider using base function.
     {
         if (weapon.Special == null || weapon.Special.All(a => a?.Innate != "Self-Inflict"))
             return;
@@ -372,12 +347,6 @@ public sealed class DuelSimulator
             roundDidDamage = true;
         }
         attacker.RemoveDeadAndHandleSecondLife();
-    }
-
-    private static void SeedDiceHelpers(Random rng) //Consider removing seeds.
-    {
-        if (DiceRngField?.GetValue(null) is RandomNumberGenerator godotRng)
-            godotRng.Seed = (ulong)rng.NextInt64(1, long.MaxValue);
     }
 
     private void ResetTrialCounters()

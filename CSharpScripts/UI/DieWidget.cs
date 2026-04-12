@@ -33,9 +33,7 @@ public partial class DieWidget : Control
     }
 
     public void SetIndex(int index)
-    {
-        _index = index;
-    }
+        { _index = index; }
 
     public void SetInteractable(bool enabled, bool highlighted)
     {

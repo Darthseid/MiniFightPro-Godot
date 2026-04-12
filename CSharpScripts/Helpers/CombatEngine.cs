@@ -55,7 +55,7 @@ public static class CombatEngine
     private const bool DebugDamageAllocation = false;
 
     private static bool IsActorAlive(BattleModelActor actor)
-        { return actor != null && actor.BoundModel != null && actor.BoundModel.Health > 0; }
+    { return actor != null && actor.BoundModel != null && actor.BoundModel.Health > 0; }
 
     private static int CountLivingActors(List<BattleModelActor> actors)
     {
@@ -212,29 +212,6 @@ public static class CombatEngine
         return recoilHits;
     }
 
-
-    private static void ConsumeOneShotWeapons(Squad attackerSquad, Weapon weapon) //Todo Remove this function and refactor.
-    {
-        if (attackerSquad == null || weapon == null)
-            return;
-
-        if (weapon.Special == null || weapon.Special.All(ability => ability?.Innate != "1 Shot"))
-            return;
-
-        var fingerprint = BuildWeaponFingerprint(weapon);
-        foreach (var model in attackerSquad.Composition.Where(model => model != null && model.Health > 0))
-        {
-            foreach (var tool in model.Tools)
-            {
-                if (tool == null)
-                    continue;
-
-                if (BuildWeaponFingerprint(tool) == fingerprint)
-                    tool.Attacks = "0";
-            }
-        }
-    }
-
     public static List<Weapon> GetEffectiveWeaponsForPhase(Squad attackerSquad, bool isMelee)
     {
         if (attackerSquad == null)
@@ -265,7 +242,7 @@ public static class CombatEngine
     }
 
     public static List<WeaponBatch> BuildWeaponBatches(Squad attackerSquad, bool isMelee)
-        { return BuildWeaponBatches(attackerSquad, isMelee, null); }
+    { return BuildWeaponBatches(attackerSquad, isMelee, null); }
 
 
     public static List<WeaponBatch> BuildWeaponBatches(Squad attackerSquad, bool isMelee, string requiredWeaponFingerprint)
@@ -297,10 +274,10 @@ public static class CombatEngine
     }
 
     public static string GetWeaponFingerprint(Weapon weapon)
-        { return BuildWeaponFingerprint(weapon); }
+    { return BuildWeaponFingerprint(weapon); }
 
     private static bool HasPrecision(Weapon weapon)
-        { return weapon?.Special?.Any(ability => ability?.Innate == "rareFirst") == true; }
+    { return weapon?.Special?.Any(ability => ability?.Innate == "rareFirst") == true; }
 
     private static BattleModelActor SelectLeastCommonNamedDefender(List<BattleModelActor> defenders)
     {
@@ -325,12 +302,12 @@ public static class CombatEngine
         if (living.Count == 0)
             return null;
 
-       
+
         var center = living  // Compute center
             .Select(a => a.GlobalPosition)
             .Aggregate(Vector2.Zero, (sum, pos) => sum + pos) / living.Count;
 
-        
+
         return living.MaxBy(a => a.GlobalPosition.DistanceSquaredTo(center)); // Pick actor with maximum squared distance
     }
 
@@ -442,7 +419,10 @@ public static class CombatEngine
                 injuries,
                 unsaved
             ));
-            ConsumeOneShotWeapons(attackerSquad, weapon);
+
+            if (weapon.Special?.Any(ability => ability?.Innate == "1 Shot") == true)
+                weapon.Attacks = "0";
+
             if (remainingHealth <= 0)
                 break;
         }
@@ -689,7 +669,10 @@ public static class CombatEngine
                 injuries,
                 unsaved
             );
-            ConsumeOneShotWeapons(attackerSquad, weapon);
+
+            if (weapon.Special?.Any(ability => ability?.Innate == "1 Shot") == true)
+                weapon.Attacks = "0";
+
             battleHud?.ShowToast(BuildWeaponToast(summary), 2f);
             await Task.Delay(2000);
 
@@ -703,7 +686,7 @@ public static class CombatEngine
                 handleExplosionProcess?.Invoke(defenderSquad, attackerSquad, demiseCheck);
 
             RemoveDeadModels(defenderActors, defenderSquad, battleField);
-                checkVictory?.Invoke();
+            checkVictory?.Invoke();
 
             if (CountLivingActors(defenderActors) == 0)
                 break;
@@ -819,7 +802,10 @@ public static class CombatEngine
             AllocateDamage(attackerActor, defenderActors, defenderSquad, weapon, penetrating, ref currentRecipient);
 
             var summary = new WeaponResolutionSummary(weapon.WeaponName, attacks, hits, injuries, penetrating);
-            ConsumeOneShotWeapons(attackerSquad, weapon);
+
+            if (weapon.Special?.Any(ability => ability?.Innate == "1 Shot") == true)
+                weapon.Attacks = "0";
+
             battleHud?.ShowToast(BuildWeaponToast(summary), 2f);
             await Task.Delay(2000);
 
@@ -833,7 +819,7 @@ public static class CombatEngine
                 handleExplosionProcess?.Invoke(defenderSquad, attackerSquad, demiseCheck);
 
             RemoveDeadModels(defenderActors, defenderSquad, battleField);
-                checkVictory?.Invoke();
+            checkVictory?.Invoke();
 
             if (CountLivingActors(defenderActors) == 0)
                 break;
