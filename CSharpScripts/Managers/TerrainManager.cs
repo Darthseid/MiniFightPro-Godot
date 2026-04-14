@@ -115,16 +115,6 @@ public sealed class TerrainManager
         return true;
     }
 
-    public bool HasMajorityLineOfSight(IEnumerable<Vector2> attackerPoints, Vector2 targetCenter, float pxPerInch) //Consider recoding this so that the models that can see the target are marked and then fire.
-    {
-        var points = attackerPoints.ToList();
-        if (points.Count == 0)
-            return false;
-
-        var canSee = points.Count(point => HasLineOfSight(point, targetCenter, pxPerInch));
-        return canSee > points.Count / 2;
-    }
-
     public bool IsSquadInTerrainCover(IEnumerable<Vector2> squadPoints, float pxPerInch)
     {
         var points = squadPoints.ToList();

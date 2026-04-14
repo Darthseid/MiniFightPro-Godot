@@ -109,8 +109,4 @@ public partial class DiceOverlay : CanvasLayer
         _widgets[index].SetInteractable(false, false);
     }
 
-    public void HideOverlay() //Refactor this out.
-    {
-        Visible = false;
-    }
 }

@@ -171,7 +171,7 @@ public partial class Battle : Node2D
             GetSquadsWithinRadius,
             GetActorsForSquad,
             PostDamageCleanupAndVictoryCheck,
-            HasLineOfSight);
+            CanActorSeeTargetSquad);
 
         _transportController ??= new TransportController(
             _battleField,
@@ -706,12 +706,24 @@ public partial class Battle : Node2D
 
         var moveVars = CombatHelpers.GetMoveVarsForTeam(GetTeamIdForSquad(shooter), _teamAMove, _teamBMove);
         var enemySquads = GetAliveSquadsForTeam(enemyTeamId);
+        var shooterActors = GetActorsForSquad(shooter);
+        if (shooterActors.Count == 0)
+            return false;
         foreach (var enemy in enemySquads)
         {
             var distance = BoardGeometry.ClosestDistanceInches(GetActorsForSquad(shooter), GetActorsForSquad(enemy));
-            var weapons = (shooter.Composition ?? new List<Model>()).SelectMany(model => model.Tools ?? new List<Weapon>()).Where(w => !w.IsMelee);
-            var hasLos = HasMajorityLineOfSight(shooter, enemy);
-            if (weapons.Any(weapon => CombatHelpers.CheckValidShooting(shooter, moveVars, weapon, enemy, distance, hasLos)))
+            var visibleShooters = shooterActors
+                .Where(actor => actor?.BoundModel != null && actor.BoundModel.Health > 0)
+                .Where(actor => CanActorSeeTargetSquad(actor, shooter, enemy))
+                .Select(actor => actor.BoundModel)
+                .ToList();
+            if (visibleShooters.Count == 0)
+                continue;
+
+            var weapons = visibleShooters
+                .SelectMany(model => model.Tools ?? new List<Weapon>())
+                .Where(w => !w.IsMelee);
+            if (weapons.Any(weapon => CombatHelpers.CheckValidShooting(shooter, moveVars, weapon, enemy, distance, hasLineOfSight: true)))
                 return true;
         }
         return false;
@@ -1059,7 +1071,7 @@ public partial class Battle : Node2D
         return _terrainManager.HasLineOfSight(from, to, Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f));
     }
 
-    internal bool HasMajorityLineOfSight(Squad attacker, Squad target)
+    internal bool HasAnyLineOfSight(Squad attacker, Squad target)
     {
         var attackerActors = GetActorsForSquad(attacker);
         var targetActors = GetActorsForSquad(target);
@@ -1068,9 +1080,72 @@ public partial class Battle : Node2D
             return false;
         }
 
-        var targetCenter = BoardGeometry.GetActorsCenter(targetActors);
-        var canSee = attackerActors.Count(actor => HasLineOfSight(actor.GlobalPosition, targetCenter));
-        return canSee > attackerActors.Count / 2;
+        return attackerActors.Any(actor => CanActorSeeAnyTargetActor(actor, targetActors, attacker, target));
+    }
+
+    internal bool CanActorSeeTargetSquad(BattleModelActor attackerActor, Squad attackerSquad, Squad targetSquad)
+    {
+        var targetActors = GetActorsForSquad(targetSquad);
+        return CanActorSeeAnyTargetActor(attackerActor, targetActors, attackerSquad, targetSquad);
+    }
+
+    private bool CanActorSeeAnyTargetActor(BattleModelActor attackerActor, List<BattleModelActor> targetActors, Squad attackerSquad, Squad targetSquad)
+    {
+        if (attackerActor?.BoundModel == null || attackerActor.BoundModel.Health <= 0 || targetActors == null || targetActors.Count == 0)
+            return false;
+
+        return targetActors
+            .Where(targetActor => targetActor?.BoundModel != null && targetActor.BoundModel.Health > 0)
+            .Any(targetActor => HasLineOfSight(attackerActor, attackerSquad, targetActor, targetSquad));
+    }
+
+    internal bool HasLineOfSight(BattleModelActor attackerActor, Squad attackerSquad, BattleModelActor targetActor, Squad targetSquad)
+    {
+        if (attackerActor?.BoundModel == null || targetActor?.BoundModel == null || attackerSquad == null || targetSquad == null)
+            return false;
+
+        if (!HasLineOfSight(attackerActor.GlobalPosition, targetActor.GlobalPosition))
+            return false;
+
+        var pxPerInch = Mathf.Max(1f, GameGlobals.Instance?.FakeInchPx ?? 1f);
+        foreach (var squad in GetAliveSquadsForTeam(1).Concat(GetAliveSquadsForTeam(2)))
+        {
+            if (ReferenceEquals(squad, attackerSquad) || ReferenceEquals(squad, targetSquad))
+                continue;
+
+            var blockRadiusInches = GetSquadLosBlockRadiusInches(squad);
+            if (blockRadiusInches <= 0f)
+                continue;
+
+            var blockRadiusPx = blockRadiusInches * pxPerInch;
+            foreach (var blocker in GetActorsForSquad(squad))
+            {
+                if (blocker?.BoundModel == null || blocker.BoundModel.Health <= 0)
+                    continue;
+
+                if (BoardGeometry.SegmentIntersectsCircle(attackerActor.GlobalPosition, targetActor.GlobalPosition, blocker.GlobalPosition, blockRadiusPx))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static float GetSquadLosBlockRadiusInches(Squad squad)
+    {
+        var squadType = squad?.SquadType ?? string.Empty;
+        var blockRadius = squadType.Contains("Fortification", StringComparison.OrdinalIgnoreCase) ? 2.4f
+            : squadType.Contains("Monster", StringComparison.OrdinalIgnoreCase) ? 2.0f
+            : squadType.Contains("Vehicle", StringComparison.OrdinalIgnoreCase) ? 1.6f
+            : squadType.Contains("Character", StringComparison.OrdinalIgnoreCase) ? 1.2f
+            : squadType.Contains("Mounted", StringComparison.OrdinalIgnoreCase) ? 0.8f
+            : squadType.Contains("Infantry", StringComparison.OrdinalIgnoreCase) ? 0.4f
+            : 0.4f;
+
+        if (squadType.Contains("Titanic", StringComparison.OrdinalIgnoreCase))
+            blockRadius *= 1.5f;
+
+        return blockRadius;
     }
 
     internal void ApplyTerrainCoverAtCommandPhaseStart()

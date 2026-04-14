@@ -223,9 +223,8 @@ public sealed class CombatSequence
 
             if (target == null) continue;
 
-            var hasLineOfSight = _battle.HasMajorityLineOfSight(squad, target);
-            var hasIndirectOption = _battle.SquadHasIndirectFireWeaponThatCanShootTarget(squad, target);
-            if (!hasLineOfSight && !hasIndirectOption)
+            var hasLineOfSight = _battle.HasAnyLineOfSight(squad, target);
+            if (!hasLineOfSight)
             {
                 _battle.Hud?.ShowToast("No line of sight: shooting invalid");
                 GD.Print("[Terrain] No line of sight: shooting invalid");
@@ -247,17 +246,7 @@ public sealed class CombatSequence
 
             var prevActiveTeamId = _battle.ActiveTeamId;
             _battle.ActiveTeamId = activeTeamId;
-            var appliedIndirectCover = false;
-            if (!hasLineOfSight && hasIndirectOption && target.SquadAbilities.All(a => a.Innate != SquadAbilities.CoverBenefitTemp.Innate))
-            {
-                target.SquadAbilities.Add(SquadAbilities.CoverBenefitTemp);
-                appliedIndirectCover = true;
-            }
-
             await _battle.ResolveShootingPhase(selectedRangedProfile, hasLineOfSight);
-
-            if (appliedIndirectCover)
-                target.SquadAbilities.RemoveAll(a => a.IsTemporary && a.Innate == SquadAbilities.CoverBenefitTemp.Innate);
             _battle.ActiveTeamId = prevActiveTeamId;
             _battle.CheckVictory();
             if (_battle.CurrentPhase == BattlePhase.BattleOver) return;
@@ -521,8 +510,7 @@ public sealed class CombatSequence
                     !IsInFightRange(enemySquad, friendlySquad)))
             .Where(enemySquad =>
             {
-                var hasLos = _battle.HasMajorityLineOfSight(attackerSquad, enemySquad);
-                return hasLos || _battle.SquadHasIndirectFireWeaponThatCanShootTarget(attackerSquad, enemySquad);
+                return _battle.HasAnyLineOfSight(attackerSquad, enemySquad);
             })
             .ToList();
     }
