@@ -15,7 +15,7 @@ public sealed class CombatManager
     private readonly Func<Squad, float, bool, List<Squad>> _getSquadsWithinRadius;
     private readonly Func<Squad, List<BattleModelActor>> _getActorsForSquad;
     private readonly Action _postDamageCleanupAndVictoryCheck;
-    private readonly Func<Vector2, Vector2, bool> _hasLineOfSight;
+    private readonly Func<BattleModelActor, Squad, Squad, bool> _canActorSeeTargetSquad;
     private readonly BattleHud _battleHud;
     private readonly BattleField _battleField;
 
@@ -31,7 +31,7 @@ public sealed class CombatManager
         Func<Squad, float, bool, List<Squad>> getSquadsWithinRadius,
         Func<Squad, List<BattleModelActor>> getActorsForSquad,
         Action postDamageCleanupAndVictoryCheck,
-        Func<Vector2, Vector2, bool> hasLineOfSight)
+        Func<BattleModelActor, Squad, Squad, bool> canActorSeeTargetSquad)
     {
         _battleHud = battleHud;
         _battleField = battleField;
@@ -44,7 +44,7 @@ public sealed class CombatManager
         _getSquadsWithinRadius = getSquadsWithinRadius;
         _getActorsForSquad = getActorsForSquad;
         _postDamageCleanupAndVictoryCheck = postDamageCleanupAndVictoryCheck;
-        _hasLineOfSight = hasLineOfSight;
+        _canActorSeeTargetSquad = canActorSeeTargetSquad;
     }
 
     public async Task ResolveShootingPhaseAsync(string selectedWeaponFingerprint = null, bool hasLineOfSight = true)
@@ -62,8 +62,27 @@ public sealed class CombatManager
         if (target == null)
             return;
 
+        var attackerSquad = attacker.TeamId == 1 ? _getTeamASquad() : _getTeamBSquad();
+        var defenderSquad = attacker.TeamId == 1 ? _getTeamBSquad() : _getTeamASquad();
         BoardGeometry.FaceGroupTowardsEnemies(attackers, defenders);
-        await CombatEngine.ResolveBatchedAttack(attacker, target, false, _getTeamASquad(), _getTeamBSquad(), attackers, defenders, _getTeamAMove(), _getTeamBMove(), _battleHud, _battleField, _postDamageCleanupAndVictoryCheck, HandleExplosionProcess, selectedWeaponFingerprint, false, hasLineOfSight);
+        await CombatEngine.ResolveBatchedAttack(
+            attacker,
+            target,
+            false,
+            _getTeamASquad(),
+            _getTeamBSquad(),
+            attackers,
+            defenders,
+            _getTeamAMove(),
+            _getTeamBMove(),
+            _battleHud,
+            _battleField,
+            _postDamageCleanupAndVictoryCheck,
+            HandleExplosionProcess,
+            selectedWeaponFingerprint,
+            false,
+            hasLineOfSight,
+            actor => _canActorSeeTargetSquad(actor, attackerSquad, defenderSquad));
     }
 
     public async Task ResolveFightPhaseAsync(string selectedWeaponFingerprint = null)
@@ -95,8 +114,27 @@ public sealed class CombatManager
         var target = _getActorsForSquad(chargingSquad).FirstOrDefault(actor => actor?.BoundModel != null && actor.BoundModel.Health > 0);
         if (attacker != null && target != null)
         {
-            var hasLos = HasMajorityLineOfSight(defenderSquad, chargingSquad);
-            await CombatEngine.ResolveBatchedAttack(attacker, target, false, _getTeamASquad(), _getTeamBSquad(), _getActorsForSquad(defenderSquad), _getActorsForSquad(chargingSquad), _getTeamAMove(), _getTeamBMove(), _battleHud, _battleField, _postDamageCleanupAndVictoryCheck, HandleExplosionProcess, null, true, hasLos);
+            var attackerActors = _getActorsForSquad(defenderSquad);
+            var targetActors = _getActorsForSquad(chargingSquad);
+            var hasLos = attackerActors.Any(actor => _canActorSeeTargetSquad(actor, defenderSquad, chargingSquad));
+            await CombatEngine.ResolveBatchedAttack(
+                attacker,
+                target,
+                false,
+                _getTeamASquad(),
+                _getTeamBSquad(),
+                attackerActors,
+                targetActors,
+                _getTeamAMove(),
+                _getTeamBMove(),
+                _battleHud,
+                _battleField,
+                _postDamageCleanupAndVictoryCheck,
+                HandleExplosionProcess,
+                null,
+                true,
+                hasLos,
+                actor => _canActorSeeTargetSquad(actor, defenderSquad, chargingSquad));
         }
     }
 
@@ -145,15 +183,4 @@ public sealed class CombatManager
         _postDamageCleanupAndVictoryCheck();
     }
 
-    private bool HasMajorityLineOfSight(Squad attacker, Squad target)
-    {
-        var attackerActors = _getActorsForSquad(attacker);
-        var targetActors = _getActorsForSquad(target);
-        if (attackerActors.Count == 0 || targetActors.Count == 0)
-            return false;
-
-        var targetCenter = BoardGeometry.GetActorsCenter(targetActors);
-        var canSee = attackerActors.Count(actor => _hasLineOfSight(actor.GlobalPosition, targetCenter));
-        return canSee > attackerActors.Count / 2;
-    }
 }
