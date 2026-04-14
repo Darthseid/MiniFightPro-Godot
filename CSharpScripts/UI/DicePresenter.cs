@@ -39,7 +39,7 @@ public partial class DicePresenter : Node, IDicePresenter
             InteractionMode = DiceInteractionMode.AwaitingPlayerRush;
             UpdateButtons();
             await WaitForRushAsync();
-            _overlay.HideOverlay();
+            _overlay.Visible = false;
             _currentRoll = null;
             InteractionMode = DiceInteractionMode.None;
         }
