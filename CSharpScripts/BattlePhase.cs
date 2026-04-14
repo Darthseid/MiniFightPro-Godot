@@ -11,3 +11,10 @@ public enum BattlePhase
     EndTurn,
     BattleOver
 }
+
+public enum DiceInteractionMode
+{
+    None,
+    AwaitingPlayerRush,
+    AwaitingRerollSelection
+}
