@@ -628,7 +628,11 @@ public sealed class CombatSequence
 
     private static bool CanSquadAttemptCharge(Squad squad)
     {
-        if (squad == null || squad.CannotChargeThisTurn || squad.RushedThisTurn || squad.RetreatedThisTurn || squad.Movement <= 0.01f)
+        if (squad == null || squad.CannotChargeThisTurn || squad.RushedThisTurn || squad.Movement <= 0.01f)
+            return false;
+
+        var canChargeAfterRetreat = squad.SquadAbilities?.Any(ability => ability?.Innate == SquadAbilities.ChargeAfterRetreat.Innate) == true;
+        if (squad.RetreatedThisTurn && !canChargeAfterRetreat)
             return false;
 
         if (squad.SquadType.Contains("Fortification") || squad.SquadType.Contains("Aircraft"))
