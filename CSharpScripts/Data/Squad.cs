@@ -164,6 +164,8 @@ public static class SquadAbilities
     public static readonly SquadAbility FirstStrikeTemp = new SquadAbility("Hit First", "Temp First Strike", 0, true);
     public static readonly SquadAbility ShootRetreat = new SquadAbility("FleeShoot", "Shoot After Retreat", 0, false);
     public static readonly SquadAbility TempShootRetreat = new SquadAbility("FleeShoot", "Shoot After Retreat", 0, true);
+    public static readonly SquadAbility ChargeAfterRetreat = new SquadAbility("FleeCharge", "Charge After Retreat", 0, false);
+    public static readonly SquadAbility TempChargeAfterRetreat = new SquadAbility("FleeCharge", "Temp Charge After Retreat", 0, true);
     public static readonly SquadAbility ChargeAfterRush = new SquadAbility("DashBash", "Charge After Rush", 0, false);
     public static readonly SquadAbility TempChargeAfterRush = new SquadAbility("DashBash", "Temp Charge After Rush", 0, true);
     public static readonly SquadAbility FightAfterMeleeDeath = new SquadAbility("Hit@End", "Fight After Melee Death", 2, false);
@@ -282,6 +284,7 @@ public static class SquadAbilities
         CloseUpToShoot,
         FirstStrike,
         ShootRetreat,
+        ChargeAfterRetreat,
         ChargeAfterRush,
         FightAfterMeleeDeath,
         SelfRessurection,

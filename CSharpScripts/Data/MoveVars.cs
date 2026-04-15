@@ -1,5 +1,12 @@
 using System;
 
+public enum MovementType
+{
+    Standard,
+    Rush,
+    Retreat
+}
+
 public class MoveVars
 {
     public bool Move;

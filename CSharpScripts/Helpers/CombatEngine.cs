@@ -253,6 +253,14 @@ public static class CombatEngine
         var eligibleWeapons = GetEffectiveWeaponsForPhase(attackerSquad, isMelee)
             .Where(weapon => weapon != null && weapon.IsMelee == isMelee);
 
+        return BuildWeaponBatchesFromWeapons(eligibleWeapons, requiredWeaponFingerprint);
+    }
+
+    private static List<WeaponBatch> BuildWeaponBatchesFromWeapons(IEnumerable<Weapon> eligibleWeapons, string requiredWeaponFingerprint)
+    {
+        if (eligibleWeapons == null)
+            return new List<WeaponBatch>();
+
         if (!string.IsNullOrWhiteSpace(requiredWeaponFingerprint))
         {
             eligibleWeapons = eligibleWeapons
@@ -271,6 +279,45 @@ public static class CombatEngine
             .OrderBy(batch => batch.Weapon?.WeaponName)
             .ThenBy(batch => batch.Weapon?.Range ?? 0f)
             .ToList();
+    }
+
+    private static List<WeaponBatch> BuildWeaponBatchesForVisibleAttackers(
+        Squad attackerSquad,
+        IEnumerable<BattleModelActor> attackerActors,
+        bool isMelee,
+        string requiredWeaponFingerprint,
+        System.Func<BattleModelActor, bool> canActorShootTarget)
+    {
+        if (attackerSquad == null || attackerActors == null || canActorShootTarget == null)
+            return new List<WeaponBatch>();
+
+        var visibleWeapons = attackerActors
+            .Where(IsActorAlive)
+            .Where(canActorShootTarget)
+            .Select(actor => actor.BoundModel)
+            .Where(model => model != null)
+            .SelectMany(model => model.Tools ?? new List<Weapon>())
+            .Where(weapon => weapon != null && weapon.IsMelee == isMelee)
+            .ToList();
+
+        var hasFiringDeck = !isMelee
+            && attackerSquad.SquadType?.Contains("Transport") == true
+            && attackerSquad.EmbarkedSquad != null
+            && attackerSquad.SquadAbilities?.Any(ability => ability?.Innate == "Firing Deck") == true
+            && attackerActors.Any(canActorShootTarget);
+
+        if (hasFiringDeck)
+        {
+            var passengerWeapons = attackerSquad.EmbarkedSquad.Composition
+                .Where(model => model != null && model.Health > 0)
+                .SelectMany(model => model.Tools)
+                .Where(weapon => weapon != null && !weapon.IsMelee)
+                .Select(weapon => weapon.DeepCopy());
+
+            visibleWeapons.AddRange(passengerWeapons);
+        }
+
+        return BuildWeaponBatchesFromWeapons(visibleWeapons, requiredWeaponFingerprint);
     }
 
     public static string GetWeaponFingerprint(Weapon weapon)
@@ -530,7 +577,8 @@ public static class CombatEngine
         System.Action<Squad, Squad, int> handleExplosionProcess = null,
         string selectedWeaponFingerprint = null,
         bool onlySixesHit = false,
-        bool hasLineOfSight = true
+        bool hasLineOfSight = true,
+        System.Func<BattleModelActor, bool> canAttackerActorShootTarget = null
     )
     {
         if (attacker == null || defender == null)
@@ -545,7 +593,9 @@ public static class CombatEngine
             return;
 
         _currentDistance = BoardGeometry.ClosestDistanceInches(teamAActors, teamBActors);
-        var weaponBatches = BuildWeaponBatches(attackerSquad, isFight, selectedWeaponFingerprint);
+        var weaponBatches = !isFight && canAttackerActorShootTarget != null
+            ? BuildWeaponBatchesForVisibleAttackers(attackerSquad, attackerActors, false, selectedWeaponFingerprint, canAttackerActorShootTarget)
+            : BuildWeaponBatches(attackerSquad, isFight, selectedWeaponFingerprint);
         var attackerMove = CombatHelpers.GetMoveVarsForTeam(attacker.TeamId, teamAMove, teamBMove);
         var currentRecipient = defender;
 
