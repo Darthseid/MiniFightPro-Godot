@@ -777,12 +777,12 @@ public partial class GameData : Node
         {
             allOrders.First(o => o.OrderId == "misty_retreat"),
             allOrders.First(o => o.OrderId == "hit_the_ground"),
-            allOrders.First(o => o.OrderId == "anti-charge shots")
+            allOrders.First(o => o.OrderId == "reactive_fire")
         }.Select(o => new Order(o.OrderId, o.OrderCost, o.OrderName, o.AvailablePhase, o.TargetsEnemy, o.Description, o.WindowType, o.TargetSide, o.TargetType, o.RequiresTarget)).ToList();
         var cyborgDefaultOrders = new List<Order>
         {
             allOrders.First(o => o.OrderId == "tank_shock"),
-            allOrders.First(o => o.OrderId == "anti-charge shots")
+            allOrders.First(o => o.OrderId == "reactive_fire")
         }.Select(o => new Order(o.OrderId, o.OrderCost, o.OrderName, o.AvailablePhase, o.TargetsEnemy, o.Description, o.WindowType, o.TargetSide, o.TargetType, o.RequiresTarget)).ToList();
         var xeliaDefaultOrders = new List<Order>
         {

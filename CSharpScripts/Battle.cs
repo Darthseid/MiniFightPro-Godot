@@ -1133,20 +1133,27 @@ public partial class Battle : Node2D
 
     private static float GetSquadLosBlockRadiusInches(Squad squad)
     {
-        var squadType = squad?.SquadType ?? string.Empty;
-        var blockRadius = squadType.Contains("Fortification", StringComparison.OrdinalIgnoreCase) ? 2.4f
-            : squadType.Contains("Monster", StringComparison.OrdinalIgnoreCase) ? 2.0f
-            : squadType.Contains("Vehicle", StringComparison.OrdinalIgnoreCase) ? 1.6f
-            : squadType.Contains("Character", StringComparison.OrdinalIgnoreCase) ? 1.2f
-            : squadType.Contains("Mounted", StringComparison.OrdinalIgnoreCase) ? 0.8f
-            : squadType.Contains("Infantry", StringComparison.OrdinalIgnoreCase) ? 0.4f
-            : 0.4f;
+        var types = squad?.SquadType ?? new List<string>();
 
-        if (squadType.Contains("Titanic", StringComparison.OrdinalIgnoreCase))
+        // Helper to check tags case-insensitively
+        bool Has(string tag) =>
+            types.Any(t => t.Contains(tag, StringComparison.OrdinalIgnoreCase));
+
+        float blockRadius =
+            Has("Fortification") ? 2.4f :
+            Has("Monster") ? 2.0f :
+            Has("Vehicle") ? 1.6f :
+            Has("Character") ? 1.2f :
+            Has("Mounted") ? 0.8f :
+            Has("Infantry") ? 0.4f :
+                                   0.4f;
+
+        if (Has("Titanic"))
             blockRadius *= 1.5f;
 
         return blockRadius;
     }
+
 
     internal void ApplyTerrainCoverAtCommandPhaseStart()
     {

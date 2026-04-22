@@ -201,9 +201,9 @@ public class Order
 		true),
 
 	new Order(
-		"reactive fire",
+		"reactive_fire",
 		1,
-		"reactive fire",
+		"Reactive Fire",
 		"Engagement",
 		false,
 		"At start of opponent engagement phase, arm a friendly shooter squad to fire ReactiveFire when charged.",
