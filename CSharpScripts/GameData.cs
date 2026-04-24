@@ -701,6 +701,29 @@ public partial class GameData : Node
 
         presetWeapons.AddRange(varnoxWeapons.Select(weapon => weapon.DeepCopy()));
 
+        string GetPresetModelImagePath(string modelName)
+        {
+            return modelName switch
+            {
+                "Medium Tank" => "res://Assets/ModelIcons/tank.png",
+                "Varnox" => "res://Assets/ModelIcons/tank2.png",
+                "Clairvoyant" => "res://Assets/ModelIcons/vip.png",
+                "Zapper Pylon" => "res://Assets/ModelIcons/fort2.png",
+                "Homemade Biplane" => "res://Assets/ModelIcons/combatjet.png",
+                "Floating Biker" => "res://Assets/ModelIcons/biker.png",
+                "Huge Mecha" => "res://Assets/ModelIcons/mecha.png",
+                _ => ModelImageService.DefaultPresetImagePath
+            };
+        }
+
+        void ApplyPresetModelImage(Model model)
+        {
+            if (model == null)
+                return;
+
+            model.DefaultImagePath = GetPresetModelImagePath(model.Name);
+        }
+
         var presetModels = new List<Model>
         {
             new Model("Guard", 1, 0, guardWeapons),
@@ -717,6 +740,9 @@ public partial class GameData : Node
             new Model("Varnox", 14, 5, varnoxWeapons)
         };
 
+        foreach (var model in presetModels)
+            ApplyPresetModelImage(model);
+
         var mechaSquad = new List<Model> { new Model("Huge Mecha", 100, 33, hugeMechaWeapons) };
         var bikerSquad = new List<Model>();
         for (int i = 0; i < 3; i++)
@@ -725,6 +751,15 @@ public partial class GameData : Node
         var planeSquad = new List<Model> { new Model("Homemade Biplane", 12, 4, planeWeapons) };
         var pylonModel = new List<Model> { new Model("Zapper Pylon", 10, 0, pylonWeapon) };
         var clairvoyantModels = new List<Model> { new Model("Clairvoyant", 3, 4, clairvoyantWeapons) };
+
+        foreach (var model in mechaSquad)
+            ApplyPresetModelImage(model);
+        foreach (var model in planeSquad)
+            ApplyPresetModelImage(model);
+        foreach (var model in pylonModel)
+            ApplyPresetModelImage(model);
+        foreach (var model in clairvoyantModels)
+            ApplyPresetModelImage(model);
 
         var guardSquad = new List<Model>();
         for (int i = 0; i < 18; i++)
