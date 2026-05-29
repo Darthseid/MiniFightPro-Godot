@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctvcgn15aqloh"
-path="res://.godot/imported/monsterbug.png-97a56474c996882d409cb2089fffeba5.ctex"
+uid="uid://ydckip4s4h6m"
+path="res://.godot/imported/DemonMonster.png-78a0276f5af8f18112e6200903461079.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ModelIcons/monsterbug.png"
-dest_files=["res://.godot/imported/monsterbug.png-97a56474c996882d409cb2089fffeba5.ctex"]
+source_file="res://Assets/ModelIcons/DemonMonster.png"
+dest_files=["res://.godot/imported/DemonMonster.png-78a0276f5af8f18112e6200903461079.ctex"]
 
 [params]
 

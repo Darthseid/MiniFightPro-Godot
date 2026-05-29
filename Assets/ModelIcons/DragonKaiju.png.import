@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cekc5mpwttbv0"
-path="res://.godot/imported/vip2.png-b39b312256cf9c525eeabe733ebfa04e.ctex"
+uid="uid://isntaotbwhgc"
+path="res://.godot/imported/DragonKaiju.png-3107349ec40088f36e026e3d414b93f3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ModelIcons/vip2.png"
-dest_files=["res://.godot/imported/vip2.png-b39b312256cf9c525eeabe733ebfa04e.ctex"]
+source_file="res://Assets/ModelIcons/DragonKaiju.png"
+dest_files=["res://.godot/imported/DragonKaiju.png-3107349ec40088f36e026e3d414b93f3.ctex"]
 
 [params]
 

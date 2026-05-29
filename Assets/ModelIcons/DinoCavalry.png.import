@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cekc5mpwttbv0"
-path="res://.godot/imported/vip2.png-b39b312256cf9c525eeabe733ebfa04e.ctex"
+uid="uid://cfsblvpgwif7l"
+path="res://.godot/imported/DinoCavalry.png-4b0f7c949e01f25ed4563b971dac105d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ModelIcons/vip2.png"
-dest_files=["res://.godot/imported/vip2.png-b39b312256cf9c525eeabe733ebfa04e.ctex"]
+source_file="res://Assets/ModelIcons/DinoCavalry.png"
+dest_files=["res://.godot/imported/DinoCavalry.png-4b0f7c949e01f25ed4563b971dac105d.ctex"]
 
 [params]
 

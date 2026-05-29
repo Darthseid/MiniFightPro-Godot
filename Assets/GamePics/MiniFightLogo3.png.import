@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ckc4tx1cu4mn8"
-path="res://.godot/imported/dinorider.png-32f5a8ed03d81d04767de9de13ecb338.ctex"
+uid="uid://ityxl46ul644"
+path="res://.godot/imported/MiniFightLogo3.png-f3bbcb09051ff69d253a025e8b3abfc5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ModelIcons/dinorider.png"
-dest_files=["res://.godot/imported/dinorider.png-32f5a8ed03d81d04767de9de13ecb338.ctex"]
+source_file="res://Assets/GamePics/MiniFightLogo3.png"
+dest_files=["res://.godot/imported/MiniFightLogo3.png-f3bbcb09051ff69d253a025e8b3abfc5.ctex"]
 
 [params]
 

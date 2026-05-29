@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cekc5mpwttbv0"
-path="res://.godot/imported/vip2.png-b39b312256cf9c525eeabe733ebfa04e.ctex"
+uid="uid://b6ftsori7k4bl"
+path="res://.godot/imported/GatlingSoldier.png-997d091a0c35a0266aadf1b74dd0a517.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ModelIcons/vip2.png"
-dest_files=["res://.godot/imported/vip2.png-b39b312256cf9c525eeabe733ebfa04e.ctex"]
+source_file="res://Assets/ModelIcons/GatlingSoldier.png"
+dest_files=["res://.godot/imported/GatlingSoldier.png-997d091a0c35a0266aadf1b74dd0a517.ctex"]
 
 [params]
 

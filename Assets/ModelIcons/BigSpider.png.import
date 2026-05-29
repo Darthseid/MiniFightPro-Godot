@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cg1j1ue38gspj"
-path="res://.godot/imported/monsterspike.png-1737d08a05989f5f3c16c3a879e7c9cd.ctex"
+uid="uid://d2fuqx7m3av01"
+path="res://.godot/imported/BigSpider.png-c5a6f07d591c51c442c1e6287bed1074.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ModelIcons/monsterspike.png"
-dest_files=["res://.godot/imported/monsterspike.png-1737d08a05989f5f3c16c3a879e7c9cd.ctex"]
+source_file="res://Assets/ModelIcons/BigSpider.png"
+dest_files=["res://.godot/imported/BigSpider.png-c5a6f07d591c51c442c1e6287bed1074.ctex"]
 
 [params]
 
