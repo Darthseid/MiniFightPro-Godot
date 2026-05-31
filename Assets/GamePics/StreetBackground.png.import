@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c1ix76rwymrvi"
-path="res://.godot/imported/Minifightlogo2.png-fc30db42f96e3e0a2e7309a63d5d74a5.ctex"
+uid="uid://c7s045d40ulkw"
+path="res://.godot/imported/StreetBackground.png-35b2b6887cd1199ee0b75d57b99a943b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/GamePics/Minifightlogo2.png"
-dest_files=["res://.godot/imported/Minifightlogo2.png-fc30db42f96e3e0a2e7309a63d5d74a5.ctex"]
+source_file="res://Assets/GamePics/StreetBackground.png"
+dest_files=["res://.godot/imported/StreetBackground.png-35b2b6887cd1199ee0b75d57b99a943b.ctex"]
 
 [params]
 

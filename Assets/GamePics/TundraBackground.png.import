@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://skslc7dcntgg"
-path="res://.godot/imported/red-circle.svg-186636154c85eebcaf4bb4f1ad8ada54.ctex"
+uid="uid://dnh60aq3rc31s"
+path="res://.godot/imported/TundraBackground.png-cf1276cfa7ee3e8bef92c4814a68501e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ModelIcons/red-circle.svg"
-dest_files=["res://.godot/imported/red-circle.svg-186636154c85eebcaf4bb4f1ad8ada54.ctex"]
+source_file="res://Assets/GamePics/TundraBackground.png"
+dest_files=["res://.godot/imported/TundraBackground.png-cf1276cfa7ee3e8bef92c4814a68501e.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

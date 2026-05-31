@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cpv3k70ymjoep"]
 
 [ext_resource type="Script" uid="uid://ihrnfgcj6grl" path="res://CSharpScripts/BattleModelActor.cs" id="1_1qf2g"]
-[ext_resource type="Texture2D" uid="uid://brjy7vu4jf116" path="res://Assets/ModelIcons/gunman.png" id="2_s5p5r"]
+[ext_resource type="Texture2D" uid="uid://dtqni5n5y7ife" path="res://Assets/ModelIcons/gunman2.png" id="2_i2m04"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 
@@ -10,7 +10,7 @@ script = ExtResource("1_1qf2g")
 
 [node name="MiniSprite" type="Sprite2D" parent="." unique_id=603757648]
 position = Vector2(628, 278)
-texture = ExtResource("2_s5p5r")
+texture = ExtResource("2_i2m04")
 
 [node name="ClickArea" type="Area2D" parent="." unique_id=866129977]
 

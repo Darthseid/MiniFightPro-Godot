@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ydckip4s4h6m"
-path="res://.godot/imported/DemonMonster.png-78a0276f5af8f18112e6200903461079.ctex"
+uid="uid://dr1lwujm61qbr"
+path="res://.godot/imported/DesertBackground.png-ab3ac9dcd0ef32d77382722e87c8cae1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ModelIcons/DemonMonster.png"
-dest_files=["res://.godot/imported/DemonMonster.png-78a0276f5af8f18112e6200903461079.ctex"]
+source_file="res://Assets/GamePics/DesertBackground.png"
+dest_files=["res://.godot/imported/DesertBackground.png-ab3ac9dcd0ef32d77382722e87c8cae1.ctex"]
 
 [params]
 
