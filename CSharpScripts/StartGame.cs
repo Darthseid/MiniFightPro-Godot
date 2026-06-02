@@ -5,11 +5,25 @@ using System.Linq;
 
 public partial class StartGame : Control
 {
+    public const string DefaultBattlefieldBackgroundPath = "res://Assets/GamePics/fieldbackground.jpg";
+
+    private sealed record BattlefieldBackgroundOption(string DisplayName, string TexturePath, string ButtonNodePath);
+
+    private static readonly BattlefieldBackgroundOption[] BattlefieldBackgroundOptions =
+    {
+        new("Field", DefaultBattlefieldBackgroundPath, "%FieldBackgroundButton"),
+        new("Street", "res://Assets/GamePics/StreetBackground.png", "%StreetBackgroundButton"),
+        new("Desert", "res://Assets/GamePics/DesertBackground.png", "%DesertBackgroundButton"),
+        new("Tundra", "res://Assets/GamePics/TundraBackground.png", "%TundraBackgroundButton")
+    };
+
     private OptionButton _unit1Dropdown;
     private OptionButton _unit2Dropdown;
     private SpinBox _terrainCountInput;
     private Button _beginBattleButton;
     private Label _statusLabel;
+    private string _selectedBattlefieldBackgroundPath = DefaultBattlefieldBackgroundPath;
+    private readonly Dictionary<string, TextureButton> _backgroundButtons = new();
     private readonly List<Player> _selectablePlayers = new List<Player>();
 
     public override void _Ready()
@@ -29,6 +43,7 @@ public partial class StartGame : Control
         _beginBattleButton = GetNode<Button>("%BtnBeginBattle");
         _statusLabel = GetNode<Label>("%StatusLabel");
 
+        SetupBattlefieldBackgroundSelection();
         PopulatePlayers();
         _beginBattleButton.Pressed += OnBeginBattlePressed;
     }
@@ -108,9 +123,46 @@ public partial class StartGame : Control
         }
 
         var terrainCount = (int)Mathf.Clamp((float)_terrainCountInput.Value, 0f, 12f);
-        battleRoot.SetupPlayers(player1, player2, terrainCount: terrainCount);
+        battleRoot.SetupPlayers(player1, player2, terrainCount: terrainCount, battlefieldBackgroundPath: _selectedBattlefieldBackgroundPath);
         GetTree().Root.AddChild(battleRoot);
         QueueFree();
+    }
+
+    private void SetupBattlefieldBackgroundSelection()
+    {
+        _backgroundButtons.Clear();
+        foreach (var option in BattlefieldBackgroundOptions)
+        {
+            var button = GetNodeOrNull<TextureButton>(option.ButtonNodePath);
+            if (button == null)
+            {
+                GD.PushWarning($"[StartGame] Missing battlefield background button for {option.DisplayName} at {option.ButtonNodePath}.");
+                continue;
+            }
+
+            button.TooltipText = option.DisplayName;
+            button.Pressed += () => SelectBattlefieldBackground(option.TexturePath);
+            _backgroundButtons[option.TexturePath] = button;
+        }
+
+        SelectBattlefieldBackground(DefaultBattlefieldBackgroundPath);
+    }
+
+    private void SelectBattlefieldBackground(string texturePath)
+    {
+        _selectedBattlefieldBackgroundPath = string.IsNullOrWhiteSpace(texturePath)
+            ? DefaultBattlefieldBackgroundPath
+            : texturePath;
+
+        foreach (var option in BattlefieldBackgroundOptions)
+        {
+            if (!_backgroundButtons.TryGetValue(option.TexturePath, out var button))
+                continue;
+
+            var isSelected = option.TexturePath == _selectedBattlefieldBackgroundPath;
+            button.Modulate = isSelected ? Colors.White : new Color(0.65f, 0.65f, 0.65f, 1f);
+            button.SelfModulate = isSelected ? new Color(1f, 1f, 1f, 1f) : new Color(0.85f, 0.85f, 0.85f, 1f);
+        }
     }
 
     private void RefreshSelectablePlayers(GameData data)

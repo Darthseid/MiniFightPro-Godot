@@ -72,6 +72,18 @@ public partial class BattleField : Node2D
         SetProcessInput(true);
     }
 
+    public void SetBackgroundTexture(Texture2D? texture)
+    {
+        if (_battleBackground == null)
+            _battleBackground = GetNodeOrNull<Sprite2D>("BattleBackground");
+
+        if (_battleBackground == null || texture == null)
+            return;
+
+        _battleBackground.Texture = texture;
+        FitBackgroundToViewport();
+    }
+
 
     private void FitBackgroundToViewport()
     {
