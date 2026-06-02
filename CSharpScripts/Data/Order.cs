@@ -129,9 +129,9 @@ public class Order
 		true),
 
 	new Order(
-		"tank_shock",
+		"roadkill",
 		1,
-		"Tank Shock",
+		"Roadkill",
 		"Engagement",
 		false,
 		"Friendly Vehicle squad gains temporary Stampede until end of turn.",

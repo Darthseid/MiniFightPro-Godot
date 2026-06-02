@@ -3,12 +3,12 @@
 importer="mp3"
 type="AudioStreamMP3"
 uid="uid://b2y5xpp1qchbd"
-path="res://.godot/imported/Sniper.mp3-a33095333efe9a1fc438eb4c4397e613.mp3str"
+path="res://.godot/imported/sniper.mp3-5095308314b1b6ac807117b630e656d5.mp3str"
 
 [deps]
 
-source_file="res://Assets/WeaponSounds/Sniper.mp3"
-dest_files=["res://.godot/imported/Sniper.mp3-a33095333efe9a1fc438eb4c4397e613.mp3str"]
+source_file="res://Assets/WeaponSounds/sniper.mp3"
+dest_files=["res://.godot/imported/sniper.mp3-5095308314b1b6ac807117b630e656d5.mp3str"]
 
 [params]
 

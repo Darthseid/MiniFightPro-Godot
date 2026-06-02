@@ -130,14 +130,14 @@ public static class CombatEngine
     private static string ResolveWeaponHitSoundKey(Weapon weapon)
     {
         if (weapon == null)
-            return "rifleshot.mp3";
+            return "rifle_shot.mp3";
 
         var manager = AudioManager.Instance;
         if (manager == null)
-            return string.IsNullOrWhiteSpace(weapon.HitSfxKey) ? "rifleshot.mp3" : weapon.HitSfxKey;
+            return string.IsNullOrWhiteSpace(weapon.HitSfxKey) ? "rifle_shot.mp3" : weapon.HitSfxKey;
 
         var normalized = manager.NormalizeWeaponHitKey(weapon.HitSfxKey);
-        return string.IsNullOrEmpty(normalized) ? "rifleshot.mp3" : normalized;
+        return string.IsNullOrEmpty(normalized) ? "rifle_shot.mp3" : normalized;
     }
 
     private static string BuildWeaponToast(WeaponResolutionSummary summary)
@@ -426,9 +426,9 @@ public static class CombatEngine
             if (hits > 0)
                 AudioManager.Instance?.PlayStaggeredJitter(weaponHitSoundKey, attacks, 0.02f);
             else if (weapon.IsMelee)
-                AudioManager.Instance?.Play("meleemiss");
+                AudioManager.Instance?.Play("melee_miss");
             else
-                AudioManager.Instance?.Play("rangedmiss");
+                AudioManager.Instance?.Play("ranged_miss");
 
             var defenderHardness = defenderSquad.Hardness;
             if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)
@@ -653,9 +653,9 @@ public static class CombatEngine
             if (hits > 0)
                 AudioManager.Instance?.PlayStaggeredJitter(weaponHitSoundKey, attacks, 0.02f);
             else if (weapon.IsMelee)
-                AudioManager.Instance?.Play("meleemiss");
+                AudioManager.Instance?.Play("melee_miss");
             else
-                AudioManager.Instance?.Play("rangedmiss");
+                AudioManager.Instance?.Play("ranged_miss");
 
             var defenderHardness = defenderSquad.Hardness;
             if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)
@@ -813,9 +813,9 @@ public static class CombatEngine
             if (hits > 0)
                 AudioManager.Instance?.PlayStaggeredJitter(weaponHitSoundKey, attacks, 0.02f);
             else if (weapon.IsMelee)
-                AudioManager.Instance?.Play("meleemiss");
+                AudioManager.Instance?.Play("melee_miss");
             else
-                AudioManager.Instance?.Play("rangedmiss");
+                AudioManager.Instance?.Play("ranged_miss");
 
             var defenderHardness = defenderSquad.Hardness;
             if (attackerSquad?.SquadAbilities.Any(ability => ability.Innate == "AIDS") == true && _currentDistance <= 9f)

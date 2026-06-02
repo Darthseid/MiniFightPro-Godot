@@ -23,7 +23,7 @@ public partial class AudioManager : Node
     public readonly Dictionary<string, AudioStream> WeaponHitSfx = new(StringComparer.OrdinalIgnoreCase);
 
     private const string WeaponSoundsPath = "res://Assets/WeaponSounds";
-    private const string DefaultWeaponHitSfxKey = "rifleshot.mp3";
+    private const string DefaultWeaponHitSfxKey = "rifle_shot.mp3";
 
     public static AudioManager? Instance { get; private set; }
 

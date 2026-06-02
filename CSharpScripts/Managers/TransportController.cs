@@ -204,7 +204,7 @@ public sealed class TransportController
         if (emergency)
         {
             passenger.ShellShock = true;
-            AudioManager.Instance?.Play("failedbravery"); //Consider changing this sound effect to a terrified scream.
+            AudioManager.Instance?.Play("failed_bravery"); //Consider changing this sound effect to a terrified scream.
             _showToast($"{passenger.Name} became shell-shocked.");
             _applyRout(passenger, false);
         }

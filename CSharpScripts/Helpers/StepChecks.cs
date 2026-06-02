@@ -553,7 +553,7 @@ public static class StepChecks
         if (test && activeSquad.SquadAbilities.Any(ability => ability.Innate == "TryAgain"))
             test = DiceHelpers.Roll2d6() + shellShockModifier < baseBravery;
         if (test) //True means the test was failed.
-            AudioManager.Instance?.Play("failedbravery");
+            AudioManager.Instance?.Play("failed_bravery");
 
         if (hasBadJuju && !test)
             TriggerSquadRegeneration(activeSquad);

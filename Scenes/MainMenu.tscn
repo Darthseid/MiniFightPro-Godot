@@ -82,7 +82,7 @@ script = ExtResource("3_df05h")
 [node name="BtnDuel" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=571886102]
 unique_name_in_owner = true
 layout_mode = 2
-text = "MathHammer Duel"
+text = "Battle Simulator"
 script = ExtResource("9_duel")
 
 [node name="BtnOptions" type="Button" parent="ResponsiveLayout/VBoxContainer" unique_id=601927359]
