@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://btqqf7cqgnhfl" path="res://CSharpScripts/BattleField.cs" id="1_6m6d7"]
 [ext_resource type="Script" uid="uid://drsfnyord8sq4" path="res://CSharpScripts/AudioManager.cs" id="2_audio"]
+[ext_resource type="Texture2D" uid="uid://ccva7oove6c0s" path="res://Assets/GamePics/fieldbackground.jpg" id="3_fieldbg"]
 [ext_resource type="AudioStream" uid="uid://cqx7br5elqfik" path="res://Assets/GameSounds/battle_cry.mp3" id="3_10"]
 [ext_resource type="AudioStream" uid="uid://cxnvmcgmb2jt5" path="res://Assets/GameSounds/bugle.mp3" id="3_11"]
 [ext_resource type="AudioStream" uid="uid://uf1ekry1wepk" path="res://Assets/WeaponSounds/cannon.mp3" id="3_12"]
@@ -50,16 +51,13 @@
 [ext_resource type="AudioStream" uid="uid://dy887svgqxb60" path="res://Assets/GameSounds/victory.mp3" id="3_55"]
 [ext_resource type="AudioStream" uid="uid://c4qs8m6hagw45" path="res://Assets/GameSounds/wilhelm_scream.ogg" id="3_56"]
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wx2gs"]
-load_path = "res://.godot/imported/battlebackground.jpg-6866cf063b553bdf60aa92fea124be47.ctex"
-
 [node name="BattleField" type="Node2D" unique_id=1479842921]
 script = ExtResource("1_6m6d7")
 
 [node name="BattleBackground" type="Sprite2D" parent="." unique_id=1468298049]
 z_index = -50
 position = Vector2(197, 6)
-texture = SubResource("CompressedTexture2D_wx2gs")
+texture = ExtResource("3_fieldbg")
 
 [node name="UnitsTeamA" type="Node2D" parent="." unique_id=1434351887]
 

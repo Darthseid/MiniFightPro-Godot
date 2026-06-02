@@ -47,6 +47,7 @@ public partial class Battle : Node2D
     private int _player1OrderPoints;
     private int _player2OrderPoints;
     private int _terrainCount;
+    private string _selectedBattlefieldBackgroundPath = StartGame.DefaultBattlefieldBackgroundPath;
     private MovementManager _movementManager;
     private TerrainManager _terrainManager = new();
     private CombatManager _combatManager;
@@ -88,11 +89,18 @@ public partial class Battle : Node2D
 
     public void SetupPlayers(Player playerOne, Player playerTwo)
     { SetupPlayers(playerOne, playerTwo, 0); }
+
     public void SetupPlayers(Player playerOne, Player playerTwo, int terrainCount)
+    { SetupPlayers(playerOne, playerTwo, terrainCount, StartGame.DefaultBattlefieldBackgroundPath); }
+
+    public void SetupPlayers(Player playerOne, Player playerTwo, int terrainCount, string battlefieldBackgroundPath)
     {
         _pendingPlayerOne = playerOne;
         _pendingPlayerTwo = playerTwo;
         _terrainCount = Math.Max(0, terrainCount);
+        _selectedBattlefieldBackgroundPath = string.IsNullOrWhiteSpace(battlefieldBackgroundPath)
+            ? StartGame.DefaultBattlefieldBackgroundPath
+            : battlefieldBackgroundPath;
 
         if (IsInsideTree())
             _ = InitializeBattleAsync();
@@ -139,6 +147,7 @@ public partial class Battle : Node2D
             _battleField.DragUpdated += HandleDragUpdated;
             _battleField.DragEnded -= OnDragEnded;
             _battleField.DragEnded += OnDragEnded;
+            ApplySelectedBattlefieldBackground();
         }
 
         _dicePresenter = GetNodeOrNull<DicePresenter>("DicePresenter");
@@ -185,6 +194,26 @@ public partial class Battle : Node2D
             ApplyRout,
             SetActiveSquadForTeam,
             async (teamId, squad) => await MovingStuff(99f, true, 0f, false, false, false, $"{squad.Name}: place strategic reserve squad", false));
+    }
+
+
+    private void ApplySelectedBattlefieldBackground()
+    {
+        if (_battleField == null)
+            return;
+
+        var backgroundPath = string.IsNullOrWhiteSpace(_selectedBattlefieldBackgroundPath)
+            ? StartGame.DefaultBattlefieldBackgroundPath
+            : _selectedBattlefieldBackgroundPath;
+
+        var texture = GD.Load<Texture2D>(backgroundPath);
+        if (texture == null)
+        {
+            GD.PushWarning($"[Battle] Could not load battlefield background '{backgroundPath}'. Falling back to field background.");
+            texture = GD.Load<Texture2D>(StartGame.DefaultBattlefieldBackgroundPath);
+        }
+
+        _battleField.SetBackgroundTexture(texture);
     }
 
     private async Task InitializeBattleAsync()
